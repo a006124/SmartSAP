@@ -3,13 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:SmartSAP.ViewModels;assembly=SmartSAP"
-        xmlns:views="clr-namespace:SmartSAP.Views;assembly=SmartSAP"
+        xmlns:vm="clr-namespace:SmartSAP.ViewModels"
+        xmlns:views="clr-namespace:SmartSAP.Views"
         mc:Ignorable="d"
         Title="SmartSAP - Workflow Automation" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource WindowBackgroundBrush}">
-    
+
     <Window.Resources>
         <!-- Mapping des ViewModels aux Views -->
         <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
@@ -18,52 +18,115 @@
         <DataTemplate DataType="{x:Type vm:ModuleDetailViewModel}">
             <views:ModuleDetailView/>
         </DataTemplate>
+
+        <!-- Style bouton navigation sidebar -->
+        <Style x:Key="NavButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0,10"/>
+            <Setter Property="Width" Value="72"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock FontFamily="Segoe MDL2 Assets"
+                                           FontSize="20"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#4B5568"
+                                           Text="{TemplateBinding Tag}"/>
+                                <TextBlock Text="{TemplateBinding Content}"
+                                           FontSize="11"
+                                           FontFamily="Segoe UI"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,5,0,0"
+                                           Foreground="#4B5568"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DDE1E8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#CBD0D9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <DockPanel>
 
-        <!-- Sidebar -->
-        <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Logo Section -->
-                <StackPanel Grid.Row="0" Margin="25,40">
-                    <TextBlock Text="SmartSAP" FontSize="20" FontWeight="Bold" Foreground="{StaticResource AccentBlueBrush}"/>
-                    <TextBlock Text="Enterprise Automation" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+        <!-- Status Bar — Hauteur 28px (typique barre d'état compacte/titre) -->
+        <StatusBar DockPanel.Dock="Bottom" Height="28" Padding="10,0"
+                   Background="#ECEEF1"
+                   BorderBrush="{StaticResource BorderBrush}"
+                   BorderThickness="0,1,0,0">
+            <!-- Connection SAP -->
+            <StatusBarItem Padding="0">
+                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="SAP Connection: ERP_PROD_100 (Active)"
+                               FontSize="11" FontFamily="Segoe UI"
+                               Foreground="#4B5568" VerticalAlignment="Center" Margin="0,0,0,1"/>
                 </StackPanel>
-
-                <!-- Navigation -->
-                <StackPanel Grid.Row="1" Margin="10,0">
-                    <Button Style="{StaticResource FluentButton}" Content="Library" HorizontalContentAlignment="Left" Background="{StaticResource BluePastelBrush}" Foreground="{StaticResource AccentBlueBrush}" Margin="0,5"/>
-                    <Button Style="{StaticResource FluentButton}" Content="Settings" HorizontalContentAlignment="Left" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5"/>
-                    <Button Style="{StaticResource FluentButton}" Content="Active Logs" HorizontalContentAlignment="Left" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5"/>
+            </StatusBarItem>
+            
+            <StatusBarItem Padding="0">
+                <Separator Background="#D1D5DB" Margin="5,6,5,6"/>
+            </StatusBarItem>
+            
+            <!-- Data Prep -->
+            <StatusBarItem Padding="0">
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                    <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                               Foreground="#4B5568" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Data Prep: Excel Linked"
+                               FontSize="11" FontFamily="Segoe UI"
+                               Foreground="#4B5568" VerticalAlignment="Center" Margin="0,0,0,1"/>
                 </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
 
-                <!-- User Profile -->
-                <Border Grid.Row="2" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
-                    <DockPanel>
-                        <Ellipse Width="32" Height="32" Fill="{StaticResource AccentBlueBrush}" DockPanel.Dock="Left"/>
-                        <StackPanel Margin="10,0">
-                            <TextBlock Text="Utilisateur SAP" FontWeight="Bold" FontSize="12"/>
-                            <TextBlock Text="Admin Mode" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
-                        </StackPanel>
-                    </DockPanel>
-                </Border>
-            </Grid>
-        </Border>
+        <!-- Layout Central -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Main Content -->
-        <ContentControl Grid.Column="1" Content="{Binding CurrentViewModel}"/>
-        
-    </Grid>
+            <!-- Sidebar -->
+            <Border Grid.Column="0" Background="#ECEEF1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Navigation : Library + Logs en haut -->
+                    <StackPanel Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <Button Style="{StaticResource NavButton}" Content="Library" Tag="&#xE8A1;" Margin="0,4"/>
+                        <Button Style="{StaticResource NavButton}" Content="Logs"    Tag="&#xE823;" Margin="0,4"/>
+                    </StackPanel>
+
+                    <!-- Settings en bas -->
+                    <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,16">
+                        <Separator Background="{StaticResource BorderBrush}" Margin="4,0,4,10" Height="1"/>
+                        <Button Style="{StaticResource NavButton}" Content="Settings" Tag="&#xE713;" Margin="0,4"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Main Content -->
+            <Border Grid.Column="1" Background="{StaticResource WindowBackgroundBrush}">
+                <ContentControl Content="{Binding CurrentViewModel}"/>
+            </Border>
+
+        </Grid>
+    </DockPanel>
 </Window>
-
