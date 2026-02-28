@@ -43,14 +43,12 @@ namespace SmartSAP.ViewModels
 
             Modules = new ObservableCollection<ModuleInfo>
             {
-                new ModuleInfo { Title = "Création d'Equipement",   Description = "Créer de nouveaux équipements dans SAP via Excel.", IconKind = "Plus",   Color = "#3B82F6" },
-                new ModuleInfo { Title = "Modification d'Equipement", Description = "Modifier les équipements existants en masse.",       IconKind = "Pencil", Color = "#10B981" },
-                new ModuleInfo { Title = "Suppression d'Equipement",  Description = "Archiver ou supprimer des équipements obsolètes.",   IconKind = "Trash",  Color = "#EF4444" }
-                new ModuleInfo { Title = "Suppression d'Equipement",  Description = "Archiver ou supprimer des équipements obsolètes.",   IconKind = "Trash",  Color = "#EF4444" }
-                new ModuleInfo { Title = "Suppression d'Equipement",  Description = "Archiver ou supprimer des équipements obsolètes.",   IconKind = "Trash",  Color = "#EF4444" }
-                new ModuleInfo { Title = "Suppression d'Equipement",  Description = "Archiver ou supprimer des équipements obsolètes.",   IconKind = "Trash",  Color = "#EF4444" }
-                new ModuleInfo { Title = "Suppression d'Equipement",  Description = "Archiver ou supprimer des équipements obsolètes.",   IconKind = "Trash",  Color = "#EF4444" }
-                new ModuleInfo { Title = "Suppression d'Equipement",  Description = "Archiver ou supprimer des équipements obsolètes.",   IconKind = "Trash",  Color = "#EF4444" }
+                new ModuleInfo { Title = "Création de Postes Techniques", Description = "Créer en masse de nouveaux postes techniques dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Title = "Modification de Postes Techniques", Description = "Modifier en masse les postes techniques existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#F59E0B", StatusBackgroundColor="#FEF3C7" },
+                new ModuleInfo { Title = "Suppression de Postes Techniques",  Description = "Supprimer en masse les postes techniques dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ERROR", StatusForegroundColor="#EF4444", StatusBackgroundColor="#FEE2E2" },
+                new ModuleInfo { Title = "Création d'Equipements", Description = "Créer en masse de nouveaux équipements dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Title = "Modification d'Equipements", Description = "Modifier en masse les équipements existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Title = "Suppression d'Equipements",  Description = "Supprimer en masse des équipements dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" }
             };
             
             _filteredModules = new ObservableCollection<ModuleInfo>(Modules);
@@ -78,7 +76,10 @@ namespace SmartSAP.ViewModels
         public string Description { get; set; } = string.Empty;
         public string IconKind { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
-        public string Version { get; set; } = "v1.0.0";
-        public string HealthStatus { get; set; } = "Optimal";
+        public string Version { get; set; } = string.Empty;
+        public string HealthStatus { get; set; } = string.Empty;
+        public string Status { get; set; } = "ACTIVE";
+        public string StatusForegroundColor { get; set; } = "#10B981"; // AccentGreen
+        public string StatusBackgroundColor { get; set; } = "#D1FAE5"; // GreenPastel
     }
 }

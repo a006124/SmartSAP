@@ -8,7 +8,7 @@
     <Color x:Key="CardBackgroundColor">#F0F4F8</Color>
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}"/>
     
-    <Color x:Key="CardBorderColor">#CFD8DC</Color>
+    <Color x:Key="CardBorderColor">#64748B</Color>
     <SolidColorBrush x:Key="CardBorderBrush" Color="{StaticResource CardBorderColor}"/>
     
     <Color x:Key="BorderColor">#E2E8F0</Color>

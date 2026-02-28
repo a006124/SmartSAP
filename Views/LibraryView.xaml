@@ -25,13 +25,13 @@
             </StackPanel>
             
             <!-- Search Filter -->
-            <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="8" Padding="12,0" Height="40" Width="300" VerticalAlignment="Center">
+            <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="20" Padding="15,0" Height="40" Width="320" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                              Background="Transparent" BorderThickness="0" 
-                             VerticalAlignment="Center" FontSize="14" 
-                             Width="250" Foreground="{StaticResource TextPrimaryBrush}">
+                             VerticalAlignment="Center" FontSize="15" 
+                             Width="260" Foreground="{StaticResource TextPrimaryBrush}">
                         <TextBox.Resources>
                             <Style TargetType="TextBox">
                                 <Style.Triggers>
@@ -40,7 +40,7 @@
                                             <Setter.Value>
                                                 <VisualBrush Stretch="None" AlignmentX="Left" AlignmentY="Center">
                                                     <VisualBrush.Visual>
-                                                        <TextBlock Text="Search modules..." Foreground="#94A3B8" FontSize="14" FontStyle="Italic"/>
+                                                        <TextBlock Text="Search modules..." Foreground="#64748B" FontSize="15"/>
                                                     </VisualBrush.Visual>
                                                 </VisualBrush>
                                             </Setter.Value>
@@ -82,8 +82,8 @@
                                             <Border Width="40" Height="40" CornerRadius="8" Background="{StaticResource PurplePastelBrush}">
                                                 <TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource AccentPurpleBrush}"/>
                                             </Border>
-                                            <Border HorizontalAlignment="Right" Background="{StaticResource OrangePastelBrush}" CornerRadius="12" Padding="10,4" VerticalAlignment="Top">
-                                                <TextBlock Text="UPDATING" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentOrangeBrush}"/>
+                                            <Border HorizontalAlignment="Right" Background="{Binding StatusBackgroundColor}" CornerRadius="12" Padding="10,4" VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding Status}" FontSize="9" FontWeight="Bold" Foreground="{Binding StatusForegroundColor}"/>
                                             </Border>
                                         </DockPanel>
 
