@@ -5,8 +5,11 @@
     <Color x:Key="WindowBackgroundColor">#F3F3F3</Color>
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}"/>
     
-    <Color x:Key="CardBackgroundColor">#F8FAFC</Color>
+    <Color x:Key="CardBackgroundColor">#F0F4F8</Color>
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}"/>
+    
+    <Color x:Key="CardBorderColor">#CFD8DC</Color>
+    <SolidColorBrush x:Key="CardBorderBrush" Color="{StaticResource CardBorderColor}"/>
     
     <Color x:Key="BorderColor">#E2E8F0</Color>
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
