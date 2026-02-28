@@ -12,15 +12,52 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,40">
-            <TextBlock Text="Library" Style="{StaticResource Header1}"/>
-            <TextBlock Text="Sélectionnez un module pour commencer votre workflow SAP." Style="{StaticResource SubHeader}"/>
-        </StackPanel>
+        <!-- Header & Search Bar -->
+        <Grid Grid.Row="0" Margin="0,0,0,40">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Library" Style="{StaticResource Header1}"/>
+                <TextBlock Text="Sélectionnez un module pour commencer votre workflow SAP." Style="{StaticResource SubHeader}"/>
+            </StackPanel>
+            
+            <!-- Search Filter -->
+            <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="8" Padding="12,0" Height="40" Width="300" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                             Background="Transparent" BorderThickness="0" 
+                             VerticalAlignment="Center" FontSize="14" 
+                             Width="250" Foreground="{StaticResource TextPrimaryBrush}">
+                        <TextBox.Resources>
+                            <Style TargetType="TextBox">
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Background">
+                                            <Setter.Value>
+                                                <VisualBrush Stretch="None" AlignmentX="Left" AlignmentY="Center">
+                                                    <VisualBrush.Visual>
+                                                        <TextBlock Text="Search modules..." Foreground="#94A3B8" FontSize="14" FontStyle="Italic"/>
+                                                    </VisualBrush.Visual>
+                                                </VisualBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Resources>
+                    </TextBox>
+                </StackPanel>
+            </Border>
+        </Grid>
 
-        <!-- Modules Grid -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding Modules}">
-            <ItemsControl.ItemsPanel>
+        <!-- Modules Grid avec ScrollViewer -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding FilteredModules}">
+                <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel/>
                 </ItemsPanelTemplate>
@@ -67,7 +104,8 @@
                         </Button.Template>
                     </Button>
                 </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>
