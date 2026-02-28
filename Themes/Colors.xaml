@@ -1,0 +1,39 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Neutral Colors -->
+    <Color x:Key="WindowBackgroundColor">#F3F3F3</Color>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}"/>
+    
+    <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}"/>
+    
+    <Color x:Key="BorderColor">#E2E8F0</Color>
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+
+    <Color x:Key="TextPrimaryColor">#1E293B</Color>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    
+    <Color x:Key="TextSecondaryColor">#64748B</Color>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+
+    <!-- Accent Colors -->
+    <Color x:Key="AccentBlue">#3B82F6</Color>
+    <SolidColorBrush x:Key="AccentBlueBrush" Color="{StaticResource AccentBlue}"/>
+    
+    <Color x:Key="AccentGreen">#10B981</Color>
+    <SolidColorBrush x:Key="AccentGreenBrush" Color="{StaticResource AccentGreen}"/>
+    
+    <Color x:Key="AccentRed">#EF4444</Color>
+    <SolidColorBrush x:Key="AccentRedBrush" Color="{StaticResource AccentRed}"/>
+    
+    <Color x:Key="AccentOrange">#F59E0B</Color>
+    <SolidColorBrush x:Key="AccentOrangeBrush" Color="{StaticResource AccentOrange}"/>
+
+    <!-- Pastels for Icons -->
+    <SolidColorBrush x:Key="BluePastelBrush" Color="#DBEAFE"/>
+    <SolidColorBrush x:Key="GreenPastelBrush" Color="#D1FAE5"/>
+    <SolidColorBrush x:Key="RedPastelBrush" Color="#FEE2E2"/>
+    <SolidColorBrush x:Key="OrangePastelBrush" Color="#FEF3C7"/>
+
+</ResourceDictionary>

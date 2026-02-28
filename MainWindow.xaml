@@ -1,0 +1,69 @@
+<Window x:Class="SmartSAP.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SmartSAP.ViewModels;assembly=SmartSAP"
+        xmlns:views="clr-namespace:SmartSAP.Views;assembly=SmartSAP"
+        mc:Ignorable="d"
+        Title="SmartSAP - Workflow Automation" Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBackgroundBrush}">
+    
+    <Window.Resources>
+        <!-- Mapping des ViewModels aux Views -->
+        <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
+            <views:LibraryView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ModuleDetailViewModel}">
+            <views:ModuleDetailView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo Section -->
+                <StackPanel Grid.Row="0" Margin="25,40">
+                    <TextBlock Text="SmartSAP" FontSize="20" FontWeight="Bold" Foreground="{StaticResource AccentBlueBrush}"/>
+                    <TextBlock Text="Enterprise Automation" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Grid.Row="1" Margin="10,0">
+                    <Button Style="{StaticResource FluentButton}" Content="Library" HorizontalContentAlignment="Left" Background="{StaticResource BluePastelBrush}" Foreground="{StaticResource AccentBlueBrush}" Margin="0,5"/>
+                    <Button Style="{StaticResource FluentButton}" Content="Settings" HorizontalContentAlignment="Left" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5"/>
+                    <Button Style="{StaticResource FluentButton}" Content="Active Logs" HorizontalContentAlignment="Left" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5"/>
+                </StackPanel>
+
+                <!-- User Profile -->
+                <Border Grid.Row="2" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                    <DockPanel>
+                        <Ellipse Width="32" Height="32" Fill="{StaticResource AccentBlueBrush}" DockPanel.Dock="Left"/>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Utilisateur SAP" FontWeight="Bold" FontSize="12"/>
+                            <TextBlock Text="Admin Mode" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentViewModel}"/>
+        
+    </Grid>
+</Window>
+

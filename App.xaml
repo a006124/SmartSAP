@@ -1,0 +1,15 @@
+<Application x:Class="SmartSAP.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Converter simple pour cacher le premier connecteur -->
+            <!-- Note: Normalement défini dans un namespace Helper, ici on peut utiliser un DataTrigger simple dans le XAML si besoin -->
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
