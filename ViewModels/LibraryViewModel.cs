@@ -43,12 +43,15 @@ namespace SmartSAP.ViewModels
 
             Modules = new ObservableCollection<ModuleInfo>
             {
-                new ModuleInfo { Title = "Création de Postes Techniques", Description = "Créer en masse de nouveaux postes techniques dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
-                new ModuleInfo { Title = "Modification de Postes Techniques", Description = "Modifier en masse les postes techniques existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#F59E0B", StatusBackgroundColor="#FEF3C7" },
-                new ModuleInfo { Title = "Suppression de Postes Techniques",  Description = "Supprimer en masse les postes techniques dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ERROR", StatusForegroundColor="#EF4444", StatusBackgroundColor="#FEE2E2" },
-                new ModuleInfo { Title = "Création d'Equipements", Description = "Créer en masse de nouveaux équipements dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
-                new ModuleInfo { Title = "Modification d'Equipements", Description = "Modifier en masse les équipements existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
-                new ModuleInfo { Title = "Suppression d'Equipements",  Description = "Supprimer en masse des équipements dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" }
+                new ModuleInfo { Number="01", Title = "Création de Postes Techniques", Description = "Créer en masse de nouveaux postes techniques dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Number="02", Title = "Modification de Postes Techniques", Description = "Modifier en masse les postes techniques existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#F59E0B", StatusBackgroundColor="#FEF3C7" },
+                new ModuleInfo { Number="03", Title = "Suppression de Postes Techniques",  Description = "Supprimer en masse les postes techniques dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ERROR", StatusForegroundColor="#EF4444", StatusBackgroundColor="#FEE2E2" },
+                new ModuleInfo { Number="04", Title = "Création d'Equipements", Description = "Créer en masse de nouveaux équipements dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Number="05", Title = "Modification d'Equipements", Description = "Modifier en masse les équipements existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Number="06", Title = "Suppression d'Equipements",  Description = "Supprimer en masse des équipements dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Number="07", Title = "Création d'Equipements", Description = "Créer en masse de nouveaux équipements dans SAP via Excel.", IconKind = "Plus", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Number="08", Title = "Modification d'Equipements", Description = "Modifier en masse les équipements existants dans SAP via Excel.", IconKind = "Pencil", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
+                new ModuleInfo { Number="09", Title = "Suppression d'Equipements",  Description = "Supprimer en masse des équipements dans SAP via Excel.", IconKind = "Trash", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIVE", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" }
             };
             
             _filteredModules = new ObservableCollection<ModuleInfo>(Modules);
@@ -72,6 +75,7 @@ namespace SmartSAP.ViewModels
 
     public class ModuleInfo
     {
+        public string Number { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string IconKind { get; set; } = string.Empty;

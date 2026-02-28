@@ -1,3 +1,5 @@
+using SmartSAP.ViewModels.Modules;
+
 namespace SmartSAP.ViewModels
 {
     public class MainViewModel : ViewModelBase
@@ -19,9 +21,19 @@ namespace SmartSAP.ViewModels
             CurrentViewModel = new LibraryViewModel(this);
         }
 
-        public void NavigateToModule(string moduleTitle)
+        public void NavigateToModule(string moduleNumber)
         {
-            CurrentViewModel = new ModuleDetailViewModel(this, moduleTitle);
+            switch (moduleNumber)
+            {
+                case "01":
+                    CurrentViewModel = new Module01ViewModel(this, "Création de Postes Techniques");
+                    break;
+                // D'autres modules viendront s'ajouter ici par la suite
+                default:
+                    // Pour l'instant, si on clique sur un autre module non implémenté, on peut instancier un ViewModel basique ou ne rien faire
+                    // CurrentViewModel = new NotImplementedViewModel();
+                    break;
+            }
         }
     }
 }

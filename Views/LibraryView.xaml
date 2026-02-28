@@ -25,7 +25,7 @@
             </StackPanel>
             
             <!-- Search Filter -->
-            <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="20" Padding="15,0" Height="40" Width="320" VerticalAlignment="Center">
+            <Border Grid.Column="1" Background="#9d9d9dff" CornerRadius="20" Padding="15,0" Height="40" Width="320" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
@@ -40,7 +40,7 @@
                                             <Setter.Value>
                                                 <VisualBrush Stretch="None" AlignmentX="Left" AlignmentY="Center">
                                                     <VisualBrush.Visual>
-                                                        <TextBlock Text="Search modules..." Foreground="#64748B" FontSize="15"/>
+                                                        <TextBlock Text="Search modules..." Foreground="#64748B" FontFamily="Segoe MDL2 Assets" FontSize="13"/>
                                                     </VisualBrush.Visual>
                                                 </VisualBrush>
                                             </Setter.Value>
@@ -65,7 +65,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Button Command="{Binding DataContext.NavigateToModuleCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                            CommandParameter="{Binding Title}"
+                            CommandParameter="{Binding Number}"
                             Background="Transparent" BorderThickness="0" Padding="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
