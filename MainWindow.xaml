@@ -64,7 +64,7 @@
 
         <!-- Status Bar — Hauteur 28px (typique barre d'état compacte/titre) -->
         <StatusBar DockPanel.Dock="Bottom" Height="28" Padding="10,0"
-                   Background="#5b9cffff"
+                   Background="royalblue"
                    BorderBrush="{StaticResource BorderBrush}"
                    BorderThickness="0,1,0,0">
             <!-- Connection SAP -->
@@ -73,7 +73,7 @@
                     <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center"/>
                     <TextBlock Text="SAP Connection: ERP_PROD_100 (Active)"
                                FontSize="11" FontFamily="Segoe UI"
-                               Foreground="#4B5568" VerticalAlignment="Center" Margin="0,0,0,1"/>
+                               Foreground="white" VerticalAlignment="Center" Margin="0,0,0,1"/>
                 </StackPanel>
             </StatusBarItem>
             
@@ -85,10 +85,10 @@
             <StatusBarItem Padding="0">
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
                     <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                               Foreground="#4B5568" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                               Foreground="white" Margin="0,0,6,0" VerticalAlignment="Center"/>
                     <TextBlock Text="Data Prep: Excel Linked"
                                FontSize="11" FontFamily="Segoe UI"
-                               Foreground="#4B5568" VerticalAlignment="Center" Margin="0,0,0,1"/>
+                               Foreground="white" VerticalAlignment="Center" Margin="0,0,0,1"/>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
@@ -101,7 +101,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
-            <Border Grid.Column="0" Background="#ECEEF1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="#e5e5e5ff" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>

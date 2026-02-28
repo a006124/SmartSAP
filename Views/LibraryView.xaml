@@ -42,12 +42,11 @@
 
                                         <!-- Top Info -->
                                         <DockPanel Grid.Row="0">
-                                            <Border Width="40" Height="40" CornerRadius="8" Background="{StaticResource BluePastelBrush}">
-                                                <!-- Icon would go here -->
-                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource AccentBlueBrush}"/>
+                                            <Border Width="40" Height="40" CornerRadius="8" Background="{StaticResource PurplePastelBrush}">
+                                                <TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource AccentPurpleBrush}"/>
                                             </Border>
-                                            <Border HorizontalAlignment="Right" Background="{StaticResource GreenPastelBrush}" CornerRadius="4" Padding="8,2">
-                                                <TextBlock Text="ACTIVE" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentGreenBrush}"/>
+                                            <Border HorizontalAlignment="Right" Background="{StaticResource OrangePastelBrush}" CornerRadius="12" Padding="10,4" VerticalAlignment="Top">
+                                                <TextBlock Text="UPDATING" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentOrangeBrush}"/>
                                             </Border>
                                         </DockPanel>
 

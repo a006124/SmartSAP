@@ -5,7 +5,7 @@
     <Color x:Key="WindowBackgroundColor">#F3F3F3</Color>
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}"/>
     
-    <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="CardBackgroundColor">#F8FAFC</Color>
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}"/>
     
     <Color x:Key="BorderColor">#E2E8F0</Color>
@@ -35,5 +35,9 @@
     <SolidColorBrush x:Key="GreenPastelBrush" Color="#D1FAE5"/>
     <SolidColorBrush x:Key="RedPastelBrush" Color="#FEE2E2"/>
     <SolidColorBrush x:Key="OrangePastelBrush" Color="#FEF3C7"/>
+    
+    <Color x:Key="AccentPurple">#A855F7</Color>
+    <SolidColorBrush x:Key="AccentPurpleBrush" Color="{StaticResource AccentPurple}"/>
+    <SolidColorBrush x:Key="PurplePastelBrush" Color="#F3E8FF"/>
 
 </ResourceDictionary>
