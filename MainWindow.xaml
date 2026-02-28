@@ -20,6 +20,30 @@
         <DataTemplate DataType="{x:Type vmmodules:Module01ViewModel}">
             <vmodules:Module01View/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module02ViewModel}">
+            <vmodules:Module02View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module03ViewModel}">
+            <vmodules:Module03View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module04ViewModel}">
+            <vmodules:Module04View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module05ViewModel}">
+            <vmodules:Module05View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module06ViewModel}">
+            <vmodules:Module06View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module07ViewModel}">
+            <vmodules:Module07View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module08ViewModel}">
+            <vmodules:Module08View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module09ViewModel}">
+            <vmodules:Module09View/>
+        </DataTemplate>
 
         <!-- Style bouton navigation sidebar -->
         <Style x:Key="NavButton" TargetType="Button">

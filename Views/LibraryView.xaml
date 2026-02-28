@@ -64,7 +64,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Button Command="{Binding DataContext.NavigateToModuleCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                    <Button Command="{Binding DataContext.NavigateToModuleCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                             CommandParameter="{Binding Number}"
                             Background="Transparent" BorderThickness="0" Padding="0">
                         <Button.Template>
