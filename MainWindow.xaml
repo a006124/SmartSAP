@@ -64,7 +64,7 @@
 
         <!-- Status Bar — Hauteur 28px (typique barre d'état compacte/titre) -->
         <StatusBar DockPanel.Dock="Bottom" Height="28" Padding="10,0"
-                   Background="#ECEEF1"
+                   Background="#5b9cffff"
                    BorderBrush="{StaticResource BorderBrush}"
                    BorderThickness="0,1,0,0">
             <!-- Connection SAP -->
