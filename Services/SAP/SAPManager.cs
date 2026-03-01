@@ -220,7 +220,7 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                string result = $"{sSAPTransaction}|OK|{linesRead}|0";
+                string result = $"{sSAPTransaction}|OK||0";
                 Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
             }

@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,20">
+        <DockPanel Grid.Row="0" Margin="0,0,0,5">
             <Button Command="{Binding GoBackCommand}" Background="Transparent" BorderThickness="0" Margin="0,0,15,0" DockPanel.Dock="Left">
                 <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource TextPrimaryBrush}"/>
             </Button>
@@ -27,7 +27,7 @@
 
 
         <!-- Workflow Steps -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="1" Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding Steps}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -36,7 +36,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
                             <Button Command="{Binding ActionCommand}" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">

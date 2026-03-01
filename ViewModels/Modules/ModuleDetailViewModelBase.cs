@@ -320,4 +320,5 @@ namespace SmartSAP.ViewModels.Modules
                 Steps[Steps.Count - 1].IsLast = true;
             }
         }
+    }
 }
