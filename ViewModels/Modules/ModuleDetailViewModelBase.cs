@@ -51,7 +51,7 @@ namespace SmartSAP.ViewModels.Modules
             SAPManager = new SAPManager();
 
             InitializeSteps();
-            // CompleteInitialization(); // This line was in the instruction but not in the original code, and it's not defined. I'll omit it to maintain syntactic correctness and avoid introducing new errors.
+            CompleteInitialization();
         }
 
         protected virtual void InitializeSteps()
