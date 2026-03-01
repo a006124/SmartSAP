@@ -53,9 +53,13 @@ namespace SmartSAP.ViewModels.Modules
 
         protected virtual void GenerateExcelTemplate()
         {
+            var step = Steps.FirstOrDefault(s => s.ActionCommand == GenerateTemplateCommand);
+            if (step != null) step.ResultState = "Processing";
+
             if (ExcelColumns.Count == 0)
             {
                 Logs.Add(new LogEntry("WARNING", "Aucun modèle Excel n'est défini pour ce module."));
+                if (step != null) { step.Status = "Warning"; step.ResultState = "Error"; }
                 return;
             }
 
@@ -66,7 +70,7 @@ namespace SmartSAP.ViewModels.Modules
                 string dateExecution = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}.xlsx";
                 string fullPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
-                string sheetName = "ZSMNBAO15";
+                string sheetName = "Data";
                 
                 using (var workbook = new XLWorkbook())
                 {
@@ -99,6 +103,8 @@ namespace SmartSAP.ViewModels.Modules
 
                 LastGeneratedExcelPath = fullPath;
                 Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : ", fullPath));
+                
+                if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
 
                 // Ouverture automatique du fichier
                 Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
@@ -106,14 +112,19 @@ namespace SmartSAP.ViewModels.Modules
             catch (Exception ex)
             {
                 Logs.Add(new LogEntry("ERROR", $"Erreur lors de la génération ou de l'ouverture du modèle : {ex.Message}"));
+                if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
             }
         }
 
         protected virtual void ExportLastGeneratedToFixedWidth()
         {
+            var step = Steps.FirstOrDefault(s => s.ActionCommand == ExportFixedWidthCommand);
+            if (step != null) step.ResultState = "Processing";
+
             if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
             {
                 Logs.Add(new LogEntry("WARNING", "Aucun fichier Excel récent n'a été trouvé pour l'export. veuillez d'abord générer ou modifier le fichier."));
+                if (step != null) { step.Status = "Absent"; step.ResultState = "Error"; }
                 return;
             }
 
@@ -192,7 +203,8 @@ namespace SmartSAP.ViewModels.Modules
                     if (errorCount > 0)
                     {
                         Logs.Add(new LogEntry("WARNING", $"Export terminé avec {errorCount} erreur(s). Les lignes erronées ont été ignorées."));
-                        
+                        if (step != null) { step.Status = "Erreurs"; step.ResultState = "Error"; }
+
                         // Ouverture automatique du fichier Excel pour correction
                         if (!string.IsNullOrEmpty(LastGeneratedExcelPath) && File.Exists(LastGeneratedExcelPath))
                         {
@@ -203,6 +215,8 @@ namespace SmartSAP.ViewModels.Modules
                     else
                     {
                         Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
+                        if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+
                         // Ouverture automatique de l'export
                         Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
                     }
@@ -211,6 +225,7 @@ namespace SmartSAP.ViewModels.Modules
             catch (Exception ex)
             {
                 Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'export fixe : {ex.Message}"));
+                if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
             }
         }
 
@@ -229,12 +244,14 @@ namespace SmartSAP.ViewModels.Modules
 
             foreach (var step in Steps)
             {
-                step.Status = "Processing";
+                step.ResultState = "Processing";
+                step.Status = "En cours";
                 Logs.Add(new LogEntry("INFO", $"Exécution de : {step.Title}"));
 
                 await Task.Delay(1500); // Simulation
 
-                step.Status = "Completed";
+                step.ResultState = "Success";
+                step.Status = "Terminé";
                 Logs.Add(new LogEntry("SUCCESS", $"{step.Title} terminé avec succès."));
             }
 
@@ -253,6 +270,13 @@ namespace SmartSAP.ViewModels.Modules
         {
             get => _status;
             set => SetProperty(ref _status, value);
+        }
+
+        private string _resultState = "Normal";
+        public string ResultState
+        {
+            get => _resultState;
+            set => SetProperty(ref _resultState, value);
         }
 
         private bool _isLast;

@@ -82,9 +82,42 @@
 
                                         <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
                                                 CornerRadius="4" Padding="5" HorizontalAlignment="Stretch">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ResultState}" Value="Processing">
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBlueBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ResultState}" Value="Success">
+                                                            <Setter Property="BorderBrush" Value="{StaticResource ConsoleSuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ResultState}" Value="Error">
+                                                            <Setter Property="BorderBrush" Value="{StaticResource ConsoleErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
                                             <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"
-                                                       FontSize="10" FontWeight="SemiBold"
-                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                       FontSize="10" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ResultState}" Value="Processing">
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding ResultState}" Value="Success">
+                                                                <Setter Property="Foreground" Value="{StaticResource ConsoleSuccessBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding ResultState}" Value="Error">
+                                                                <Setter Property="Foreground" Value="{StaticResource ConsoleErrorBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </Border>
                                     </Grid>
                                 </Border>
