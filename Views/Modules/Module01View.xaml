@@ -116,9 +116,9 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Margin="0,2">
-                                    <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
-                                    <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
-                                    <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text="{Binding Timestamp, Mode=OneWay}" Foreground="#94A3B8" FontFamily="Consolas"/>
+                                    <Run Text=" ["/><Run Text="{Binding Type, Mode=OneWay}" FontWeight="Bold"/><Run Text="] "/>
+                                    <Run Text="{Binding Message, Mode=OneWay}" Foreground="{StaticResource TextPrimaryBrush}"/>
                                 </TextBlock>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

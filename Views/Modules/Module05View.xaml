@@ -51,37 +51,44 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Width="200" Height="220" Style="{StaticResource ModuleCard}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
+                            <Button Command="{Binding ActionCommand}" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Border Width="200" Height="220" Style="{StaticResource ModuleCard}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-                                    <Border Grid.Row="0" Width="40" Height="40" CornerRadius="8"
-                                            Background="{StaticResource BluePastelBrush}"
-                                            HorizontalAlignment="Left" Margin="0,0,0,15">
-                                        <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
-                                                   VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                   FontSize="18" Foreground="{StaticResource AccentBlueBrush}"/>
-                                    </Border>
+                                        <Border Grid.Row="0" Width="40" Height="40" CornerRadius="8"
+                                                Background="{StaticResource BluePastelBrush}"
+                                                HorizontalAlignment="Left" Margin="0,0,0,15">
+                                            <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
+                                                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                       FontSize="18" Foreground="{StaticResource AccentBlueBrush}"/>
+                                        </Border>
 
-                                    <StackPanel Grid.Row="1">
-                                        <TextBlock Text="{Binding Title}" FontWeight="Bold"
-                                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding Description}" FontSize="11"
-                                                   Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                                    </StackPanel>
+                                        <StackPanel Grid.Row="1">
+                                            <TextBlock Text="{Binding Title}" FontWeight="Bold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
 
-                                    <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
-                                            CornerRadius="4" Padding="5" HorizontalAlignment="Stretch">
-                                        <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"
-                                                   FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    </Border>
-                                </Grid>
-                            </Border>
+                                        <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
+                                                CornerRadius="4" Padding="5" HorizontalAlignment="Stretch">
+                                            <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"
+                                                       FontSize="10" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </Button>
                             <TextBlock Style="{StaticResource ConnectorArrow}"/>
                         </StackPanel>
                     </DataTemplate>
@@ -109,9 +116,9 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Margin="0,2">
-                                    <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
-                                    <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
-                                    <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text="{Binding Timestamp, Mode=OneWay}" Foreground="#94A3B8" FontFamily="Consolas"/>
+                                    <Run Text=" ["/><Run Text="{Binding Type, Mode=OneWay}" FontWeight="Bold"/><Run Text="] "/>
+                                    <Run Text="{Binding Message, Mode=OneWay}" Foreground="{StaticResource TextPrimaryBrush}"/>
                                 </TextBlock>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

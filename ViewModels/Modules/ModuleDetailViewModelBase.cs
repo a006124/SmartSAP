@@ -57,12 +57,14 @@ namespace SmartSAP.ViewModels.Modules
             {
                 // Note: Dans une application réelle on utiliserait un SaveFileDialog.
                 // Ici on génère un nom par défaut pour la démonstration.
-                string fileName = $"Template_{ModuleTitle.Replace(" ", "_")}.xlsx";
+                string dateExecution = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}.xlsx";
                 string fullPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
-
+                string sheetName = "ZSMNBA015";
+                
                 using (var workbook = new XLWorkbook())
                 {
-                    var worksheet = workbook.Worksheets.Add("Modèle");
+                    var worksheet = workbook.Worksheets.Add(sheetName);
                     
                     for (int i = 0; i < ExcelColumns.Count; i++)
                     {
@@ -153,7 +155,7 @@ namespace SmartSAP.ViewModels.Modules
 
     public class LogEntry
     {
-        public string Timestamp { get; } = DateTime.Now.ToString("HH:mm:ss");
+        public string Timestamp { get; private set; } = DateTime.Now.ToString("HH:mm:ss");
         public string Type { get; set; }
         public string Message { get; set; }
 

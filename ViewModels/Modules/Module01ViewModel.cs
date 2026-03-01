@@ -24,10 +24,17 @@ namespace SmartSAP.ViewModels.Modules
         }
         protected override void InitializeExcelColumns()
         {
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("ID Equipement", "Numéro unique de l'équipement dans SAP", "EQUI-001"));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Catégorie", "Code de catégorie d'équipement (ex: M pour Machine)", "M"));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Fabricant", "Nom du constructeur de l'équipement", "SIEMENS"));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Modèle", "Désignation précise du modèle", "SIMATIC S7-1200"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Numéro unique de l'équipement dans SAP", "MC02"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", "FR"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Code de localisation", "150"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Code du centre de coût", "AC004510"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "0010"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Indicateur de criticité ABC", "1"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code projet - 30 car", "Référence projet", ""));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code produit - 30 car", "Référence produit", ""));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1"));
         }
     }
 }
