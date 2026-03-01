@@ -180,26 +180,59 @@ namespace SmartSAP.Services.SAP
             }
         }
 
-        private bool GoMainMenu(dynamic session)
+        public object? GetActiveSession()
         {
             try
             {
-                if (session == null) return false;
-                session.findById("wnd[0]/tbar[0]/okcd").Text = "/n";
-                session.findById("wnd[0]").sendVKey(0);
-                return true;
+                object sapGuiAuto = GetObject("SAPGUI");
+                if (sapGuiAuto == null) return null;
+
+                dynamic guiApp = sapGuiAuto.GetType().InvokeMember("GetScriptingEngine", 
+                    System.Reflection.BindingFlags.InvokeMethod, null, sapGuiAuto, null);
+                
+                if (guiApp == null || guiApp.Children.Count == 0) return null;
+
+                dynamic connection = guiApp.Children(0);
+                if (connection.Children.Count == 0) return null;
+
+                return connection.Children(0);
             }
-            catch { return false; }
+            catch { return null; }
         }
 
-        public string GetStatus(dynamic session)
+        public string ExecuteZSMNBAO15(dynamic session, string filePath, out string resultFilePath)
         {
+            const string sSAPTransaction = "ZSMNBAO15";
+            resultFilePath = string.Empty;
+            
             try
             {
-                if (session == null) return "✗ Session non connectée";
-                return session.ActiveWindow.FindByName("sbar", "GuiStatusbar").Text;
+                session.findById("wnd[0]").maximize();
+                session.findById("wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                session.findById("wnd[0]").sendVKey(0);
+
+                // Écran de sélection
+                session.findById("wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
+                //session.findById("wnd[0]/tbar[1]/btn[8]").press(); // Exécuter
+
+                // Retour et Nettoyage
+                session.findById("wnd[0]/tbar[0]/btn[3]").press(); // Retour
+                session.findById("wnd[0]/tbar[0]/btn[3]").press(); // Retour
+
+                // Sauvegarde du log résultat
+                resultFilePath = filePath + "_Resultat.txt";
+                System.IO.File.WriteAllLines(resultFilePath, resultLines);
+
+                // Formatage du résultat compact
+                if (linesError == 0)
+                    return $"{sSAPTransaction}|OK|{linesRead}|0";
+                else
+                    return $"{sSAPTransaction}|NOK|{linesRead}|{linesError}";
             }
-            catch { return "NOK"; }
+            catch (Exception ex)
+            {
+                return $"{sSAPTransaction}|ERROR|{ex.Message}";
+            }
         }
     }
 }

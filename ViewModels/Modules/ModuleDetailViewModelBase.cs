@@ -25,8 +25,10 @@ namespace SmartSAP.ViewModels.Modules
         public ICommand ClearLogsCommand { get; protected set; }
         public ICommand PickExcelFileCommand { get; protected set; }
         public ICommand CheckSAPConnectionCommand { get; protected set; }
+        public ICommand ExecuteSAPTransactionCommand { get; protected set; }
 
         protected string? LastGeneratedExcelPath;
+        protected string? LastExportedTextPath;
         protected readonly SAPManager SAPManager;
 
         protected ModuleDetailViewModelBase(MainViewModel mainViewModel, string title)
@@ -45,6 +47,7 @@ namespace SmartSAP.ViewModels.Modules
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
             PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
             CheckSAPConnectionCommand = new RelayCommand(async _ => await CheckSAPConnectionAsync());
+            ExecuteSAPTransactionCommand = new RelayCommand(async _ => await ExecuteSAPTransactionAsync());
 
             SAPManager = new SAPManager();
         }
@@ -224,6 +227,8 @@ namespace SmartSAP.ViewModels.Modules
                     {
                         Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
                         if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                        
+                        LastExportedTextPath = exportPath;
 
                         // Ouverture automatique de l'export
                         Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
@@ -255,19 +260,36 @@ namespace SmartSAP.ViewModels.Modules
                         Logs.Add(new LogEntry("SUCCESS", $"✓ Connexion SAP OK. Instance : {result.InstanceInfo}"));
                         if (step != null) { step.Status = "Connecté"; step.ResultState = "Success"; }
                         
-                        _mainViewModel.IsSAPConnected = true;
-                        _mainViewModel.SAPInstanceInfo = $"Instance : {result.InstanceInfo}";
+                        MainViewModel.IsSAPConnected = true;
+                        MainViewModel.SAPInstanceInfo = $"Instance : {result.InstanceInfo}";
                     }
                     else
                     {
                         Logs.Add(new LogEntry("ERROR", result.ErrorMessage));
                         if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
                         
-                        _mainViewModel.IsSAPConnected = false;
-                        _mainViewModel.SAPInstanceInfo = "Non connecté";
+                        MainViewModel.IsSAPConnected = false;
+                        MainViewModel.SAPInstanceInfo = "Non connecté";
                     }
                 });
             });
+        }
+
+        protected virtual async Task ExecuteSAPTransactionAsync()
+        {
+            var step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            if (step != null) step.ResultState = "Processing";
+
+            if (string.IsNullOrEmpty(LastExportedTextPath) || !File.Exists(LastExportedTextPath))
+            {
+                Logs.Add(new LogEntry("ERROR", "Veuillez d'abord générer l'export format SAP (Étape 2)."));
+                if (step != null) { step.Status = "Manquant"; step.ResultState = "Error"; }
+                return;
+            }
+
+            Logs.Add(new LogEntry("INFO", "Exécution de la transaction SAP..."));
+            // L'implémentation spécifique par module se fera par surcharge dans les ViewModels enfants.
+            await Task.CompletedTask; 
         }
 
         protected virtual void PickExcelFile()

@@ -23,10 +23,63 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE762", 
                     ActionCommand = ExportFixedWidthCommand
                 },
-                new WorkflowStep { Title = "3. Intégration SAP", Description = "Exécute la transaction SAP pour créer les Postes Techniques.", Icon = "\xE8A5", ActionCommand = CheckSAPConnectionCommand },
-                new WorkflowStep { Title = "4. Audit & Validation", Description = "Vérification la création des Postes Techniques et logs.", Icon = "\xE9A1" }
+                new WorkflowStep { Title = "3. Connexion SAP", Description = "Vérifie la connexion au serveur SAP.", Icon = "\xE8A5", ActionCommand = CheckSAPConnectionCommand },
+                new WorkflowStep { Title = "4. Intégration SAP", Description = "Exécute la transaction ZSMNBAO15.", Icon = "\xE768", ActionCommand = ExecuteSAPTransactionCommand }
             };
         }
+
+        protected override async Task ExecuteSAPTransactionAsync()
+        {
+            await base.ExecuteSAPTransactionAsync(); // Vérifie le fichier
+            
+            var step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            if (step != null && step.ResultState == "Error") return; // Arrêt si fichier absent (déjà loggé par base)
+
+            try
+            {
+                dynamic session = SAPManager.GetActiveSession();
+                if (session == null)
+                {
+                    Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active. Veuillez vérifier l'étape 3."));
+                    if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZSMNBAO15..."));
+                
+                string resultFile = string.Empty;
+                string result = await Task.Run(() => SAPManager.ExecuteZSMNBAO15(session, LastExportedTextPath, out resultFile));
+
+                var parts = result.Split('|');
+                if (parts.Length >= 2 && parts[1] == "OK")
+                {
+                    Logs.Add(new LogEntry("SUCCESS", $"✓ Transaction terminée avec succès. Lignes lues: {parts[2]}."));
+                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                }
+                else if (parts.Length >= 2 && parts[1] == "NOK")
+                {
+                    Logs.Add(new LogEntry("WARNING", $"⚠ Transaction terminée avec {parts[3]} erreur(s)."));
+                    if (step != null) { step.Status = "Succès partiel"; step.ResultState = "Error"; }
+                }
+                else
+                {
+                    Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
+                    if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
+                }
+
+                if (!string.IsNullOrEmpty(resultFile) && System.IO.File.Exists(resultFile))
+                {
+                    Logs.Add(new LogEntry("SUCCESS", "Le fichier de log SAP a été généré : ", resultFile));
+                    Process.Start(new ProcessStartInfo(resultFile) { UseShellExecute = true });
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur fatale lors de l'intégration SAP : {ex.Message}"));
+                if (step != null) { step.Status = "Crash"; step.ResultState = "Error"; }
+            }
+        }
+
         protected override void InitializeExcelColumns()
         {
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Numéro unique de l'équipement dans SAP", "MC02", 4));
