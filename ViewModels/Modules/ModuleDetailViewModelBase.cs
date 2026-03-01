@@ -123,41 +123,81 @@ namespace SmartSAP.ViewModels.Modules
                 {
                     var worksheet = workbook.Worksheets.First();
                     var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Ignorer l'en-tête
+                    int errorCount = 0;
+                    int rowIdx = 1;
 
                     using (var writer = new StreamWriter(exportPath))
                     {
                         foreach (var row in rows)
                         {
+                            rowIdx++;
                             string line = "";
+                            bool rowValid = true;
+
                             for (int i = 0; i < ExcelColumns.Count; i++)
                             {
-                                int width = ExcelColumns[i].FixedWidth;
-                                string value = row.Cell(i + 1).Value.ToString();
+                                var colDef = ExcelColumns[i];
+                                int width = colDef.FixedWidth;
+                                string rawValue = row.Cell(i + 1).Value.ToString();
+                                
+                                // Cleansing
+                                string processedValue = rawValue?.Trim() ?? "";
+                                if (colDef.ForceUpperCase)
+                                    processedValue = processedValue.ToUpper();
+
+                                // Validation
+                                if (colDef.AllowedValues != null && colDef.AllowedValues.Length > 0)
+                                {
+                                    bool match = false;
+                                    foreach (var allowed in colDef.AllowedValues)
+                                    {
+                                        if (processedValue == allowed.ToUpper())
+                                        {
+                                            match = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!match)
+                                    {
+                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Header}'."));
+                                        rowValid = false;
+                                        errorCount++;
+                                    }
+                                }
                                 
                                 if (width > 0)
                                 {
                                     // Tronquer ou Padder à droite
-                                    if (value.Length > width)
-                                        value = value.Substring(0, width);
+                                    if (processedValue.Length > width)
+                                        processedValue = processedValue.Substring(0, width);
                                     else
-                                        value = value.PadRight(width);
+                                        processedValue = processedValue.PadRight(width);
                                     
-                                    line += value;
+                                    line += processedValue;
                                 }
                                 else
                                 {
-                                    line += value + " ";
+                                    line += processedValue + " ";
                                 }
                             }
-                            writer.WriteLine(line);
+
+                            if (rowValid)
+                                writer.WriteLine(line);
                         }
                     }
-                }
 
-                Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
-                
-                // Ouverture automatique
-                Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
+                    if (errorCount > 0)
+                    {
+                        Logs.Add(new LogEntry("WARNING", $"Export terminé avec {errorCount} erreur(s). Les lignes erronées ont été ignorées."));
+                    }
+                    else
+                    {
+                        Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
+                        // Ouverture automatique
+                        Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
+                    }
+                }
             }
             catch (Exception ex)
             {
