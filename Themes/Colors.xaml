@@ -43,4 +43,26 @@
     <SolidColorBrush x:Key="AccentPurpleBrush" Color="{StaticResource AccentPurple}"/>
     <SolidColorBrush x:Key="PurplePastelBrush" Color="#F3E8FF"/>
 
+    <!-- Console / Terminal Colors -->
+    <Color x:Key="ConsoleBackgroundColor">#1E1E1E</Color>
+    <SolidColorBrush x:Key="ConsoleBackgroundBrush" Color="{StaticResource ConsoleBackgroundColor}"/>
+
+    <Color x:Key="ConsoleDefaultTextColor">#D4D4D4</Color>
+    <SolidColorBrush x:Key="ConsoleDefaultTextBrush" Color="{StaticResource ConsoleDefaultTextColor}"/>
+
+    <Color x:Key="ConsoleTimestampColor">#858585</Color>
+    <SolidColorBrush x:Key="ConsoleTimestampBrush" Color="{StaticResource ConsoleTimestampColor}"/>
+
+    <Color x:Key="ConsoleInfoColor">#3794FF</Color>
+    <SolidColorBrush x:Key="ConsoleInfoBrush" Color="{StaticResource ConsoleInfoColor}"/>
+
+    <Color x:Key="ConsoleSuccessColor">#89D185</Color>
+    <SolidColorBrush x:Key="ConsoleSuccessBrush" Color="{StaticResource ConsoleSuccessColor}"/>
+
+    <Color x:Key="ConsoleWarningColor">#CCA700</Color>
+    <SolidColorBrush x:Key="ConsoleWarningBrush" Color="{StaticResource ConsoleWarningColor}"/>
+
+    <Color x:Key="ConsoleErrorColor">#F48771</Color>
+    <SolidColorBrush x:Key="ConsoleErrorBrush" Color="{StaticResource ConsoleErrorColor}"/>
+
 </ResourceDictionary>

@@ -98,7 +98,7 @@
         </ScrollViewer>
 
         <!-- Log Section -->
-        <Border Grid.Row="3" Background="White" BorderBrush="{StaticResource BorderBrush}"
+        <Border Grid.Row="3" Background="{StaticResource ConsoleBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1,1,1,0" CornerRadius="8,8,0,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -106,20 +106,42 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Background="{StaticResource WindowBackgroundBrush}"
+                <Border Grid.Row="0" Background="#2D2D2D"
                         CornerRadius="8,8,0,0" Padding="10">
-                    <TextBlock Text="Execution Logs" FontWeight="Bold" FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" 
+                                   Foreground="#CCCCCC" Margin="0,0,8,0" FontSize="12"/>
+                        <TextBlock Text="TERMINAL - EXECUTION LOGS" VerticalAlignment="Center"
+                                   FontWeight="Bold" FontSize="10" Foreground="#CCCCCC" LetterSpacing="1"/>
+                    </StackPanel>
                 </Border>
 
                 <ScrollViewer Grid.Row="1" Margin="10">
                     <ItemsControl ItemsSource="{Binding Logs}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Margin="0,2">
-                                    <Run Text="{Binding Timestamp, Mode=OneWay}" Foreground="#94A3B8" FontFamily="Consolas"/>
-                                    <Run Text=" ["/><Run Text="{Binding Type, Mode=OneWay}" FontWeight="Bold"/><Run Text="] "/>
-                                    <Run Text="{Binding Message, Mode=OneWay}" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Margin="0,2" FontFamily="Consolas" FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource ConsoleDefaultTextBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="INFO">
+                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleInfoBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="SUCCESS">
+                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleSuccessBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="ERROR">
+                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleErrorBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="WARNING">
+                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleWarningBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <Run Text="[" Foreground="{StaticResource ConsoleTimestampBrush}"/><Run Text="{Binding Timestamp, Mode=OneWay}" Foreground="{StaticResource ConsoleTimestampBrush}"/><Run Text="] " Foreground="{StaticResource ConsoleTimestampBrush}"/>
+                                    <Run Text="{Binding Message, Mode=OneWay}"/>
                                 </TextBlock>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
