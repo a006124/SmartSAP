@@ -6,6 +6,7 @@ using System.Windows.Input;
 using ClosedXML.Excel;
 using SmartSAP.Models;
 using System.Diagnostics;
+using System.Linq;
 using SmartSAP.Services.SAP;
 
 namespace SmartSAP.ViewModels.Modules
@@ -62,7 +63,7 @@ namespace SmartSAP.ViewModels.Modules
 
         protected virtual void GenerateExcelTemplate()
         {
-            var step = Steps.FirstOrDefault(s => s.ActionCommand == GenerateTemplateCommand);
+            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GenerateTemplateCommand);
             if (step != null) step.ResultState = "Processing";
 
             if (ExcelColumns.Count == 0)
@@ -127,7 +128,7 @@ namespace SmartSAP.ViewModels.Modules
 
         protected virtual void ExportLastGeneratedToFixedWidth()
         {
-            var step = Steps.FirstOrDefault(s => s.ActionCommand == ExportFixedWidthCommand);
+            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == ExportFixedWidthCommand);
             if (step != null) step.ResultState = "Processing";
 
             if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
@@ -242,7 +243,7 @@ namespace SmartSAP.ViewModels.Modules
 
         protected virtual async Task CheckSAPConnectionAsync()
         {
-            var step = Steps.FirstOrDefault(s => s.ActionCommand == CheckSAPConnectionCommand);
+            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == CheckSAPConnectionCommand);
             if (step != null) { step.ResultState = "Processing"; step.Status = "Vérification..."; }
 
             Logs.Add(new LogEntry("INFO", "Vérification de la connexion SAP en cours..."));
@@ -275,7 +276,7 @@ namespace SmartSAP.ViewModels.Modules
 
         protected virtual async Task ExecuteSAPTransactionAsync()
         {
-            var step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == ExecuteSAPTransactionCommand);
             if (step != null) step.ResultState = "Processing";
 
             if (string.IsNullOrEmpty(LastExportedTextPath) || !File.Exists(LastExportedTextPath))
@@ -319,76 +320,4 @@ namespace SmartSAP.ViewModels.Modules
                 Steps[Steps.Count - 1].IsLast = true;
             }
         }
-
-        }
-    }
-
-    public class WorkflowStep : ViewModelBase
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string Icon { get; set; } = string.Empty;
-
-        private string _status = "Ready";
-        public string Status
-        {
-            get => _status;
-            set => SetProperty(ref _status, value);
-        }
-
-        private string _resultState = "Normal";
-        public string ResultState
-        {
-            get => _resultState;
-            set => SetProperty(ref _resultState, value);
-        }
-
-        public string? LinkText { get; set; }
-        public ICommand? LinkCommand { get; set; }
-
-        private bool _isLast;
-        public bool IsLast
-        {
-            get => _isLast;
-            set => SetProperty(ref _isLast, value);
-        }
-
-        public ICommand? ActionCommand { get; set; }
-    }
-
-    public class LogEntry
-    {
-        public string Timestamp { get; private set; } = DateTime.Now.ToString("HH:mm:ss");
-        public string Type { get; set; }
-        public string Message { get; set; }
-        public string? FilePath { get; set; }
-        public string? FileName => !string.IsNullOrEmpty(FilePath) ? Path.GetFileName(FilePath) : null;
-        public bool HasFile => !string.IsNullOrEmpty(FilePath);
-        public string? LinkText { get; set; }
-        public ICommand? LinkCommand { get; set; }
-        public bool HasLink => !string.IsNullOrEmpty(LinkText) && LinkCommand != null;
-        public ICommand? OpenFileCommand { get; }
-
-        public LogEntry(string type, string message, string? filePath = null, string? linkText = null, ICommand? linkCommand = null)
-        {
-            Type = type;
-            Message = message;
-            FilePath = filePath;
-            LinkText = linkText;
-            LinkCommand = linkCommand;
-            
-            if (HasFile)
-            {
-                OpenFileCommand = new RelayCommand(_ =>
-                {
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(FilePath))
-                            Process.Start(new ProcessStartInfo(FilePath) { UseShellExecute = true });
-                    }
-                    catch { /* Ignore errors on opening */ }
-                });
-            }
-        }
-    }
 }
