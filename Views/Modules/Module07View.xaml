@@ -37,7 +37,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                            <Button Command="{Binding ActionCommand}" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                            <Button Command="{Binding ActionCommand}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <ContentPresenter/>

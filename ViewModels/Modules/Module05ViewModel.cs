@@ -45,11 +45,15 @@ namespace SmartSAP.ViewModels.Modules
             };
         }
 
-        protected override async Task ExecuteSAPTransactionAsync()
+        protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
-            await base.ExecuteSAPTransactionAsync(); // Vérifie la présence du fichier exporté
+            await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
             
-            var step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            }
+
             if (step != null && step.ResultState == "Error") return;
 
             try

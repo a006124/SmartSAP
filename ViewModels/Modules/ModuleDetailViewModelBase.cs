@@ -41,12 +41,12 @@ namespace SmartSAP.ViewModels.Modules
             ExcelColumns = new ObservableCollection<ExcelColumnDefinition>();
 
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
-            GenerateTemplateCommand = new RelayCommand(_ => GenerateExcelTemplate());
-            ExportFixedWidthCommand = new RelayCommand(_ => ExportLastGeneratedToFixedWidth());
+            GenerateTemplateCommand = new RelayCommand(p => GenerateExcelTemplate(p as WorkflowStep));
+            ExportFixedWidthCommand = new RelayCommand(p => ExportLastGeneratedToFixedWidth(p as WorkflowStep));
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
             PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
             CheckSAPConnectionCommand = new RelayCommand(async _ => await CheckSAPConnectionAsync());
-            ExecuteSAPTransactionCommand = new RelayCommand(async _ => await ExecuteSAPTransactionAsync());
+            ExecuteSAPTransactionCommand = new RelayCommand(async p => await ExecuteSAPTransactionAsync(p as WorkflowStep));
 
             SAPManager = new SAPManager();
 
@@ -64,9 +64,13 @@ namespace SmartSAP.ViewModels.Modules
             // A surcharger dans les classes enfants pour définir les colonnes Excel
         }
 
-        protected virtual void GenerateExcelTemplate()
+        protected virtual void GenerateExcelTemplate(WorkflowStep? step = null)
         {
-            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GenerateTemplateCommand);
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GenerateTemplateCommand);
+            }
+
             if (step != null) step.ResultState = "Processing";
 
             InitializeExcelColumns(step);
@@ -132,9 +136,13 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected virtual void ExportLastGeneratedToFixedWidth()
+        protected virtual void ExportLastGeneratedToFixedWidth(WorkflowStep? step = null)
         {
-            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == ExportFixedWidthCommand);
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault(s => s.ActionCommand == ExportFixedWidthCommand);
+            }
+            
             if (step != null) step.ResultState = "Processing";
 
             if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
@@ -280,9 +288,13 @@ namespace SmartSAP.ViewModels.Modules
             });
         }
 
-        protected virtual async Task ExecuteSAPTransactionAsync()
+        protected virtual async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
-            var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == ExecuteSAPTransactionCommand);
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            }
+            
             if (step != null) step.ResultState = "Processing";
 
             if (string.IsNullOrEmpty(LastExportedTextPath) || !File.Exists(LastExportedTextPath))
