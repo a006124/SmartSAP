@@ -91,7 +91,7 @@ namespace SmartSAP.ViewModels.Modules
                     workbook.SaveAs(fullPath);
                 }
 
-                Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : {fileName}"));
+                Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : ", fullPath));
 
                 // Ouverture automatique du fichier
                 Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
@@ -158,11 +158,29 @@ namespace SmartSAP.ViewModels.Modules
         public string Timestamp { get; private set; } = DateTime.Now.ToString("HH:mm:ss");
         public string Type { get; set; }
         public string Message { get; set; }
+        public string? FilePath { get; set; }
+        public string? FileName => !string.IsNullOrEmpty(FilePath) ? Path.GetFileName(FilePath) : null;
+        public bool HasFile => !string.IsNullOrEmpty(FilePath);
+        public ICommand? OpenFileCommand { get; }
 
-        public LogEntry(string type, string message)
+        public LogEntry(string type, string message, string? filePath = null)
         {
             Type = type;
             Message = message;
+            FilePath = filePath;
+            
+            if (HasFile)
+            {
+                OpenFileCommand = new RelayCommand(_ =>
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(FilePath))
+                            Process.Start(new ProcessStartInfo(FilePath) { UseShellExecute = true });
+                    }
+                    catch { /* Ignore errors on opening */ }
+                });
+            }
         }
     }
 }

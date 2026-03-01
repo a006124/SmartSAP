@@ -8,8 +8,7 @@
                 <ResourceDictionary Source="Themes/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
-            <!-- Converter simple pour cacher le premier connecteur -->
-            <!-- Note: Normalement défini dans un namespace Helper, ici on peut utiliser un DataTrigger simple dans le XAML si besoin -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

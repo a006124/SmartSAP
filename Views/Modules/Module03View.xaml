@@ -112,7 +112,7 @@
                         <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" 
                                    Foreground="#CCCCCC" Margin="0,0,8,0" FontSize="12"/>
                         <TextBlock Text="TERMINAL - EXECUTION LOGS" VerticalAlignment="Center"
-                                   FontWeight="Bold" FontSize="10" Foreground="#CCCCCC" LetterSpacing="1"/>
+                                   FontWeight="Bold" FontSize="10" Foreground="#CCCCCC"/>
                     </StackPanel>
                 </Border>
 
@@ -120,29 +120,36 @@
                     <ItemsControl ItemsSource="{Binding Logs}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Margin="0,2" FontFamily="Consolas" FontSize="12">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource ConsoleDefaultTextBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Type}" Value="INFO">
-                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleInfoBrush}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type}" Value="SUCCESS">
-                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleSuccessBrush}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type}" Value="ERROR">
-                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleErrorBrush}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type}" Value="WARNING">
-                                                    <Setter Property="Foreground" Value="{StaticResource ConsoleWarningBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                    <Run Text="[" Foreground="{StaticResource ConsoleTimestampBrush}"/><Run Text="{Binding Timestamp, Mode=OneWay}" Foreground="{StaticResource ConsoleTimestampBrush}"/><Run Text="] " Foreground="{StaticResource ConsoleTimestampBrush}"/>
-                                    <Run Text="{Binding Message, Mode=OneWay}"/>
-                                </TextBlock>
+                                <WrapPanel Margin="0,2">
+                                    <TextBlock FontFamily="Consolas" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource ConsoleDefaultTextBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Type}" Value="INFO">
+                                                        <Setter Property="Foreground" Value="{StaticResource ConsoleInfoBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="SUCCESS">
+                                                        <Setter Property="Foreground" Value="{StaticResource ConsoleSuccessBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="ERROR">
+                                                        <Setter Property="Foreground" Value="{StaticResource ConsoleErrorBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="WARNING">
+                                                        <Setter Property="Foreground" Value="{StaticResource ConsoleWarningBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                        <Run Text="[" Foreground="{StaticResource ConsoleTimestampBrush}"/><Run Text="{Binding Timestamp, Mode=OneWay}" Foreground="{StaticResource ConsoleTimestampBrush}"/><Run Text="] " Foreground="{StaticResource ConsoleTimestampBrush}"/>
+                                        <Run Text="{Binding Message, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock Visibility="{Binding HasFile, Converter={StaticResource BoolToVis}}" Margin="2,0,0,0">
+                                        <Hyperlink Command="{Binding OpenFileCommand}" TextDecorations="Underline" Foreground="{StaticResource AccentBlueBrush}" FontFamily="Consolas" FontSize="12">
+                                            <Run Text="{Binding FileName, Mode=OneWay}"/>
+                                        </Hyperlink>
+                                    </TextBlock>
+                                </WrapPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
