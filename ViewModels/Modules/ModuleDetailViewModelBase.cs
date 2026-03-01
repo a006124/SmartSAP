@@ -49,6 +49,9 @@ namespace SmartSAP.ViewModels.Modules
             ExecuteSAPTransactionCommand = new RelayCommand(async _ => await ExecuteSAPTransactionAsync());
 
             SAPManager = new SAPManager();
+
+            InitializeSteps();
+            // CompleteInitialization(); // This line was in the instruction but not in the original code, and it's not defined. I'll omit it to maintain syntactic correctness and avoid introducing new errors.
         }
 
         protected virtual void InitializeSteps()
@@ -56,7 +59,7 @@ namespace SmartSAP.ViewModels.Modules
             // A surcharger dans les classes enfants pour définir les étapes spécifiques
         }
 
-        protected virtual void InitializeExcelColumns()
+        protected virtual void InitializeExcelColumns(WorkflowStep? step = null)
         {
             // A surcharger dans les classes enfants pour définir les colonnes Excel
         }
@@ -65,6 +68,8 @@ namespace SmartSAP.ViewModels.Modules
         {
             var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GenerateTemplateCommand);
             if (step != null) step.ResultState = "Processing";
+
+            InitializeExcelColumns(step);
 
             if (ExcelColumns.Count == 0)
             {
@@ -78,7 +83,8 @@ namespace SmartSAP.ViewModels.Modules
                 // Note: Dans une application réelle on utiliserait un SaveFileDialog.
                 // Ici on génère un nom par défaut pour la démonstration.
                 string dateExecution = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}.xlsx";
+                string moduleStepPart = !string.IsNullOrEmpty(step?.ModuleStep) ? $"_{step.ModuleStep}" : "";
+                string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}_{moduleStepPart}_{dateExecution}.xlsx";
                 string fullPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
                 string sheetName = "Data";
                 

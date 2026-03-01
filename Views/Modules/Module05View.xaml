@@ -20,11 +20,9 @@
             </Button>
             <StackPanel>
                 <TextBlock Text="{Binding ModuleTitle}" Style="{StaticResource Header1}"/>
-                <TextBlock Text="Exécutez les étapes ci-dessous pour lancer la création des équipements dans SAP." Style="{StaticResource SubHeader}"/>
+                <TextBlock Text="Exécutez les étapes ci-dessous pour lancer la modification des Equipements dans SAP." Style="{StaticResource SubHeader}"/>
             </StackPanel>
         </DockPanel>
-
-
 
         <!-- Workflow Steps -->
         <ScrollViewer Grid.Row="1" Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">

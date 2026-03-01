@@ -25,7 +25,7 @@
             </StackPanel>
             
             <!-- Search Filter -->
-            <Border Grid.Column="1" Background="#c4c4c4ff" CornerRadius="20" Padding="15,0" Height="40" Width="320" VerticalAlignment="Center">
+            <Border Grid.Column="1" Background="#c5c5c5df" CornerRadius="20" Padding="15,0" Height="40" Width="320" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 

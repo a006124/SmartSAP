@@ -8,6 +8,7 @@ namespace SmartSAP.ViewModels.Modules
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Icon { get; set; } = string.Empty;
+        public string ModuleStep { get; set; } = string.Empty;
 
         private string _status = "Ready";
         public string Status

@@ -10,23 +10,31 @@ namespace SmartSAP.ViewModels.Modules
         public Module01ViewModel(MainViewModel mainViewModel, string title) 
             : base(mainViewModel, title)
         {
-            InitializeSteps();
-            InitializeExcelColumns();
-            CompleteInitialization();
         }
 
         protected override void InitializeSteps()
         {
             Steps = new ObservableCollection<WorkflowStep>
             {
-                new WorkflowStep { Title = "1. Saisie des données de base", Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", Icon = "\xE70F", ActionCommand = GenerateTemplateCommand },
+                new WorkflowStep { 
+                    Title = "1. Saisie des numéros d'équipement dont on veut récupérer les données dans SAP", 
+                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
+                    Icon = "\xE70F", 
+                    ModuleStep = "E1_Saisie",
+                    ActionCommand = GenerateTemplateCommand 
+                },
                 new WorkflowStep { 
                     Title = "2. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
-                    ActionCommand = ExportFixedWidthCommand
+                    ActionCommand = ExportFixedWidthCommand 
                 },
-                new WorkflowStep { Title = "3. Intégration SAP", Description = "Contrôle la connexion et exécute la transaction ZSMNBAO15.", Icon = "\xE768", ActionCommand = ExecuteSAPTransactionCommand }
+                new WorkflowStep { 
+                    Title = "3. Intégration SAP", 
+                    Description = "Contrôle la connexion et exécute la transaction ZSMNBAO15.", 
+                    Icon = "\xE768", 
+                    ActionCommand = ExecuteSAPTransactionCommand 
+                }
             };
         }
 
@@ -89,12 +97,6 @@ namespace SmartSAP.ViewModels.Modules
                     Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
                     if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
                 }
-
-                //if (!string.IsNullOrEmpty(resultFile) && System.IO.File.Exists(resultFile))
-                //{
-                //    Logs.Add(new LogEntry("SUCCESS", "Le fichier de log SAP a été généré : ", resultFile));
-                //    Process.Start(new ProcessStartInfo(resultFile) { UseShellExecute = true });
-                //}
             }
             catch (System.Exception ex)
             {
@@ -103,8 +105,9 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected override void InitializeExcelColumns()
+        protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
+            ExcelColumns.Clear();
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Numéro unique de l'équipement dans SAP", "MC02", 4));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", "FR", 2));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT", 30));
