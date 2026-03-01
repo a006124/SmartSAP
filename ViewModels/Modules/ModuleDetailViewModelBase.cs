@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ClosedXML.Excel;
 using SmartSAP.Models;
+using System.Diagnostics;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -89,10 +90,13 @@ namespace SmartSAP.ViewModels.Modules
                 }
 
                 Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : {fileName}"));
+
+                // Ouverture automatique du fichier
+                Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
-                Logs.Add(new LogEntry("ERROR", $"Erreur lors de la génération du modèle : {ex.Message}"));
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de la génération ou de l'ouverture du modèle : {ex.Message}"));
             }
         }
 
@@ -143,6 +147,8 @@ namespace SmartSAP.ViewModels.Modules
             get => _isLast;
             set => SetProperty(ref _isLast, value);
         }
+
+        public ICommand? ActionCommand { get; set; }
     }
 
     public class LogEntry

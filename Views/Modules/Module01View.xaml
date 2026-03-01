@@ -28,16 +28,10 @@
         <!-- Control Bar -->
         <Border Grid.Row="1" Style="{StaticResource ModuleCard}" Padding="10" Margin="0,0,0,30">
             <StackPanel Orientation="Horizontal">
-                <Button Command="{Binding RunWorkflowCommand}" Background="#10B981" Foreground="White" Padding="20,5" BorderThickness="0" Margin="0,0,10,0">
+                <Button Command="{Binding RunWorkflowCommand}" Background="#10B981" Foreground="White" Padding="20,5" BorderThickness="0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Run Workflow" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding GenerateTemplateCommand}" Background="{StaticResource AccentBlueBrush}" Foreground="White" Padding="20,5" BorderThickness="0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8B5;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Générer Modèle Excel" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
                 <Separator Width="1" Height="24" Margin="15,0" Background="{StaticResource BorderBrush}"/>
@@ -57,37 +51,44 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Width="200" Height="220" Style="{StaticResource ModuleCard}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
+                            <Button Command="{Binding ActionCommand}" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Border Width="200" Height="220" Style="{StaticResource ModuleCard}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-                                    <Border Grid.Row="0" Width="40" Height="40" CornerRadius="8"
-                                            Background="{StaticResource BluePastelBrush}"
-                                            HorizontalAlignment="Left" Margin="0,0,0,15">
-                                        <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
-                                                   VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                   FontSize="18" Foreground="{StaticResource AccentBlueBrush}"/>
-                                    </Border>
+                                        <Border Grid.Row="0" Width="40" Height="40" CornerRadius="8"
+                                                Background="{StaticResource BluePastelBrush}"
+                                                HorizontalAlignment="Left" Margin="0,0,0,15">
+                                            <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
+                                                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                       FontSize="18" Foreground="{StaticResource AccentBlueBrush}"/>
+                                        </Border>
 
-                                    <StackPanel Grid.Row="1">
-                                        <TextBlock Text="{Binding Title}" FontWeight="Bold"
-                                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding Description}" FontSize="11"
-                                                   Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                                    </StackPanel>
+                                        <StackPanel Grid.Row="1">
+                                            <TextBlock Text="{Binding Title}" FontWeight="Bold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
 
-                                    <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
-                                            CornerRadius="4" Padding="5" HorizontalAlignment="Stretch">
-                                        <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"
-                                                   FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    </Border>
-                                </Grid>
-                            </Border>
+                                        <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
+                                                CornerRadius="4" Padding="5" HorizontalAlignment="Stretch">
+                                            <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"
+                                                       FontSize="10" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </Button>
                             <TextBlock Style="{StaticResource ConnectorArrow}"/>
                         </StackPanel>
                     </DataTemplate>
