@@ -8,6 +8,23 @@ namespace SmartSAP.Services.SAP
     {
         private const string EcranDemarrageSAP = "SAP Easy Access";
 
+        [DllImport("oleaut32.dll", PreserveSig = false)]
+        private static extern void GetActiveObject([In] ref Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
+
+        [DllImport("ole32.dll")]
+        private static extern int CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] string lpszProgID, out Guid pclsid);
+
+        public static object GetActiveObject(string progId)
+        {
+            Guid clsid;
+            int hr = CLSIDFromProgID(progId, out clsid);
+            if (hr < 0) Marshal.ThrowExceptionForHR(hr);
+
+            object obj;
+            GetActiveObject(ref clsid, IntPtr.Zero, out obj);
+            return obj;
+        }
+
         /// <summary>
         /// Vérifie la connexion à SAP et retourne un message d'erreur si la connexion échoue.
         /// Un message vide signifie que la connexion est OK.
@@ -20,7 +37,7 @@ namespace SmartSAP.Services.SAP
                 object sapGuiAuto;
                 try
                 {
-                    sapGuiAuto = Marshal.GetActiveObject("SAPGUI");
+                    sapGuiAuto = GetActiveObject("SAPGUI");
                 }
                 catch
                 {
