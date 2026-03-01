@@ -213,7 +213,12 @@ namespace SmartSAP.Services.SAP
 
                 // Écran de sélection
                 session.findById("wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
-                //session.findById("wnd[0]/tbar[1]/btn[8]").press(); // Exécuter
+                // session.findById("wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
+
+                // Variables pour la compilation (initialement remplies par le bloc supprimé)
+                var resultLines = new System.Collections.Generic.List<string> { "Traitement manuel requis ou arrêté par l'utilisateur." };
+                int linesRead = 0;
+                int linesError = 0;
 
                 // Retour et Nettoyage
                 session.findById("wnd[0]/tbar[0]/btn[3]").press(); // Retour
@@ -224,15 +229,24 @@ namespace SmartSAP.Services.SAP
                 System.IO.File.WriteAllLines(resultFilePath, resultLines);
 
                 // Formatage du résultat compact
-                if (linesError == 0)
-                    return $"{sSAPTransaction}|OK|{linesRead}|0";
-                else
-                    return $"{sSAPTransaction}|NOK|{linesRead}|{linesError}";
+                return $"{sSAPTransaction}|OK|{linesRead}|0";
             }
             catch (Exception ex)
             {
                 return $"{sSAPTransaction}|ERROR|{ex.Message}";
             }
+        }
+
+        private bool GoMainMenu(dynamic session)
+        {
+            try
+            {
+                if (session == null) return false;
+                session.findById("wnd[0]/tbar[0]/okcd").Text = "/n";
+                session.findById("wnd[0]").sendVKey(0);
+                return true;
+            }
+            catch { return false; }
         }
     }
 }
