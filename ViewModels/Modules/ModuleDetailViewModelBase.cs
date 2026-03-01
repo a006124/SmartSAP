@@ -192,11 +192,18 @@ namespace SmartSAP.ViewModels.Modules
                     if (errorCount > 0)
                     {
                         Logs.Add(new LogEntry("WARNING", $"Export terminé avec {errorCount} erreur(s). Les lignes erronées ont été ignorées."));
+                        
+                        // Ouverture automatique du fichier Excel pour correction
+                        if (!string.IsNullOrEmpty(LastGeneratedExcelPath) && File.Exists(LastGeneratedExcelPath))
+                        {
+                            Logs.Add(new LogEntry("INFO", "Ouverture du fichier Excel pour correction..."));
+                            Process.Start(new ProcessStartInfo(LastGeneratedExcelPath) { UseShellExecute = true });
+                        }
                     }
                     else
                     {
                         Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
-                        // Ouverture automatique
+                        // Ouverture automatique de l'export
                         Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
                     }
                 }
