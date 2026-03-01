@@ -8,6 +8,7 @@ namespace SmartSAP.ViewModels.Modules
             : base(mainViewModel, title)
         {
             InitializeSteps();
+            CompleteInitialization();
         }
 
         protected override void InitializeSteps()

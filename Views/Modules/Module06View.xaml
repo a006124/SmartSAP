@@ -69,7 +69,7 @@
 
                                     <StackPanel Grid.Row="1">
                                         <TextBlock Text="{Binding Title}" FontWeight="Bold"
-                                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5" TextWrapping="Wrap"/>
                                         <TextBlock Text="{Binding Description}" FontSize="11"
                                                    Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
@@ -82,9 +82,7 @@
                                     </Border>
                                 </Grid>
                             </Border>
-                            <!-- Connector Arrow -->
-                            <TextBlock Text="→" FontSize="24" VerticalAlignment="Center"
-                                       Margin="5" Foreground="{StaticResource BorderBrush}"/>
+                            <TextBlock Style="{StaticResource ConnectorArrow}"/>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

@@ -32,6 +32,15 @@ namespace SmartSAP.ViewModels.Modules
             // A surcharger dans les classes enfants pour définir les étapes spécifiques
         }
 
+        protected void CompleteInitialization()
+        {
+            if (Steps.Count > 0)
+            {
+                foreach (var step in Steps) step.IsLast = false;
+                Steps[Steps.Count - 1].IsLast = true;
+            }
+        }
+
         protected virtual async Task ExecuteWorkflowAsync()
         {
             Logs.Add(new LogEntry("INFO", $"Démarrage du workflow : {ModuleTitle}"));
@@ -62,6 +71,13 @@ namespace SmartSAP.ViewModels.Modules
         {
             get => _status;
             set => SetProperty(ref _status, value);
+        }
+
+        private bool _isLast;
+        public bool IsLast
+        {
+            get => _isLast;
+            set => SetProperty(ref _isLast, value);
         }
     }
 
