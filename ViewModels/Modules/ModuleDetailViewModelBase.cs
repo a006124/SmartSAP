@@ -6,6 +6,7 @@ using System.Windows.Input;
 using ClosedXML.Excel;
 using SmartSAP.Models;
 using System.Diagnostics;
+using SmartSAP.Services.SAP;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -23,8 +24,10 @@ namespace SmartSAP.ViewModels.Modules
         public ICommand ExportFixedWidthCommand { get; protected set; }
         public ICommand ClearLogsCommand { get; protected set; }
         public ICommand PickExcelFileCommand { get; protected set; }
+        public ICommand CheckSAPConnectionCommand { get; protected set; }
 
         protected string? LastGeneratedExcelPath;
+        protected readonly SAPManager SAPManager;
 
         protected ModuleDetailViewModelBase(MainViewModel mainViewModel, string title)
         {
@@ -41,6 +44,9 @@ namespace SmartSAP.ViewModels.Modules
             ExportFixedWidthCommand = new RelayCommand(_ => ExportLastGeneratedToFixedWidth());
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
             PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
+            CheckSAPConnectionCommand = new RelayCommand(async _ => await CheckSAPConnectionAsync());
+
+            SAPManager = new SAPManager();
         }
 
         protected virtual void InitializeSteps()
@@ -229,6 +235,33 @@ namespace SmartSAP.ViewModels.Modules
                 Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'export fixe : {ex.Message}"));
                 if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
             }
+        }
+
+        protected virtual async Task CheckSAPConnectionAsync()
+        {
+            var step = Steps.FirstOrDefault(s => s.ActionCommand == CheckSAPConnectionCommand);
+            if (step != null) { step.ResultState = "Processing"; step.Status = "Vérification..."; }
+
+            Logs.Add(new LogEntry("INFO", "Vérification de la connexion SAP en cours..."));
+            
+            await Task.Run(() =>
+            {
+                string error = SAPManager.IsConnectedToSAP();
+                
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        Logs.Add(new LogEntry("SUCCESS", "✓ Connexion SAP OK. Écran principal prêt."));
+                        if (step != null) { step.Status = "Connecté"; step.ResultState = "Success"; }
+                    }
+                    else
+                    {
+                        Logs.Add(new LogEntry("ERROR", error));
+                        if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+                    }
+                });
+            });
         }
 
         protected virtual void PickExcelFile()

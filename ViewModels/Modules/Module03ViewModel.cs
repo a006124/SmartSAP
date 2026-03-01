@@ -23,7 +23,7 @@ namespace SmartSAP.ViewModels.Modules
                     LinkText = "modifier le fichier",
                     LinkCommand = PickExcelFileCommand
                 },
-                new WorkflowStep { Title = "3. IntÃ©gration SAP (BAPI)", Description = "Appel de la BAPI_EQUI_CREATE pour gÃ©nÃ©rer les Ã©quipements.", Icon = "èA5" },
+                new WorkflowStep { Title = "3. Intégration SAP (BAPI)", Description = "Appel de la BAPI_EQUI_CREATE pour générer les équipements.", Icon = "\xE8A5", ActionCommand = CheckSAPConnectionCommand },
                 new WorkflowStep { Title = "4. Audit & Validation", Description = "VÃ©rification des numÃ©ros d'Ã©quipements gÃ©nÃ©rÃ©s et logs.", Icon = "éA1" }
             };
         }

@@ -23,7 +23,7 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE762", 
                     ActionCommand = ExportFixedWidthCommand
                 },
-                new WorkflowStep { Title = "3. Intégration SAP", Description = "Exécute la transaction SAP pour créer les Postes Techniques.", Icon = "\xE8A5" },
+                new WorkflowStep { Title = "3. Intégration SAP", Description = "Exécute la transaction SAP pour créer les Postes Techniques.", Icon = "\xE8A5", ActionCommand = CheckSAPConnectionCommand },
                 new WorkflowStep { Title = "4. Audit & Validation", Description = "Vérification la création des Postes Techniques et logs.", Icon = "\xE9A1" }
             };
         }
