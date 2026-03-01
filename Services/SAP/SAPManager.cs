@@ -4,6 +4,15 @@ using System.Diagnostics;
 
 namespace SmartSAP.Services.SAP
 {
+    public class SAPConnectionResult
+    {
+        public bool IsSuccess => string.IsNullOrEmpty(ErrorMessage);
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string? SystemID { get; set; }
+        public string? Client { get; set; }
+        public string InstanceInfo => IsSuccess ? $"{SystemID}[{Client}]" : "Non connecté";
+    }
+
     public class SAPManager
     {
         private const string EcranDemarrageSAP = "SAP Easy Access";
@@ -13,17 +22,6 @@ namespace SmartSAP.Services.SAP
 
         [DllImport("ole32.dll")]
         private static extern int CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] string lpszProgID, out Guid pclsid);
-
-        public static object GetActiveObject(string progId)
-        {
-            Guid clsid;
-            int hr = CLSIDFromProgID(progId, out clsid);
-            if (hr < 0) Marshal.ThrowExceptionForHR(hr);
-
-            object obj;
-            GetActiveObject(ref clsid, IntPtr.Zero, out obj);
-            return obj;
-        }
 
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable prot);
@@ -59,7 +57,6 @@ namespace SmartSAP.Services.SAP
         [ComImport, Guid("0000000f-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface IMoniker
         {
-            // Dummy methods to keep the correct vtable order
             void GetClassID(out Guid pClassID);
             [PreserveSig] int IsDirty();
             void Load(object pStm);
@@ -123,46 +120,63 @@ namespace SmartSAP.Services.SAP
             return null;
         }
 
-        /// <summary>
-        /// Vérifie la connexion à SAP et retourne un message d'erreur si la connexion échoue.
-        /// Un message vide signifie que la connexion est OK.
-        /// </summary>
-        public string IsConnectedToSAP()
+        public SAPConnectionResult IsConnectedToSAP()
         {
+            var result = new SAPConnectionResult();
             try
             {
-                // 1. Vérifier si SAP est lancé
                 object sapGuiAuto = GetObject("SAPGUI");
                 if (sapGuiAuto == null)
-                    return "✗ Application SAP non exécutée (Non trouvé dans ROT)";
+                {
+                    result.ErrorMessage = "✗ Application SAP non exécutée (Non trouvé dans ROT)";
+                    return result;
+                }
 
-                // 2. Accéder au moteur de scriptage
                 dynamic guiApp = sapGuiAuto.GetType().InvokeMember("GetScriptingEngine", 
                     System.Reflection.BindingFlags.InvokeMethod, null, sapGuiAuto, null);
                 
                 if (guiApp == null)
-                    return "✗ Scriptage SAP non disponible";
+                {
+                    result.ErrorMessage = "✗ Scriptage SAP non disponible";
+                    return result;
+                }
 
-                // 3. Vérifier les connexions
                 if (guiApp.Children.Count == 0)
-                    return "✗ Aucune connexion SAP ouverte";
+                {
+                    result.ErrorMessage = "✗ Aucune connexion SAP ouverte";
+                    return result;
+                }
 
                 dynamic connection = guiApp.Children(0);
                 if (connection.Children.Count == 0)
-                    return "✗ Aucune session SAP ouverte";
+                {
+                    result.ErrorMessage = "✗ Aucune session SAP ouverte";
+                    return result;
+                }
 
                 dynamic session = connection.Children(0);
 
-                // 4. Tenter d'aller au menu principal (Équivalent de /n)
+                try
+                {
+                    dynamic info = session.Info;
+                    result.SystemID = info.SystemName;
+                    result.Client = info.Client;
+                }
+                catch { }
+
                 bool movedToMain = GoMainMenu(session);
                 if (!movedToMain)
-                    return "✗ Impossible de rejoindre l'écran principal";
+                {
+                    result.ErrorMessage = "✗ Impossible de rejoindre l'écran principal";
+                    return result;
+                }
 
-                return string.Empty; // Succès
+                return result;
             }
             catch (Exception ex)
             {
-                return $"✗ Erreur SAP : {ex.Message}";
+                result.ErrorMessage = $"✗ Erreur SAP : {ex.Message}";
+                return result;
             }
         }
 
@@ -171,16 +185,11 @@ namespace SmartSAP.Services.SAP
             try
             {
                 if (session == null) return false;
-
-                // On envoie /n pour revenir à la racine si on n'est pas déjà sur l'écran Easy Access
                 session.findById("wnd[0]/tbar[0]/okcd").Text = "/n";
                 session.findById("wnd[0]").sendVKey(0);
                 return true;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
         public string GetStatus(dynamic session)
@@ -190,10 +199,7 @@ namespace SmartSAP.Services.SAP
                 if (session == null) return "✗ Session non connectée";
                 return session.ActiveWindow.FindByName("sbar", "GuiStatusbar").Text;
             }
-            catch
-            {
-                return "NOK";
-            }
+            catch { return "NOK"; }
         }
     }
 }

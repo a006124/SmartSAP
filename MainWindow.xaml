@@ -97,8 +97,8 @@
             <!-- Connection SAP -->
             <StatusBarItem Padding="0">
                 <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
-                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="SAP Connection: ERP_PROD_100 (Active)"
+                    <Ellipse Width="8" Height="8" Fill="{Binding SAPStatusBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding SAPInstanceInfo, StringFormat='SAP Connection: {0}'}"
                                FontSize="11" FontFamily="Segoe UI"
                                Foreground="white" VerticalAlignment="Center" Margin="0,0,0,1"/>
                 </StackPanel>

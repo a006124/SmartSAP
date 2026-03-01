@@ -1,4 +1,5 @@
 using SmartSAP.ViewModels.Modules;
+using System.Windows.Media;
 
 namespace SmartSAP.ViewModels
 {
@@ -10,6 +11,28 @@ namespace SmartSAP.ViewModels
             get => _currentViewModel;
             set => SetProperty(ref _currentViewModel, value);
         }
+
+        private bool _isSAPConnected;
+        public bool IsSAPConnected
+        {
+            get => _isSAPConnected;
+            set 
+            {
+                if (SetProperty(ref _isSAPConnected, value))
+                {
+                    OnPropertyChanged(nameof(SAPStatusBrush));
+                }
+            }
+        }
+
+        private string _sapInstanceInfo = "Non connecté";
+        public string SAPInstanceInfo
+        {
+            get => _sapInstanceInfo;
+            set => SetProperty(ref _sapInstanceInfo, value);
+        }
+
+        public Brush SAPStatusBrush => IsSAPConnected ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : new SolidColorBrush(Color.FromRgb(239, 68, 68));
 
         public MainViewModel()
         {

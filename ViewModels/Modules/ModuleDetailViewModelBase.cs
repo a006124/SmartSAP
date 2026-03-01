@@ -246,19 +246,25 @@ namespace SmartSAP.ViewModels.Modules
             
             await Task.Run(() =>
             {
-                string error = SAPManager.IsConnectedToSAP();
+                var result = SAPManager.IsConnectedToSAP();
                 
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    if (string.IsNullOrEmpty(error))
+                    if (result.IsSuccess)
                     {
-                        Logs.Add(new LogEntry("SUCCESS", "✓ Connexion SAP OK. Écran principal prêt."));
+                        Logs.Add(new LogEntry("SUCCESS", $"✓ Connexion SAP OK. Instance : {result.InstanceInfo}"));
                         if (step != null) { step.Status = "Connecté"; step.ResultState = "Success"; }
+                        
+                        _mainViewModel.IsSAPConnected = true;
+                        _mainViewModel.SAPInstanceInfo = $"Instance : {result.InstanceInfo}";
                     }
                     else
                     {
-                        Logs.Add(new LogEntry("ERROR", error));
+                        Logs.Add(new LogEntry("ERROR", result.ErrorMessage));
                         if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+                        
+                        _mainViewModel.IsSAPConnected = false;
+                        _mainViewModel.SAPInstanceInfo = "Non connecté";
                     }
                 });
             });
