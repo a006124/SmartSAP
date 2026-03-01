@@ -90,11 +90,11 @@ namespace SmartSAP.ViewModels.Modules
                     if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
                 }
 
-                if (!string.IsNullOrEmpty(resultFile) && System.IO.File.Exists(resultFile))
-                {
-                    Logs.Add(new LogEntry("SUCCESS", "Le fichier de log SAP a été généré : ", resultFile));
-                    Process.Start(new ProcessStartInfo(resultFile) { UseShellExecute = true });
-                }
+                //if (!string.IsNullOrEmpty(resultFile) && System.IO.File.Exists(resultFile))
+                //{
+                //    Logs.Add(new LogEntry("SUCCESS", "Le fichier de log SAP a été généré : ", resultFile));
+                //    Process.Start(new ProcessStartInfo(resultFile) { UseShellExecute = true });
+                //}
             }
             catch (System.Exception ex)
             {

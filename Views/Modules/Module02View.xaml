@@ -8,9 +8,9 @@
 
     <Grid Margin="40">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="120"/>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Workflow Steps -->
+            <RowDefinition Height="*"/>    <!-- Logs -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
@@ -118,7 +118,7 @@
         </ScrollViewer>
 
         <!-- Log Section -->
-        <Border Grid.Row="2" Background="{StaticResource ConsoleBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}"
+        <Border Grid.Row="2" Margin="0,20,0,0" Background="{StaticResource ConsoleBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1,1,1,0" CornerRadius="8,8,0,0">
             <Grid>
                 <Grid.RowDefinitions>
