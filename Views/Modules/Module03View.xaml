@@ -108,12 +108,24 @@
 
                 <Border Grid.Row="0" Background="#2D2D2D"
                         CornerRadius="8,8,0,0" Padding="10">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" 
-                                   Foreground="#CCCCCC" Margin="0,0,8,0" FontSize="12"/>
-                        <TextBlock Text="TERMINAL - EXECUTION LOGS" VerticalAlignment="Center"
-                                   FontWeight="Bold" FontSize="10" Foreground="#CCCCCC"/>
-                    </StackPanel>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" 
+                                       Foreground="#CCCCCC" Margin="0,0,8,0" FontSize="12"/>
+                            <TextBlock Text="TERMINAL - EXECUTION LOGS" VerticalAlignment="Center"
+                                       FontWeight="Bold" FontSize="10" Foreground="#CCCCCC"/>
+                        </StackPanel>
+
+                        <Button HorizontalAlignment="Right" Command="{Binding ClearLogsCommand}"
+                                Background="Transparent" BorderThickness="0" Padding="5,0"
+                                Cursor="Hand" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE894;" FontFamily="Segoe MDL2 Assets" FontSize="12" 
+                                           Foreground="#CCCCCC" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="VIDER" FontSize="9" Foreground="#CCCCCC" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
                 </Border>
 
                 <ScrollViewer Grid.Row="1" Margin="10">

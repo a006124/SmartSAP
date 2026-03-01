@@ -21,6 +21,7 @@ namespace SmartSAP.ViewModels.Modules
         public ICommand RunWorkflowCommand { get; protected set; }
         public ICommand GenerateTemplateCommand { get; protected set; }
         public ICommand ExportFixedWidthCommand { get; protected set; }
+        public ICommand ClearLogsCommand { get; protected set; }
 
         protected string? LastGeneratedExcelPath;
 
@@ -37,6 +38,7 @@ namespace SmartSAP.ViewModels.Modules
             RunWorkflowCommand = new RelayCommand(async _ => await ExecuteWorkflowAsync());
             GenerateTemplateCommand = new RelayCommand(_ => GenerateExcelTemplate());
             ExportFixedWidthCommand = new RelayCommand(_ => ExportLastGeneratedToFixedWidth());
+            ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
         }
 
         protected virtual void InitializeSteps()
