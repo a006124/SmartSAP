@@ -1,7 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ClosedXML.Excel;
+using SmartSAP.Models;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -12,8 +15,10 @@ namespace SmartSAP.ViewModels.Modules
         public string ModuleTitle { get; protected set; }
         public ObservableCollection<WorkflowStep> Steps { get; protected set; }
         public ObservableCollection<LogEntry> Logs { get; protected set; }
+        public ObservableCollection<ExcelColumnDefinition> ExcelColumns { get; protected set; }
         public ICommand GoBackCommand { get; protected set; }
         public ICommand RunWorkflowCommand { get; protected set; }
+        public ICommand GenerateTemplateCommand { get; protected set; }
 
         protected ModuleDetailViewModelBase(MainViewModel mainViewModel, string title)
         {
@@ -22,14 +27,73 @@ namespace SmartSAP.ViewModels.Modules
             
             Logs = new ObservableCollection<LogEntry>();
             Steps = new ObservableCollection<WorkflowStep>();
+            ExcelColumns = new ObservableCollection<ExcelColumnDefinition>();
 
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
             RunWorkflowCommand = new RelayCommand(async _ => await ExecuteWorkflowAsync());
+            GenerateTemplateCommand = new RelayCommand(_ => GenerateExcelTemplate());
         }
 
         protected virtual void InitializeSteps()
         {
             // A surcharger dans les classes enfants pour définir les étapes spécifiques
+        }
+
+        protected virtual void InitializeExcelColumns()
+        {
+            // A surcharger dans les classes enfants pour définir les colonnes Excel
+        }
+
+        protected virtual void GenerateExcelTemplate()
+        {
+            if (ExcelColumns.Count == 0)
+            {
+                Logs.Add(new LogEntry("WARNING", "Aucun modèle Excel n'est défini pour ce module."));
+                return;
+            }
+
+            try
+            {
+                // Note: Dans une application réelle on utiliserait un SaveFileDialog.
+                // Ici on génère un nom par défaut pour la démonstration.
+                string fileName = $"Template_{ModuleTitle.Replace(" ", "_")}.xlsx";
+                string fullPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Modèle");
+                    
+                    for (int i = 0; i < ExcelColumns.Count; i++)
+                    {
+                        var colDef = ExcelColumns[i];
+                        var cell = worksheet.Cell(1, i + 1);
+                        
+                        // Header
+                        cell.Value = colDef.Header;
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#3B82F6");
+                        cell.Style.Font.FontColor = XLColor.White;
+
+                        // Comment
+                        if (!string.IsNullOrEmpty(colDef.Comment))
+                        {
+                            cell.GetComment().AddText(colDef.Comment);
+                        }
+
+                        // Sample Data
+                        worksheet.Cell(2, i + 1).Value = colDef.SampleData;
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+                    workbook.SaveAs(fullPath);
+                }
+
+                Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : {fileName}"));
+            }
+            catch (Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de la génération du modèle : {ex.Message}"));
+            }
         }
 
         protected void CompleteInitialization()

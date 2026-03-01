@@ -8,6 +8,7 @@ namespace SmartSAP.ViewModels.Modules
             : base(mainViewModel, title)
         {
             InitializeSteps();
+            InitializeExcelColumns();
             CompleteInitialization();
         }
 
@@ -20,6 +21,13 @@ namespace SmartSAP.ViewModels.Modules
                 new WorkflowStep { Title = "3. Intégration SAP", Description = "Exécute la transaction SAP pour créer les Postes Techniques.", Icon = "\xE8A5" },
                 new WorkflowStep { Title = "4. Audit & Validation", Description = "Vérification la création des Postes Techniques et logs.", Icon = "\xE9A1" }
             };
+        }
+        protected override void InitializeExcelColumns()
+        {
+            ExcelColumns.Add(new ExcelColumnDefinition("ID Equipement", "Numéro unique de l'équipement dans SAP", "EQUI-001"));
+            ExcelColumns.Add(new ExcelColumnDefinition("Catégorie", "Code de catégorie d'équipement (ex: M pour Machine)", "M"));
+            ExcelColumns.Add(new ExcelColumnDefinition("Fabricant", "Nom du constructeur de l'équipement", "SIEMENS"));
+            ExcelColumns.Add(new ExcelColumnDefinition("Modèle", "Désignation précise du modèle", "SIMATIC S7-1200"));
         }
     }
 }
