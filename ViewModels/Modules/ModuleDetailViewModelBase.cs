@@ -125,7 +125,7 @@ namespace SmartSAP.ViewModels.Modules
 
             if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
             {
-                Logs.Add(new LogEntry("WARNING", "Aucun fichier Excel récent n'a été trouvé pour l'export. ", null, "modifier le fichier", PickExcelFileCommand));
+                Logs.Add(new LogEntry("WARNING", "Aucun fichier Excel récent n'a été trouvé pour l'export. Créer un modèle Excel ou ", null, "modifier le fichier.", PickExcelFileCommand));
                 if (step != null) { step.Status = "Absent"; step.ResultState = "Error"; }
                 return;
             }
@@ -243,6 +243,12 @@ namespace SmartSAP.ViewModels.Modules
             {
                 LastGeneratedExcelPath = openFileDialog.FileName;
                 Logs.Add(new LogEntry("INFO", $"Fichier source sélectionné : {Path.GetFileName(LastGeneratedExcelPath)}"));
+
+                try
+                {
+                    Process.Start(new ProcessStartInfo(LastGeneratedExcelPath) { UseShellExecute = true });
+                }
+                catch { /* Ignorer les erreurs d'ouverture */ }
             }
         }
 

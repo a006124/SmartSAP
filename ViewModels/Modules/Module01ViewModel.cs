@@ -21,9 +21,7 @@ namespace SmartSAP.ViewModels.Modules
                     Title = "2. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
-                    ActionCommand = ExportFixedWidthCommand,
-                    LinkText = "modifier le fichier",
-                    LinkCommand = PickExcelFileCommand
+                    ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { Title = "3. Intégration SAP", Description = "Exécute la transaction SAP pour créer les Postes Techniques.", Icon = "\xE8A5" },
                 new WorkflowStep { Title = "4. Audit & Validation", Description = "Vérification la création des Postes Techniques et logs.", Icon = "\xE9A1" }
