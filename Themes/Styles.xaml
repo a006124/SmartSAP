@@ -57,12 +57,12 @@
 
     <!-- Workflow Connector Style -->
     <Style x:Key="ConnectorArrow" TargetType="TextBlock">
-        <Setter Property="Text" Value="&#xE76C;"/>
+        <Setter Property="Text" Value="&#xE72A;"/>
         <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontSize" Value="24"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="10,0"/>
-        <Setter Property="Foreground" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Foreground" Value="#94A3B8"/>
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsLast}" Value="True">
                 <Setter Property="Visibility" Value="Collapsed"/>
