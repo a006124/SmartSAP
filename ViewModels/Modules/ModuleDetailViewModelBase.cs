@@ -22,6 +22,7 @@ namespace SmartSAP.ViewModels.Modules
         public ICommand GenerateTemplateCommand { get; protected set; }
         public ICommand ExportFixedWidthCommand { get; protected set; }
         public ICommand ClearLogsCommand { get; protected set; }
+        public ICommand PickExcelFileCommand { get; protected set; }
 
         protected string? LastGeneratedExcelPath;
 
@@ -39,6 +40,7 @@ namespace SmartSAP.ViewModels.Modules
             GenerateTemplateCommand = new RelayCommand(_ => GenerateExcelTemplate());
             ExportFixedWidthCommand = new RelayCommand(_ => ExportLastGeneratedToFixedWidth());
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
+            PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
         }
 
         protected virtual void InitializeSteps()
@@ -229,6 +231,21 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        protected virtual void PickExcelFile()
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                Title = "Sélectionner le fichier de données"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                LastGeneratedExcelPath = openFileDialog.FileName;
+                Logs.Add(new LogEntry("INFO", $"Fichier source sélectionné : {Path.GetFileName(LastGeneratedExcelPath)}"));
+            }
+        }
+
         protected void CompleteInitialization()
         {
             if (Steps.Count > 0)
@@ -278,6 +295,9 @@ namespace SmartSAP.ViewModels.Modules
             get => _resultState;
             set => SetProperty(ref _resultState, value);
         }
+
+        public string? LinkText { get; set; }
+        public ICommand? LinkCommand { get; set; }
 
         private bool _isLast;
         public bool IsLast

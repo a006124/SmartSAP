@@ -77,8 +77,12 @@
                                         <StackPanel Grid.Row="1">
                                             <TextBlock Text="{Binding Title}" FontWeight="Bold"
                                                        Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5" TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Description}" FontSize="11"
-                                                       Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                            <TextBlock FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap">
+                                                <Run Text="{Binding Description}"/>
+                                                <Hyperlink Command="{Binding LinkCommand}" Foreground="{StaticResource AccentBlueBrush}" TextDecorations="None">
+                                                    <TextBlock Text="{Binding LinkText}" VerticalAlignment="Center"/>
+                                                </Hyperlink>
+                                            </TextBlock>
                                         </StackPanel>
 
                                         <Border Grid.Row="2" Background="{StaticResource WindowBackgroundBrush}"
