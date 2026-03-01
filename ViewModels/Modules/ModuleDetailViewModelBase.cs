@@ -20,6 +20,9 @@ namespace SmartSAP.ViewModels.Modules
         public ICommand GoBackCommand { get; protected set; }
         public ICommand RunWorkflowCommand { get; protected set; }
         public ICommand GenerateTemplateCommand { get; protected set; }
+        public ICommand ExportFixedWidthCommand { get; protected set; }
+
+        protected string? LastGeneratedExcelPath;
 
         protected ModuleDetailViewModelBase(MainViewModel mainViewModel, string title)
         {
@@ -33,6 +36,7 @@ namespace SmartSAP.ViewModels.Modules
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
             RunWorkflowCommand = new RelayCommand(async _ => await ExecuteWorkflowAsync());
             GenerateTemplateCommand = new RelayCommand(_ => GenerateExcelTemplate());
+            ExportFixedWidthCommand = new RelayCommand(_ => ExportLastGeneratedToFixedWidth());
         }
 
         protected virtual void InitializeSteps()
@@ -91,6 +95,7 @@ namespace SmartSAP.ViewModels.Modules
                     workbook.SaveAs(fullPath);
                 }
 
+                LastGeneratedExcelPath = fullPath;
                 Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : ", fullPath));
 
                 // Ouverture automatique du fichier
@@ -99,6 +104,64 @@ namespace SmartSAP.ViewModels.Modules
             catch (Exception ex)
             {
                 Logs.Add(new LogEntry("ERROR", $"Erreur lors de la génération ou de l'ouverture du modèle : {ex.Message}"));
+            }
+        }
+
+        protected virtual void ExportLastGeneratedToFixedWidth()
+        {
+            if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
+            {
+                Logs.Add(new LogEntry("WARNING", "Aucun fichier Excel récent n'a été trouvé pour l'export. veuillez d'abord générer ou modifier le fichier."));
+                return;
+            }
+
+            try
+            {
+                string exportPath = Path.ChangeExtension(LastGeneratedExcelPath, ".txt");
+                
+                using (var workbook = new XLWorkbook(LastGeneratedExcelPath))
+                {
+                    var worksheet = workbook.Worksheets.First();
+                    var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Ignorer l'en-tête
+
+                    using (var writer = new StreamWriter(exportPath))
+                    {
+                        foreach (var row in rows)
+                        {
+                            string line = "";
+                            for (int i = 0; i < ExcelColumns.Count; i++)
+                            {
+                                int width = ExcelColumns[i].FixedWidth;
+                                string value = row.Cell(i + 1).Value.ToString();
+                                
+                                if (width > 0)
+                                {
+                                    // Tronquer ou Padder à droite
+                                    if (value.Length > width)
+                                        value = value.Substring(0, width);
+                                    else
+                                        value = value.PadRight(width);
+                                    
+                                    line += value;
+                                }
+                                else
+                                {
+                                    line += value + " ";
+                                }
+                            }
+                            writer.WriteLine(line);
+                        }
+                    }
+                }
+
+                Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
+                
+                // Ouverture automatique
+                Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'export fixe : {ex.Message}"));
             }
         }
 
