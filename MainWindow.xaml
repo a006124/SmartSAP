@@ -10,6 +10,7 @@
         mc:Ignorable="d"
         Title="SmartSAP - Workflow Automation" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         Background="{StaticResource WindowBackgroundBrush}">
 
     <Window.Resources>

@@ -24,10 +24,10 @@ namespace SmartSAP.ViewModels.Modules
         }
         protected override void InitializeExcelColumns()
         {
-            ExcelColumns.Add(new ExcelColumnDefinition("ID Equipement", "Numéro unique de l'équipement dans SAP", "EQUI-001"));
-            ExcelColumns.Add(new ExcelColumnDefinition("Catégorie", "Code de catégorie d'équipement (ex: M pour Machine)", "M"));
-            ExcelColumns.Add(new ExcelColumnDefinition("Fabricant", "Nom du constructeur de l'équipement", "SIEMENS"));
-            ExcelColumns.Add(new ExcelColumnDefinition("Modèle", "Désignation précise du modèle", "SIMATIC S7-1200"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("ID Equipement", "Numéro unique de l'équipement dans SAP", "EQUI-001"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Catégorie", "Code de catégorie d'équipement (ex: M pour Machine)", "M"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Fabricant", "Nom du constructeur de l'équipement", "SIEMENS"));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Modèle", "Désignation précise du modèle", "SIMATIC S7-1200"));
         }
     }
 }
