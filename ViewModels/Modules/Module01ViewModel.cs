@@ -26,24 +26,41 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE762", 
                     ActionCommand = ExportFixedWidthCommand
                 },
-                new WorkflowStep { Title = "3. Connexion SAP", Description = "Vérifie la connexion au serveur SAP.", Icon = "\xE8A5", ActionCommand = CheckSAPConnectionCommand },
-                new WorkflowStep { Title = "4. Intégration SAP", Description = "Exécute la transaction ZSMNBAO15.", Icon = "\xE768", ActionCommand = ExecuteSAPTransactionCommand }
+                new WorkflowStep { Title = "3. Intégration SAP", Description = "Contrôle la connexion et exécute la transaction ZSMNBAO15.", Icon = "\xE768", ActionCommand = ExecuteSAPTransactionCommand }
             };
         }
 
         protected override async Task ExecuteSAPTransactionAsync()
         {
-            await base.ExecuteSAPTransactionAsync(); // Vérifie le fichier
+            await base.ExecuteSAPTransactionAsync(); // Vérifie la présence du fichier exporté
             
             var step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
-            if (step != null && step.ResultState == "Error") return; // Arrêt si fichier absent (déjà loggé par base)
+            if (step != null && step.ResultState == "Error") return;
 
             try
             {
+                // 1. Contrôle de la connexion SAP (Fusionné ici)
+                Logs.Add(new LogEntry("INFO", "Contrôle de la connexion SAP..."));
+                var connResult = await Task.Run(() => SAPManager.IsConnectedToSAP());
+                
+                // Mise à jour de la barre d'état globale
+                MainViewModel.IsSAPConnected = connResult.IsSuccess;
+                MainViewModel.SAPInstanceInfo = connResult.IsSuccess ? $"Instance : {connResult.InstanceInfo}" : "Non connecté";
+
+                if (!connResult.IsSuccess)
+                {
+                    Logs.Add(new LogEntry("ERROR", connResult.ErrorMessage));
+                    if (step != null) { step.Status = "Erreur Connexion"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                Logs.Add(new LogEntry("SUCCESS", $"✓ Connexion SAP OK : {connResult.InstanceInfo}"));
+
+                // 2. Récupération de la session
                 dynamic session = SAPManager.GetActiveSession();
                 if (session == null)
                 {
-                    Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active. Veuillez vérifier l'étape 3."));
+                    Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active."));
                     if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
                     return;
                 }
@@ -52,6 +69,9 @@ namespace SmartSAP.ViewModels.Modules
                 
                 string resultFile = string.Empty;
                 string result = await Task.Run(() => SAPManager.ExecuteZSMNBAO15(session, LastExportedTextPath, out resultFile));
+
+                // Affichage du résultat brut dans les logs
+                Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP : {result}"));
 
                 var parts = result.Split('|');
                 if (parts.Length >= 2 && parts[1] == "OK")

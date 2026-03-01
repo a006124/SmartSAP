@@ -207,33 +207,28 @@ namespace SmartSAP.Services.SAP
             
             try
             {
-                session.findById("wnd[0]").maximize();
-                session.findById("wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
-                session.findById("wnd[0]").sendVKey(0);
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
 
                 // Écran de sélection
-                session.findById("wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
-                // session.findById("wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
-
-                // Variables pour la compilation (initialement remplies par le bloc supprimé)
-                var resultLines = new System.Collections.Generic.List<string> { "Traitement manuel requis ou arrêté par l'utilisateur." };
-                int linesRead = 0;
-                int linesError = 0;
+                SafeFindById(session, "wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
+                // SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
 
                 // Retour et Nettoyage
-                session.findById("wnd[0]/tbar[0]/btn[3]").press(); // Retour
-                session.findById("wnd[0]/tbar[0]/btn[3]").press(); // Retour
-
-                // Sauvegarde du log résultat
-                resultFilePath = filePath + "_Resultat.txt";
-                System.IO.File.WriteAllLines(resultFilePath, resultLines);
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                return $"{sSAPTransaction}|OK|{linesRead}|0";
+                string result = $"{sSAPTransaction}|OK|{linesRead}|0";
+                Console.WriteLine($"[SAP] Resultat : {result}");
+                return result;
             }
             catch (Exception ex)
             {
-                return $"{sSAPTransaction}|ERROR|{ex.Message}";
+                string errorResult = $"{sSAPTransaction}|ERROR|{ex.Message}";
+                Console.WriteLine($"[SAP] Erreur : {errorResult}");
+                return errorResult;
             }
         }
 
@@ -247,6 +242,108 @@ namespace SmartSAP.Services.SAP
                 return true;
             }
             catch { return false; }
+        }
+
+        /// <summary>
+        /// Détecte la valeur d'un objet de manière sécurisée.
+        /// </summary>
+        public string SafeGetText(dynamic session, string id, string defaultValue = "")
+        {
+            try
+            {
+                var element = session.findById(id);
+                if (element == null) return defaultValue;
+
+                string text = element.Text?.ToString().Trim();
+                return string.IsNullOrWhiteSpace(text) ? defaultValue : text;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Détecte un objet de manière sécurisée.
+        /// </summary>
+        public dynamic? SafeFindById(dynamic session, string id, bool throwIfNotFound = true)
+        {
+            try
+            {
+                var element = session.findById(id);
+                if (element == null && throwIfNotFound)
+                {
+                    throw new Exception($"✗ Élément SAP introuvable: {id}");
+                }
+                return element;
+            }
+            catch (Exception ex)
+            {
+                if (throwIfNotFound)
+                {
+                    throw new Exception($"✗ Erreur accès élément SAP '{id}': {ex.Message}", ex);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Affiche le type et les dimensions d'un objet SAP.
+        /// </summary>
+        public void DetecterTypeObjetSAP(dynamic session, string idObjet)
+        {
+            try
+            {
+                var sapObject = session.findById(idObjet);
+                if (sapObject != null)
+                {
+                    string typeObjet = sapObject.Type;
+                    Console.WriteLine("Le type de l'objet est : " + typeObjet);
+
+                    // Note: Ces méthodes peuvent ne pas exister sur tous les types d'objets, d'où le dynamic
+                    try {
+                        long rows = sapObject.RowCount() - 1;
+                        long cols = sapObject.ColumnCount() - 1;
+                        Console.WriteLine($"Dimensions : {rows} lignes, {cols} colonnes");
+                    } catch { }
+                }
+                else
+                {
+                    Console.WriteLine("✗ L'objet n'a pas été trouvé");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("✗ Une erreur s'est produite : " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Liste les éléments enfants d'un conteneur SAP.
+        /// </summary>
+        public void ListerElementsConteneur(dynamic session, string idConteneur)
+        {
+            try
+            {
+                var conteneur = session.findById(idConteneur);
+                if (conteneur != null)
+                {
+                    foreach (var element in conteneur.Children)
+                    {
+                        string typeElement = element.Type;
+                        string idElement = element.Id;
+                        Console.WriteLine($"Type : {typeElement}, ID : {idElement}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("✗ Le conteneur n'a pas été trouvé");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("✗ Une erreur s'est produite : " + ex.Message);
+            }
         }
     }
 }
