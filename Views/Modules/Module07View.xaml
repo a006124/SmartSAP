@@ -9,7 +9,6 @@
     <Grid Margin="40">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="120"/>
         </Grid.RowDefinitions>
@@ -25,23 +24,10 @@
             </StackPanel>
         </DockPanel>
 
-        <!-- Control Bar -->
-        <Border Grid.Row="1" Style="{StaticResource ModuleCard}" Padding="10" Margin="0,0,0,30">
-            <StackPanel Orientation="Horizontal">
-                <Button Command="{Binding RunWorkflowCommand}" Background="#10B981" Foreground="White" Padding="20,5" BorderThickness="0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Run Workflow" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Button>
-                <Separator Width="1" Height="24" Margin="15,0" Background="{StaticResource BorderBrush}"/>
-                <TextBlock Text="Statut : Prêt" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                <TextBlock Text="   |   Dernière exécution : Jamais" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-            </StackPanel>
-        </Border>
+
 
         <!-- Workflow Steps -->
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding Steps}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -134,7 +120,7 @@
         </ScrollViewer>
 
         <!-- Log Section -->
-        <Border Grid.Row="3" Background="{StaticResource ConsoleBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}"
+        <Border Grid.Row="2" Background="{StaticResource ConsoleBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1,1,1,0" CornerRadius="8,8,0,0">
             <Grid>
                 <Grid.RowDefinitions>

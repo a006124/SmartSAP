@@ -19,7 +19,6 @@ namespace SmartSAP.ViewModels.Modules
         public ObservableCollection<LogEntry> Logs { get; protected set; }
         public ObservableCollection<ExcelColumnDefinition> ExcelColumns { get; protected set; }
         public ICommand GoBackCommand { get; protected set; }
-        public ICommand RunWorkflowCommand { get; protected set; }
         public ICommand GenerateTemplateCommand { get; protected set; }
         public ICommand ExportFixedWidthCommand { get; protected set; }
         public ICommand ClearLogsCommand { get; protected set; }
@@ -41,7 +40,6 @@ namespace SmartSAP.ViewModels.Modules
             ExcelColumns = new ObservableCollection<ExcelColumnDefinition>();
 
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
-            RunWorkflowCommand = new RelayCommand(async _ => await ExecuteWorkflowAsync());
             GenerateTemplateCommand = new RelayCommand(_ => GenerateExcelTemplate());
             ExportFixedWidthCommand = new RelayCommand(_ => ExportLastGeneratedToFixedWidth());
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
@@ -322,24 +320,6 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected virtual async Task ExecuteWorkflowAsync()
-        {
-            Logs.Add(new LogEntry("INFO", $"Démarrage du workflow : {ModuleTitle}"));
-
-            foreach (var step in Steps)
-            {
-                step.ResultState = "Processing";
-                step.Status = "En cours";
-                Logs.Add(new LogEntry("INFO", $"Exécution de : {step.Title}"));
-
-                await Task.Delay(1500); // Simulation
-
-                step.ResultState = "Success";
-                step.Status = "Terminé";
-                Logs.Add(new LogEntry("SUCCESS", $"{step.Title} terminé avec succès."));
-            }
-
-            Logs.Add(new LogEntry("INFO", "Workflow terminé."));
         }
     }
 
