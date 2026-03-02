@@ -152,7 +152,6 @@ namespace SmartSAP.ViewModels.Modules
             {
                 case "E1":
                     // LISTE DE NUMÉROS D'ÉQUIPEMENTS
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
                     break;
                 case "E2":

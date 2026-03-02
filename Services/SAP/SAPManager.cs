@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
@@ -335,9 +336,21 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite (Nom du fichier par défaut ou confirmation)
 
-                // Note : sResultat = ExcelManager.SaveSAPExcelWorkbook(...) du code VB
-                // Ici on simule le succès de l'export car la gestion précise de l'ouverture d'Excel
-                // dépend de bibliothèques externes ou d'un pilotage plus complexe.
+                // Sauvegarde du classeur Excel via le nouveau service
+                var excelService = new ExcelManagerService();
+                string tempExcelPath = Path.Combine(Path.GetTempPath(), $"IH08_{Guid.NewGuid()}.xlsx");
+                
+                // On cherche le classeur "Feuille de calcul dans Basis" (nom standard SAP)
+                string saveResult = excelService.SaveSAPExcelWorkbook("Feuille de calcul dans Basis", tempExcelPath);
+                
+                if (saveResult.StartsWith("✅"))
+                {
+                    resultFilePath = tempExcelPath;
+                }
+                else
+                {
+                    Debug.WriteLine($"[Excel] {saveResult}");
+                }
                 
                 // Retour au menu principal
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour écran IH08
