@@ -90,12 +90,31 @@ namespace SmartSAP.Services.Excel
                 if (sapWorkbook == null)
                     return $"✗ Erreur : Classeur SAP contenant '{workbookNamePattern}' introuvable.";
 
-                // 3. Sauvegarder directement (Interop suffit généralement pour le besoin utilisateur)
-                if (File.Exists(destinationPath))
-                    File.Delete(destinationPath);
+                // 3. Sauvegarder une copie temporaire via Interop
+                string tempFilePath = Path.Combine(Path.GetTempPath(), $"SAP_TempWorkbook_{Guid.NewGuid()}.xlsx");
 
-                // SaveCopyAs est idéal car il ne change pas le fichier ouvert dans SAP
-                sapWorkbook.SaveCopyAs(destinationPath);
+                if (!SaveWorkbookDirectly(sapWorkbook, tempFilePath))
+                {
+                    return "✗ Erreur : Échec de la sauvegarde temporaire via Excel Interop.";
+                }
+
+                // 4. Traiter avec NPOI
+                bool success = ProcessWorkbookWithNPOI(tempFilePath, destinationPath);
+
+                // 5. Nettoyer le fichier temporaire
+                try
+                {
+                    if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+                }
+                catch (Exception exIO)
+                {
+                    Debug.WriteLine("Warning: Impossible de supprimer le fichier temporaire : " + exIO.Message);
+                }
+
+                if (!success)
+                {
+                    return "✗ Erreur : Échec du traitement/sauvegarde finale avec NPOI.";
+                }
 
                 return $"✅ Succès : Classeur SAP sauvegardé sous '{destinationPath}'.";
             }
@@ -112,6 +131,52 @@ namespace SmartSAP.Services.Excel
                 // Libération propre des objets COM
                 if (sapWorkbook != null) Marshal.FinalReleaseComObject(sapWorkbook);
                 if (excelApp != null) Marshal.FinalReleaseComObject(excelApp);
+            }
+        }
+
+        private bool SaveWorkbookDirectly(Workbook wb, string destinationPath)
+        {
+            try
+            {
+                if (File.Exists(destinationPath)) File.Delete(destinationPath);
+                wb.SaveCopyAs(destinationPath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("✗ Échec sauvegarde directe : " + ex.Message);
+                return false;
+            }
+        }
+
+        private bool ProcessWorkbookWithNPOI(string sourcePath, string destinationPath)
+        {
+            try
+            {
+                using (var fs = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+                {
+                    NPOI.SS.UserModel.IWorkbook workbook;
+
+                    if (sourcePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
+                    {
+                        workbook = new NPOI.HSSF.UserModel.HSSFWorkbook(fs);
+                    }
+                    else
+                    {
+                        workbook = new NPOI.XSSF.UserModel.XSSFWorkbook(fs);
+                    }
+
+                    using (var outFs = new FileStream(destinationPath, FileMode.Create, FileAccess.Write))
+                    {
+                        workbook.Write(outFs);
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("✗ Erreur NPOI : " + ex.Message);
+                return false;
             }
         }
 
