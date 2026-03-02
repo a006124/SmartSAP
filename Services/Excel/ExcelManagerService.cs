@@ -3,9 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Linq;
-using Microsoft.Office.Interop.Excel;
-using Application = Microsoft.Office.Interop.Excel.Application;
-using Window = Microsoft.Office.Interop.Excel.Window;
 
 namespace SmartSAP.Services.Excel
 {
@@ -20,7 +17,7 @@ namespace SmartSAP.Services.Excel
         [DllImport("oleacc.dll")]
         private static extern int AccessibleObjectFromWindow(IntPtr hwnd, uint dwId, ref Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppvObject);
 
-        public static Application GetExcelFromProcess(Process proc)
+        public static dynamic GetExcelFromProcess(Process proc)
         {
             try
             {
@@ -42,8 +39,8 @@ namespace SmartSAP.Services.Excel
 
                 if (hr >= 0 && ptr != null)
                 {
-                    // L'objet retourné est une "Window", on remonte à l'Application
-                    Window win = (Window)ptr;
+                    // L'objet retourné est une "Window" (dynamic), on remonte à l'Application
+                    dynamic win = ptr;
                     return win.Application;
                 }
             }
@@ -66,16 +63,29 @@ namespace SmartSAP.Services.Excel
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        private const uint WM_SYSCOMMAND = 0x112;
-        private const uint SC_RESTORE = 0xF120;
+        [DllImport("ole32.dll")]
+        private static extern int GetActiveObject(ref Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        [DllImport("ole32.dll")]
+        private static extern int CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] string lpszProgID, out Guid lpclsid);
+
+        private object GetActiveObjectWrapper(string progId)
+        {
+            Guid clsid;
+            int hr = CLSIDFromProgID(progId, out clsid);
+            if (hr < 0) return null;
+
+            object obj;
+            hr = GetActiveObject(ref clsid, IntPtr.Zero, out obj);
+            if (hr < 0) return null;
+
+            return obj;
+        }
 
         public string SaveSAPExcelWorkbook(string workbookNamePattern, string destinationPath)
         {
-            Application excelApp = null;
-            Workbook sapWorkbook = null;
+            dynamic excelApp = null;
+            dynamic sapWorkbook = null;
 
             try
             {
@@ -90,12 +100,12 @@ namespace SmartSAP.Services.Excel
                 if (sapWorkbook == null)
                     return $"✗ Erreur : Classeur SAP contenant '{workbookNamePattern}' introuvable.";
 
-                // 3. Sauvegarder une copie temporaire via Interop
+                // 3. Sauvegarder une copie temporaire
                 string tempFilePath = Path.Combine(Path.GetTempPath(), $"SAP_TempWorkbook_{Guid.NewGuid()}.xlsx");
 
                 if (!SaveWorkbookDirectly(sapWorkbook, tempFilePath))
                 {
-                    return "✗ Erreur : Échec de la sauvegarde temporaire via Excel Interop.";
+                    return "✗ Erreur : Échec de la sauvegarde temporaire via Excel.";
                 }
 
                 // 4. Traiter avec NPOI
@@ -118,23 +128,19 @@ namespace SmartSAP.Services.Excel
 
                 return $"✅ Succès : Classeur SAP sauvegardé sous '{destinationPath}'.";
             }
-            catch (COMException comEx)
-            {
-                return $"✗ Erreur COM ({comEx.ErrorCode:X}) : {comEx.Message}";
-            }
             catch (Exception ex)
             {
                 return $"✗ Erreur inattendue : {ex.Message}";
             }
             finally
             {
-                // Libération propre des objets COM
-                if (sapWorkbook != null) Marshal.FinalReleaseComObject(sapWorkbook);
-                if (excelApp != null) Marshal.FinalReleaseComObject(excelApp);
+                // Libération des objets COM
+                if (sapWorkbook != null) Marshal.ReleaseComObject(sapWorkbook);
+                if (excelApp != null) Marshal.ReleaseComObject(excelApp);
             }
         }
 
-        private bool SaveWorkbookDirectly(Workbook wb, string destinationPath)
+        private bool SaveWorkbookDirectly(dynamic wb, string destinationPath)
         {
             try
             {
@@ -158,13 +164,9 @@ namespace SmartSAP.Services.Excel
                     NPOI.SS.UserModel.IWorkbook workbook;
 
                     if (sourcePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
-                    {
                         workbook = new NPOI.HSSF.UserModel.HSSFWorkbook(fs);
-                    }
                     else
-                    {
                         workbook = new NPOI.XSSF.UserModel.XSSFWorkbook(fs);
-                    }
 
                     using (var outFs = new FileStream(destinationPath, FileMode.Create, FileAccess.Write))
                     {
@@ -180,28 +182,9 @@ namespace SmartSAP.Services.Excel
             }
         }
 
-        [DllImport("ole32.dll")]
-        private static extern int GetActiveObject(ref Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
-
-        [DllImport("ole32.dll")]
-        private static extern int CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] string lpszProgID, out Guid lpclsid);
-
-        private object GetActiveObjectWrapper(string progId)
+        private dynamic GetExcelInstance()
         {
-            Guid clsid;
-            int hr = CLSIDFromProgID(progId, out clsid);
-            if (hr < 0) return null;
-
-            object obj;
-            hr = GetActiveObject(ref clsid, IntPtr.Zero, out obj);
-            if (hr < 0) return null;
-
-            return obj;
-        }
-
-        private Application GetExcelInstance()
-        {
-            Application oExcelApp = null;
+            dynamic oExcelApp = null;
 
             // Tentative via processus avec fenêtre valide
             Process validProc = Process.GetProcessesByName("EXCEL")
@@ -223,11 +206,8 @@ namespace SmartSAP.Services.Excel
             // Si toujours rien, on tente de récupérer l'instance active via OLE
             try
             {
-                var activeObj = GetActiveObjectWrapper("Excel.Application");
-                if (activeObj != null)
-                {
-                    oExcelApp = (Application)activeObj;
-                }
+                oExcelApp = GetActiveObjectWrapper("Excel.Application");
+                if (oExcelApp != null) return oExcelApp;
             }
             catch (Exception ex)
             {
@@ -235,21 +215,31 @@ namespace SmartSAP.Services.Excel
             }
 
             // En dernier recours, on crée une nouvelle instance
-            if (oExcelApp == null)
+            try
             {
-                oExcelApp = new Application { Visible = true };
+                Type excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType != null)
+                {
+                    oExcelApp = Activator.CreateInstance(excelType);
+                    oExcelApp.Visible = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("✗ Echec création nouvelle instance : " + ex.Message);
             }
 
             return oExcelApp;
         }
 
-        private Workbook FindSapWorkbook(Application excelApp, string workbookNamePattern)
+        private dynamic FindSapWorkbook(dynamic excelApp, string workbookNamePattern)
         {
             try
             {
-                foreach (Workbook wb in excelApp.Workbooks)
+                foreach (dynamic wb in excelApp.Workbooks)
                 {
-                    if (wb.Name.IndexOf(workbookNamePattern, StringComparison.OrdinalIgnoreCase) >= 0)
+                    string wbName = wb.Name;
+                    if (wbName.IndexOf(workbookNamePattern, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         return wb;
                     }
