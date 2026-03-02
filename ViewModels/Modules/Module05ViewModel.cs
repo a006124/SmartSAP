@@ -17,34 +17,51 @@ namespace SmartSAP.ViewModels.Modules
             Steps = new ObservableCollection<WorkflowStep>
             {
                 new WorkflowStep { 
-                    Title = "1. Saisie des numéros d'équipement dont on veut récupérer les données dans SAP", 
-                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
+                    Title = "[Récupération depuis SAP] 1. Saisie des numéros d'équipement dont on veut récupérer les données dans SAP", 
+                    Description = "Crée un nouveau fichier Excel à renseigner (numéros d'équipement) à partir d'un modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E1",
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
-                    Title = "1 bis. Saisie des données des équipements que l'on veut modifier dans SAP", 
-                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
-                    Icon = "\xE70F", 
-                    ModuleStep = "E1bis",
-                    ActionCommand = GenerateTemplateCommand 
-                },
-                new WorkflowStep { 
-                    Title = "2. Contrôle et export des données", 
+                    Title = "[Récupération depuis SAP] 1 bis. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
+                    ModuleStep = "E1bis",
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
-                    Title = "3. Intégration SAP", 
-                    Description = "Contrôle la connexion et exécute la transaction ZSMNBAO15.", 
+                    Title = "[Récupération depuis SAP] 1 ter. Récupération des données des équipements dans SAP", 
+                    Description = "Contrôle la connexion et exécute la transaction SAP IH08.", 
                     Icon = "\xE768", 
-                    ActionCommand = ExecuteSAPTransactionCommand 
+                    ModuleStep = "E1ter",
+                    ActionCommand = ExecuteSAPTransactionCommand
+                },
+                new WorkflowStep { 
+                    Title = "[Saisie de toutes les données] 2. Saisie des données des équipements que l'on veut modifier dans SAP", 
+                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
+                    Icon = "\xE70F", 
+                    ModuleStep = "E2",
+                    ActionCommand = GenerateTemplateCommand 
+                },
+                new WorkflowStep { 
+                    Title = "[Saisie de toutes les données] 2 bis. Contrôle et export des données", 
+                    Description = "Contrôle et exporte les données (Format SAP). ", 
+                    Icon = "\xE762", 
+                    ModuleStep = "E2bis",
+                    ActionCommand = ExportFixedWidthCommand
+                },
+                new WorkflowStep { 
+                    Title = "3. Intégration des modifications dans SAP", 
+                    Description = "Contrôle la connexion et exécute la transaction SAP ZSMNBAO13.", 
+                    Icon = "\xE768", 
+                    ModuleStep = "E3",
+                    ActionCommand = ExecuteSAPTransactionCommand
                 }
             };
         }
 
+        // EXÉCUTION DE LA TRANSACTION  SAP
         protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
             await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
@@ -84,10 +101,19 @@ namespace SmartSAP.ViewModels.Modules
                     return;
                 }
 
-                Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZSMNBAO15..."));
+                // Exécution de la transaction appropriée en fonction du contexte :
+                // - IH08 est utilisée pour l'extraction (Lecture seule)
+                // - ZSMNBAO13 est utilisée pour l'intégration (Écriture/Modification)
+                
+                string sapTx = step?.ModuleStep == "E1ter" ? "IH08" : "ZSMNBAO13";
+                Logs.Add(new LogEntry("INFO", $"Lancement de la transaction {sapTx}..."));
                 
                 string resultFile = string.Empty;
-                string result = await Task.Run(() => SAPManager.ExecuteZSMNBAO15(session, LastExportedTextPath, out resultFile));
+                
+                string result = await Task.Run(() => 
+                    sapTx == "IH08" 
+                    ? SAPManager.ExecuteIH08(session, LastExportedTextPath, out resultFile)
+                    : SAPManager.ExecuteZSMNBAO13(session, LastExportedTextPath, out resultFile));
 
                 // Affichage du résultat brut dans les logs
                 Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP : {result}"));
@@ -116,6 +142,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+
         // DÉFINITION DES COLONNES DE L'EXCEL MODELE
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
@@ -128,7 +155,7 @@ namespace SmartSAP.ViewModels.Modules
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
                     break;
-                case "E1bis":
+                case "E2":
                     // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true));

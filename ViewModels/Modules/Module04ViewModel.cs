@@ -30,7 +30,7 @@ namespace SmartSAP.ViewModels.Modules
                 },
                 new WorkflowStep { 
                     Title = "3. Intégration SAP", 
-                    Description = "Contrôle la connexion et exécute la transaction ZSMNBAO15.", 
+                    Description = "Contrôle la connexion et exécute la transaction SAP ZSMNBAO12.", 
                     Icon = "\xE768", 
                     ActionCommand = ExecuteSAPTransactionCommand 
                 }

@@ -43,12 +43,17 @@ namespace SmartSAP.ViewModels
 
             Modules = new ObservableCollection<ModuleInfo>
             {
+                // Postes Techniques
                 new ModuleInfo { Number="01", Title = "Création de Postes Techniques", Description = "Crée en masse de nouveaux postes techniques dans SAP via Excel.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIF", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
                 new ModuleInfo { Number="02", Title = "Modification de Postes Techniques", Description = "Modifie en masse les postes techniques existants dans SAP via Excel.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#F59E0B", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="03", Title = "Suppression de Postes Techniques",  Description = "Supprime en masse les postes techniques dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#EF4444", StatusBackgroundColor="#FEF3C7" },
-                new ModuleInfo { Number="04", Title = "Création d'Equipements", Description = "Crée en masse de nouveaux équipements dans SAP via Excel.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
+                
+                // Equipements
+                new ModuleInfo { Number="04", Title = "Création d'Equipements", Description = "Crée en masse de nouveaux équipements dans SAP via Excel.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIF", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
                 new ModuleInfo { Number="05", Title = "Modification d'Equipements", Description = "Modifie en masse les équipements existants dans SAP via Excel.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="06", Title = "Suppression d'Equipements",  Description = "Supprime en masse des équipements dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
+                
+                //
                 new ModuleInfo { Number="07", Title = "Création d'Equipements", Description = "Crée en masse de nouveaux équipements dans SAP via Excel.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="08", Title = "Modification d'Equipements", Description = "Modifie en masse les équipements existants dans SAP via Excel.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="09", Title = "Suppression d'Equipements",  Description = "Supprime en masse des équipements dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" }
@@ -82,7 +87,7 @@ namespace SmartSAP.ViewModels
         public string Color { get; set; } = string.Empty;
         public string Version { get; set; } = string.Empty;
         public string HealthStatus { get; set; } = string.Empty;
-        public string Status { get; set; } = "ACTIVE";
+        public string Status { get; set; } = "A CREER";
         public string StatusForegroundColor { get; set; } = "#10B981"; // AccentGreen
         public string StatusBackgroundColor { get; set; } = "#D1FAE5"; // GreenPastel
     }
