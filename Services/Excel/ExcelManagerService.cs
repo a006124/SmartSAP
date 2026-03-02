@@ -180,6 +180,25 @@ namespace SmartSAP.Services.Excel
             }
         }
 
+        [DllImport("ole32.dll")]
+        private static extern int GetActiveObject(ref Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
+
+        [DllImport("ole32.dll")]
+        private static extern int CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] string lpszProgID, out Guid lpclsid);
+
+        private object GetActiveObjectWrapper(string progId)
+        {
+            Guid clsid;
+            int hr = CLSIDFromProgID(progId, out clsid);
+            if (hr < 0) return null;
+
+            object obj;
+            hr = GetActiveObject(ref clsid, IntPtr.Zero, out obj);
+            if (hr < 0) return null;
+
+            return obj;
+        }
+
         private Application GetExcelInstance()
         {
             Application oExcelApp = null;
@@ -201,12 +220,22 @@ namespace SmartSAP.Services.Excel
                 }
             }
 
-            // Si toujours rien, on crée une nouvelle instance (ou on tente GetActiveObject si dispo)
+            // Si toujours rien, on tente de récupérer l'instance active via OLE
             try
             {
-                oExcelApp = (Application)Marshal.GetActiveObject("Excel.Application");
+                var activeObj = GetActiveObjectWrapper("Excel.Application");
+                if (activeObj != null)
+                {
+                    oExcelApp = (Application)activeObj;
+                }
             }
-            catch
+            catch (Exception ex)
+            {
+                Debug.WriteLine("✗ Echec GetActiveObject : " + ex.Message);
+            }
+
+            // En dernier recours, on crée une nouvelle instance
+            if (oExcelApp == null)
             {
                 oExcelApp = new Application { Visible = true };
             }
