@@ -122,6 +122,12 @@ namespace SmartSAP.ViewModels.Modules
                 if (parts.Length >= 2 && parts[1] == "OK")
                 {
                     Logs.Add(new LogEntry("SUCCESS", $"✓ Transaction terminée avec succès. Lignes lues: {parts[2]}."));
+                    
+                    if (!string.IsNullOrEmpty(resultFile))
+                    {
+                        Logs.Add(new LogEntry("SUCCESS", "Fichier Excel créé : ", resultFile));
+                    }
+                    
                     if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
                 }
                 else if (parts.Length >= 2 && parts[1] == "NOK")

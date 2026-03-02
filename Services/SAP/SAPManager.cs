@@ -339,7 +339,7 @@ namespace SmartSAP.Services.SAP
 
                 // Sauvegarde du classeur Excel via le nouveau service
                 var excelService = new ExcelManagerService();
-                string tempExcelPath = Path.Combine(Path.GetTempPath(), $"IH08_{Guid.NewGuid()}.xlsx");
+                string tempExcelPath = Path.Combine(directory, $"IH08_{Guid.NewGuid()}.xlsx");
                 
                 // On cherche le classeur "Feuille de calcul dans Basis" (nom standard SAP)
                 string saveResult = excelService.SaveSAPExcelWorkbook("Feuille de calcul dans Basis", tempExcelPath);
