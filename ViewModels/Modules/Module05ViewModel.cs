@@ -116,6 +116,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // DÉFINITION DES COLONNES DE L'EXCEL MODELE
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
             ExcelColumns.Clear();

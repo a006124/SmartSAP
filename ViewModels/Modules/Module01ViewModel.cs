@@ -17,7 +17,7 @@ namespace SmartSAP.ViewModels.Modules
             Steps = new ObservableCollection<WorkflowStep>
             {
                 new WorkflowStep { 
-                    Title = "1. Saisie des numéros d'équipement dont on veut récupérer les données dans SAP", 
+                    Title = "1. Saisie des données nécessaires à la création des Postes Techniques dans SAP", 
                     Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E1_Saisie",
@@ -38,6 +38,7 @@ namespace SmartSAP.ViewModels.Modules
             };
         }
 
+        // EXÉCUTION DE LA TRANSACTION SAP
         protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
             await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
@@ -109,6 +110,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // DÉFINITION DES COLONNES DE L'EXCEL MODELE
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
             ExcelColumns.Clear();

@@ -200,6 +200,40 @@ namespace SmartSAP.Services.SAP
             catch { return null; }
         }
 
+        // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO12
+        public string ExecuteZSMNBAO12(dynamic session, string filePath, out string resultFilePath)
+        {
+            const string sSAPTransaction = "ZSMNBAO12";
+            resultFilePath = string.Empty;
+            
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                // Écran de sélection
+                SafeFindById(session, "wnd[0]/usr/ctxtFIC_FILE").Text = filePath;
+                // SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
+
+                // Retour et Nettoyage
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+
+                // Formatage du résultat compact
+                string result = $"{sSAPTransaction}|OK||0";
+                Console.WriteLine($"[SAP] Resultat : {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                string errorResult = $"{sSAPTransaction}|ERROR|{ex.Message}";
+                Console.WriteLine($"[SAP] Erreur : {errorResult}");
+                return errorResult;
+            }
+        }
+
+        // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO15
         public string ExecuteZSMNBAO15(dynamic session, string filePath, out string resultFilePath)
         {
             const string sSAPTransaction = "ZSMNBAO15";
