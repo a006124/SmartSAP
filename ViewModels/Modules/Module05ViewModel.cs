@@ -17,21 +17,21 @@ namespace SmartSAP.ViewModels.Modules
             Steps = new ObservableCollection<WorkflowStep>
             {
                 new WorkflowStep { 
-                    Title = "[Récupération depuis SAP] 1. Saisie des numéros d'équipement dont on veut récupérer les données dans SAP", 
+                    Title = "[Export SAP] 1. Saisie des numéros d'équipement à exporter", 
                     Description = "Crée un nouveau fichier Excel à renseigner (numéros d'équipement) à partir d'un modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E1",
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
-                    Title = "[Récupération depuis SAP] 1 bis. Contrôle et export des données", 
+                    Title = "[Export SAP] 1 bis. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
                     ModuleStep = "E1bis",
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
-                    Title = "[Récupération depuis SAP] 1 ter. Récupération des données des équipements dans SAP", 
+                    Title = "[Export SAP] 1 ter. Récupération des données des équipements", 
                     Description = "Contrôle la connexion et exécute la transaction SAP IH08.", 
                     Icon = "\xE768", 
                     ModuleStep = "E1ter",

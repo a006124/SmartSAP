@@ -82,23 +82,34 @@ namespace SmartSAP.Services.Excel
             return obj;
         }
 
-        public string SaveSAPExcelWorkbook(string workbookNamePattern, string destinationPath)
+        public string SaveSAPExcelWorkbook(string workbookNamePattern, string destinationPath, int timeoutSeconds = 30)
         {
             dynamic excelApp = null;
             dynamic sapWorkbook = null;
 
             try
             {
-                // 1. Récupérer l'instance Excel
-                excelApp = GetExcelInstance();
+                // 1. Récupérer l'instance Excel (Polling pour attendre que SAP la crée/l'utilise)
+                DateTime startTime = DateTime.Now;
+                while ((DateTime.Now - startTime).TotalSeconds < timeoutSeconds)
+                {
+                    excelApp = GetExcelInstance();
+                    if (excelApp != null)
+                    {
+                        // 2. Trouver le classeur SAP spécifique (Polling)
+                        sapWorkbook = FindSapWorkbook(excelApp, workbookNamePattern);
+                        if (sapWorkbook != null)
+                            break; // Le document a été trouvé, on sort de la boucle d'attente
+                    }
+                    
+                    System.Threading.Thread.Sleep(1000); // Attendre 1 seconde avant de réessayer
+                }
 
                 if (excelApp == null)
-                    return "✗ Erreur : Aucune instance Excel ouverte par SAP trouvée.";
+                    return $"✗ Erreur : Aucune instance Excel ouverte par SAP trouvée après {timeoutSeconds}s.";
 
-                // 2. Trouver le classeur SAP spécifique
-                sapWorkbook = FindSapWorkbook(excelApp, workbookNamePattern);
                 if (sapWorkbook == null)
-                    return $"✗ Erreur : Classeur SAP contenant '{workbookNamePattern}' introuvable.";
+                    return $"✗ Erreur : Classeur SAP contenant '{workbookNamePattern}' introuvable après {timeoutSeconds}s d'attente.";
 
                 // 3. Sauvegarder une copie temporaire
                 string tempFilePath = Path.Combine(Path.GetTempPath(), $"SAP_TempWorkbook_{Guid.NewGuid()}.xlsx");

@@ -337,7 +337,7 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite (Nom du fichier par défaut ou confirmation)
 
-                // Sauvegarde du classeur Excel via le nouveau service
+                // Sauvegarde du classeur Excel via le nouveau service (le service inclut maintenant une attente dynamique de 30s max)
                 var excelService = new ExcelManagerService();
                 string tempExcelPath = Path.Combine(directory, $"IH08_{Guid.NewGuid()}.xlsx");
                 
