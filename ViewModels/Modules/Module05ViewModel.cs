@@ -141,7 +141,7 @@ namespace SmartSAP.ViewModels.Modules
                                 // 2. Que la fonction EnrichirFromSAPExcelWorkbook soit exécutée
                                 try
                                 {
-                                    var excelService = new SmartSAP.Services.Excel.ExcelManagerService();
+                                    var excelService = new SmartSAP.Services.Excel.ExcelManager();
                                     string enrichResult = excelService.EnrichirFromSAPExcelWorkbook(templateE2Path, resultFile);
                                     Logs.Add(new LogEntry("SUCCESS", $"Enrichissement terminé : {enrichResult}"));
                                 }
@@ -165,13 +165,7 @@ namespace SmartSAP.ViewModels.Modules
                     Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
                     if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
                 }
-
-                // 3. Traitement du fichier Excel si étape E1ter
-                if (step?.ModuleStep == "E1ter")
-                {
-                    var excelResult = await ExcelManager.SaveSAPExcelWorkbook(LastExportedTextPath, "C:\\Users\\charles\\Desktop\\SAP_TempWorkbook.xlsx");
-                    Logs.Add(new LogEntry("SUCCESS", excelResult));
-                }   
+  
             }
             catch (System.Exception ex)
             {

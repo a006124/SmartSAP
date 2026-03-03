@@ -344,7 +344,7 @@ namespace SmartSAP.Services.SAP
                 }
 
                 // Sauvegarde du classeur Excel via le nouveau service (le service inclut maintenant une attente dynamique de 30s max)
-                var excelService = new ExcelManagerService();
+                var excelService = new ExcelManager();
                 string tempExcelPath = Path.Combine(directory, $"IH08_{Guid.NewGuid()}.xlsx");
                 
                 // On cherche le classeur "Feuille de calcul dans Basis" (nom standard SAP)
