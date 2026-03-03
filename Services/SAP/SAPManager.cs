@@ -327,15 +327,21 @@ namespace SmartSAP.Services.SAP
 
                 // Sauvegarde au format EXCEL
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[16]").press(); // Tableur
-                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite Nombre de colonnes clés
                 
-                // Sélectionner la table dans le popup SPO5
+                // Attendre la fenêtre "Information"
+                string windowTitle = SafeGetTitle(session, "wnd[1]", "");
+                while (windowTitle != "Information")
+                {
+                    windowTitle = SafeGetTitle(session, "wnd[1]", "");
+                }   
+                
+                // Table
                 var tableOption = SafeFindById(session, "wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[0,0]");
                 tableOption.Select();
                 tableOption.SetFocus();
-                
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
-                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite (Nom du fichier par défaut ou confirmation)
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite Export d'un objet
 
                 // Sauvegarde du classeur Excel via le nouveau service (le service inclut maintenant une attente dynamique de 30s max)
                 var excelService = new ExcelManagerService();
@@ -420,6 +426,26 @@ namespace SmartSAP.Services.SAP
                     throw new Exception($"✗ Erreur accès élément SAP '{id}': {ex.Message}", ex);
                 }
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Récupère de manière sécurisée le titre d'une fenêtre SAP.
+        /// </summary>
+        public string SafeGetTitle(dynamic session, string windowId, string defaultValue = "")
+        {
+            try
+            {
+                var window = session.findById(windowId);
+                if (window == null) return defaultValue;
+
+                string title = window.Text?.ToString().Trim();
+                return string.IsNullOrWhiteSpace(title) ? defaultValue : title;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SAP] Erreur récupération titre fenêtre '{windowId}' : {ex.Message}");
+                return defaultValue;
             }
         }
 

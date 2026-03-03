@@ -111,12 +111,37 @@ namespace SmartSAP.Services.Excel
                 if (sapWorkbook == null)
                     return $"✗ Erreur : Classeur SAP contenant '{workbookNamePattern}' introuvable après {timeoutSeconds}s d'attente.";
 
-                // 3. Sauvegarder une copie temporaire
+                // 3. Sauvegarder une copie temporaire (avec polling pour attendre la fin de l'écriture par SAP)
                 string tempFilePath = Path.Combine(Path.GetTempPath(), $"SAP_TempWorkbook_{Guid.NewGuid()}.xlsx");
 
-                if (!SaveWorkbookDirectly(sapWorkbook, tempFilePath))
+                bool saveSuccess = false;
+                DateTime saveStartTime = DateTime.Now;
+                
+                while ((DateTime.Now - saveStartTime).TotalSeconds < timeoutSeconds)
                 {
-                    return "✗ Erreur : Échec de la sauvegarde temporaire via Excel.";
+                    try
+                    {
+                        // On vérifie que le moteur Excel n'est plus occupé par l'export de SAP
+                        if (excelApp.Ready)
+                        {
+                            if (SaveWorkbookDirectly(sapWorkbook, tempFilePath))
+                            {
+                                saveSuccess = true;
+                                break;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Une exception COM (ex: RPC_E_CALL_REJECTED) indique qu'Excel est toujours occupé
+                    }
+                    
+                    System.Threading.Thread.Sleep(1000); // Attendre 1 seconde avant de réessayer
+                }
+
+                if (!saveSuccess)
+                {
+                    return "✗ Erreur : Échec de la sauvegarde temporaire via Excel après attente.";
                 }
 
                 // 4. Traiter avec NPOI
