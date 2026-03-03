@@ -11,8 +11,7 @@
         Title="SmartSAP - Workflow Automation" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
-        Background="{StaticResource WindowBackgroundBrush}"
-        AllowDrop="True">
+        Background="{StaticResource WindowBackgroundBrush}">
 
     <Window.Resources>
         <!-- Mapping des ViewModels aux Views -->

@@ -11,6 +11,19 @@ namespace SmartSAP.Views
             InitializeComponent();
         }
 
+        private void LogSection_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
         private void LogSection_Drop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -29,18 +42,6 @@ namespace SmartSAP.Views
                         }
                     }
                 }
-            }
-        }
-
-        private void LogSection_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                e.Effects = DragDropEffects.Copy;
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
             }
             e.Handled = true;
         }
