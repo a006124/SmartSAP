@@ -328,20 +328,20 @@ namespace SmartSAP.Services.SAP
                 // Sauvegarde au format EXCEL
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[16]").press(); // Tableur
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite Nombre de colonnes clés
-                
-                // Attendre la fenêtre "Information"
-                string windowTitle = SafeGetTitle(session, "wnd[1]", "");
-                while (windowTitle != "Information")
-                {
-                    windowTitle = SafeGetTitle(session, "wnd[1]", "");
-                }   
-                
+                                
                 // Table
                 var tableOption = SafeFindById(session, "wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[0,0]");
                 tableOption.Select();
                 tableOption.SetFocus();
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite Export d'un objet
+
+                // Attendre la fenêtre "Information"
+                string windowTitle = SafeGetTitle(session, "wnd[1]", "");
+                while (windowTitle != "Information")
+                {
+                    windowTitle = SafeGetTitle(session, "wnd[1]", "");
+                }
 
                 // Sauvegarde du classeur Excel via le nouveau service (le service inclut maintenant une attente dynamique de 30s max)
                 var excelService = new ExcelManagerService();
@@ -358,7 +358,10 @@ namespace SmartSAP.Services.SAP
                 {
                     Debug.WriteLine($"[Excel] {saveResult}");
                 }
-                
+
+                // Fermer la fenêtre d'information
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
+                    
                 // Retour au menu principal
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour écran IH08
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
