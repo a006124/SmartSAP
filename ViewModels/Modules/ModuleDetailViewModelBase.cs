@@ -87,8 +87,8 @@ namespace SmartSAP.ViewModels.Modules
                 // Note: Dans une application réelle on utiliserait un SaveFileDialog.
                 // Ici on génère un nom par défaut pour la démonstration.
                 string dateExecution = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string moduleStepPart = !string.IsNullOrEmpty(step?.ModuleStep) ? $"_{step.ModuleStep}" : "";
-                string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}_{moduleStepPart}_{dateExecution}.xlsx";
+                string moduleStepPart = !string.IsNullOrEmpty(step?.ModuleStep) ? $"{step.ModuleStep}" : "";
+                string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}_{moduleStepPart}.xlsx";
                 string fullPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
                 string sheetName = "Data";
                 

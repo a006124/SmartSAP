@@ -17,45 +17,45 @@ namespace SmartSAP.ViewModels.Modules
             Steps = new ObservableCollection<WorkflowStep>
             {
                 new WorkflowStep { 
-                    Title = "[SAP->Excel] 1.1 Saisie des numéros d'équipement à exporter", 
-                    Description = "Crée un nouveau fichier Excel à renseigner (numéros d'équipement) à partir d'un modèle.", 
+                    Title = "[Option1] SAP->Excel E1.1", 
+                    Description = "Crée un fichier Excel pour saisir le numéros d'équipement à exporter.", 
                     Icon = "\xE70F", 
-                    ModuleStep = "E1",
+                    ModuleStep = "E1.1",
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
-                    Title = "[SAP->Excel] 1.2 Contrôle et export des données", 
+                    Title = "[Option1] SAP->Excel E1.2", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
-                    ModuleStep = "E1bis",
+                    ModuleStep = "E1.2",
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
-                    Title = "[SAP->Excel] 1.3 Récupération des données des équipements", 
-                    Description = "Contrôle la connexion et exécute la transaction SAP IH08.", 
+                    Title = "[Option1] SAP->Excel E1.3", 
+                    Description = "Récupère les données des équipements via la transaction SAP IH08.", 
                     Icon = "\xE768", 
-                    ModuleStep = "E1ter",
+                    ModuleStep = "E1.3",
                     ActionCommand = ExecuteSAPTransactionCommand
                 },
                 new WorkflowStep { 
-                    Title = "[Saisie de toutes les données] 2. Saisie des données des équipements que l'on veut modifier dans SAP", 
-                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
+                    Title = "[Option2] Modèle vierge", 
+                    Description = "Crée un fichier Excel à renseigner à partir d'un modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E2",
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
-                    Title = "[Saisie de toutes les données] 2 bis. Contrôle et export des données", 
+                    Title = "3. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
-                    ModuleStep = "E2bis",
+                    ModuleStep = "E3",
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
-                    Title = "3. Intégration des modifications dans SAP", 
+                    Title = "4. Intégration des modifications dans SAP", 
                     Description = "Contrôle la connexion et exécute la transaction SAP ZSMNBAO13.", 
                     Icon = "\xE768", 
-                    ModuleStep = "E3",
+                    ModuleStep = "E4",
                     ActionCommand = ExecuteSAPTransactionCommand
                 }
             };
@@ -182,7 +182,7 @@ namespace SmartSAP.ViewModels.Modules
 
             switch (step?.ModuleStep)
             {
-                case "E1":
+                case "E1.1":
                     // LISTE DE NUMÉROS D'ÉQUIPEMENTS
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
                     break;
