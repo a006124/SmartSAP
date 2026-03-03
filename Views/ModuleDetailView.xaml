@@ -94,8 +94,8 @@
         <!-- Log Section -->
         <Border Grid.Row="3" Background="White" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1,1,1,0" CornerRadius="8,8,0,0"
-                AllowDrop="True" Drop="LogSection_Drop">
-            <Grid>
+                AllowDrop="True" Drop="LogSection_Drop" DragEnter="LogSection_DragEnter" DragOver="LogSection_DragEnter">
+            <Grid Background="Transparent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -107,7 +107,7 @@
                                Foreground="{StaticResource TextSecondaryBrush}"/>
                 </Border>
 
-                <ScrollViewer Grid.Row="1" Margin="10">
+                <ScrollViewer Grid.Row="1" Margin="10" Background="Transparent">
                     <ItemsControl ItemsSource="{Binding Logs}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
