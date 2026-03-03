@@ -277,8 +277,21 @@ namespace SmartSAP.Services.Excel
                     }
 
                     wExcelToUpdate.Save();
-                }
+                } // La sortie du bloc using va garantir un Dispose et la libération des pointeurs de fichiers ouverts.
                 
+                // Nettoyage : Suppression du fichier temporaire source
+                try
+                {
+                    if (System.IO.File.Exists(sourceDataPath))
+                    {
+                        System.IO.File.Delete(sourceDataPath);
+                    }
+                }
+                catch (Exception exIO)
+                {
+                    Debug.WriteLine($"Warning: Impossible de supprimer le fichier source temporaire '{sourceDataPath}' : {exIO.Message}");
+                }
+
                 return $"Modèle E2 généré et enrichi avec les données extraites !";
             }
             catch (Exception ex)
