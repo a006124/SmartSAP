@@ -82,6 +82,11 @@ namespace SmartSAP.Services.Excel
             return obj;
         }
 
+        public string EnrichirFromSAPExcelWorkbook(string workbookNamePattern, string destinationPath, int timeoutSeconds = 30)
+        {
+
+        }
+
         public string SaveSAPExcelWorkbook(string workbookNamePattern, string destinationPath, int timeoutSeconds = 30)
         {
             dynamic excelApp = null;
@@ -173,6 +178,116 @@ namespace SmartSAP.Services.Excel
                 // Libération des objets COM
                 if (sapWorkbook != null) Marshal.ReleaseComObject(sapWorkbook);
                 if (excelApp != null) Marshal.ReleaseComObject(excelApp);
+            }
+        }
+
+        public string EnrichirFromSAPExcelWorkbook(string templatePath, string sourceDataPath)
+        {
+            try
+            {
+                using (var wExcelToUpdate = new ClosedXML.Excel.XLWorkbook(templatePath))
+                using (var wExcelFrom = new ClosedXML.Excel.XLWorkbook(sourceDataPath))
+                {
+                    var sheetToUpdate = wExcelToUpdate.Worksheet(1); // Le template n'a qu'un seul onglet "Data"
+                    var sheetFrom = wExcelFrom.Worksheet(1);
+
+                    int lRowToUpdate = 2;
+
+                    foreach (var row in sheetFrom.RowsUsed())
+                    {
+                        // On ne traite pas la ligne de titre (ligne 1)
+                        if (row.RowNumber() == 1) continue;
+
+                        var targetRow = sheetToUpdate.Row(lRowToUpdate);
+
+                        targetRow.Cell(1).Value = row.Cell(1).GetString(); // Division
+                        targetRow.Cell(2).Value = row.Cell(2).GetString(); // Langue
+                        targetRow.Cell(3).Value = row.Cell(3).GetString(); // Numéro Equipement
+                        targetRow.Cell(4).Value = row.Cell(25).GetString(); // License
+                        targetRow.Cell(5).Value = row.Cell(4).GetString(); // Poste Technique
+                        targetRow.Cell(6).Value = row.Cell(5).GetString(); // Equipement supérieur
+                        targetRow.Cell(7).Value = ""; // License du père
+                        targetRow.Cell(8).Value = ""; // RFOU
+                        targetRow.Cell(9).Value = ""; // REF
+                        targetRow.Cell(10).Value = row.Cell(6).GetString(); // Position
+                        targetRow.Cell(11).Value = row.Cell(7).GetString(); // Groupe d'autorisation
+                        targetRow.Cell(12).Value = row.Cell(8).GetString(); // Catégorie de l'équipement
+                        targetRow.Cell(13).Value = row.Cell(9).GetString(); // Libellé fonctionnel
+                        targetRow.Cell(14).Value = row.Cell(10).GetString(); // N° de série fabricant
+                        targetRow.Cell(15).Value = row.Cell(11).GetString(); // Type d'équipement
+                        targetRow.Cell(16).Value = row.Cell(12).GetString(); // N° inventaire
+                        targetRow.Cell(17).Value = row.Cell(13).GetString(); // Code ABC
+                        targetRow.Cell(18).Value = row.Cell(14).GetString(); // Localisation
+                        targetRow.Cell(19).Value = row.Cell(15).GetString(); // Local
+                        targetRow.Cell(20).Value = row.Cell(16).GetString(); // Centre de coûts
+                        targetRow.Cell(21).Value = row.Cell(17).GetString(); // Immobilisation principale
+                        targetRow.Cell(22).Value = row.Cell(18).GetString(); // Immobilisation secondaire
+                        targetRow.Cell(23).Value = row.Cell(19).GetString(); // Valeur d'acquisition
+                        targetRow.Cell(24).Value = row.Cell(20).GetString(); // Devise
+                        targetRow.Cell(25).Value = row.Cell(21).GetString(); // Date d'acquisition
+                        targetRow.Cell(26).Value = row.Cell(22).GetString(); // Début de garantie
+                        targetRow.Cell(27).Value = row.Cell(23).GetString(); // Fin de garantie
+                        targetRow.Cell(28).Value = row.Cell(24).GetString(); // Repère / Zone de tri
+                        targetRow.Cell(29).Value = row.Cell(25).GetString(); // N° License
+                        targetRow.Cell(30).Value = row.Cell(26).GetString(); // Code MABEC / Article
+                        targetRow.Cell(31).Value = row.Cell(48).GetString(); // Libellé matériel
+
+                        // Niveau
+                        string niveau = row.Cell(117).GetString();
+                        switch (niveau)
+                        {
+                            case "Groupe d'ensemble": targetRow.Cell(32).Value = "G/E"; break;
+                            case "Ensemble": targetRow.Cell(32).Value = "E"; break;
+                            case "Sous Ensemble": targetRow.Cell(32).Value = "S/E"; break;
+                            default: targetRow.Cell(32).Value = ""; break;
+                        }
+
+                        targetRow.Cell(33).Value = row.Cell(114).GetString(); // Référence fournisseur
+                        targetRow.Cell(34).Value = row.Cell(115).GetString(); // Nom matériel
+                        targetRow.Cell(35).Value = ""; // Référence intégrateur
+                        targetRow.Cell(36).Value = row.Cell(125).GetString(); // Nom intégrateur
+                        targetRow.Cell(37).Value = row.Cell(119).GetString(); // Quantité équipement
+                        targetRow.Cell(38).Value = row.Cell(118).GetString(); // Mnémonique
+                        targetRow.Cell(39).Value = row.Cell(8).GetString(); // Catégorie de l'équipement
+                        targetRow.Cell(40).Value = ""; // Code projet
+                        targetRow.Cell(41).Value = ""; // Modèle
+                        targetRow.Cell(42).Value = row.Cell(121).GetString(); // Famille
+                        targetRow.Cell(43).Value = row.Cell(122).GetString(); // Capacité / Alimentation
+
+                        // A maintenir
+                        string aMaintenir = row.Cell(48).GetString();
+                        switch (aMaintenir)
+                        {
+                            case "Avec Maintenance": targetRow.Cell(44).Value = "1"; break;
+                            case "Sans Maintenance": targetRow.Cell(44).Value = "0"; break;
+                            default: targetRow.Cell(44).Value = ""; break;
+                        }
+
+                        targetRow.Cell(45).Value = row.Cell(124).GetString(); // UET de fabrication
+                        targetRow.Cell(46).Value = ""; // Dessiné par
+                        targetRow.Cell(47).Value = ""; // Indice inventaire
+                        targetRow.Cell(48).Value = ""; // Date de l'indice
+                        targetRow.Cell(49).Value = ""; // Responsable de l'indice
+                        targetRow.Cell(50).Value = ""; // N° pièce produit
+                        targetRow.Cell(51).Value = ""; // Indice pièce produit
+                        targetRow.Cell(52).Value = ""; // N° pièce produit
+                        targetRow.Cell(53).Value = ""; // Indice pièce produit
+                        targetRow.Cell(54).Value = ""; // N° pièce produit
+                        targetRow.Cell(55).Value = ""; // Indice pièce produit
+                        targetRow.Cell(56).Value = ""; // N° pièce produit
+                        targetRow.Cell(57).Value = ""; // Indice pièce produit
+
+                        lRowToUpdate++;
+                    }
+
+                    wExcelToUpdate.Save();
+                }
+                
+                return $"Modèle E2 généré et enrichi avec les données extraites !";
+            }
+            catch (Exception ex)
+            {
+                return $"✗ Erreur lors de l'enrichissement du modèle : {ex.Message}";
             }
         }
 

@@ -17,21 +17,21 @@ namespace SmartSAP.ViewModels.Modules
             Steps = new ObservableCollection<WorkflowStep>
             {
                 new WorkflowStep { 
-                    Title = "[Export SAP] 1. Saisie des numéros d'équipement à exporter", 
+                    Title = "[SAP->Excel] 1.1 Saisie des numéros d'équipement à exporter", 
                     Description = "Crée un nouveau fichier Excel à renseigner (numéros d'équipement) à partir d'un modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E1",
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
-                    Title = "[Export SAP] 1 bis. Contrôle et export des données", 
+                    Title = "[SAP->Excel] 1.2 Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
                     ModuleStep = "E1bis",
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
-                    Title = "[Export SAP] 1 ter. Récupération des données des équipements", 
+                    Title = "[SAP->Excel] 1.3 Récupération des données des équipements", 
                     Description = "Contrôle la connexion et exécute la transaction SAP IH08.", 
                     Icon = "\xE768", 
                     ModuleStep = "E1ter",
@@ -101,10 +101,9 @@ namespace SmartSAP.ViewModels.Modules
                     return;
                 }
 
-                // Exécution de la transaction appropriée en fonction du contexte :
-                // - IH08 est utilisée pour l'extraction (Lecture seule)
-                // - ZSMNBAO13 est utilisée pour l'intégration (Écriture/Modification)
-                
+                // Exécution de la transaction appropriée en fonction de l'étape :
+                // - IH08 est utilisée pour l'extraction (Lecture seule) E1ter
+                // - ZSMNBAO13 est utilisée pour l'intégration (Écriture/Modification) E3
                 string sapTx = step?.ModuleStep == "E1ter" ? "IH08" : "ZSMNBAO13";
                 Logs.Add(new LogEntry("INFO", $"Lancement de la transaction {sapTx}..."));
                 
@@ -126,6 +125,32 @@ namespace SmartSAP.ViewModels.Modules
                     if (!string.IsNullOrEmpty(resultFile))
                     {
                         Logs.Add(new LogEntry("SUCCESS", "Fichier Excel créé : ", resultFile));
+                        
+                        // 3. Traitement du fichier Excel si étape E1ter
+                        if (step?.ModuleStep == "E1ter")
+                        {
+                            Logs.Add(new LogEntry("INFO", "Génération du modèle E2 pour enrichissement..."));
+                            
+                            // 1. Qu'un fichier modèle type E2 soit créé
+                            var e2Step = Steps.FirstOrDefault(s => s.ModuleStep == "E2") ?? new WorkflowStep { ModuleStep = "E2" };
+                            GenerateExcelTemplate(e2Step);
+                            string templateE2Path = LastGeneratedExcelPath;
+
+                            if (!string.IsNullOrEmpty(templateE2Path) && System.IO.File.Exists(templateE2Path))
+                            {
+                                // 2. Que la fonction EnrichirFromSAPExcelWorkbook soit exécutée
+                                try
+                                {
+                                    var excelService = new SmartSAP.Services.Excel.ExcelManagerService();
+                                    string enrichResult = excelService.EnrichirFromSAPExcelWorkbook(templateE2Path, resultFile);
+                                    Logs.Add(new LogEntry("SUCCESS", $"Enrichissement terminé : {enrichResult}"));
+                                }
+                                catch (System.Exception ex)
+                                {
+                                    Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'enrichissement : {ex.Message}"));
+                                }
+                            }
+                        }
                     }
                     
                     if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
@@ -140,6 +165,13 @@ namespace SmartSAP.ViewModels.Modules
                     Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
                     if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
                 }
+
+                // 3. Traitement du fichier Excel si étape E1ter
+                if (step?.ModuleStep == "E1ter")
+                {
+                    var excelResult = await ExcelManager.SaveSAPExcelWorkbook(LastExportedTextPath, "C:\\Users\\charles\\Desktop\\SAP_TempWorkbook.xlsx");
+                    Logs.Add(new LogEntry("SUCCESS", excelResult));
+                }   
             }
             catch (System.Exception ex)
             {
