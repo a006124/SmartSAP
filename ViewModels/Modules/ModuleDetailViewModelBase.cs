@@ -338,5 +338,21 @@ namespace SmartSAP.ViewModels.Modules
                 Steps[Steps.Count - 1].IsLast = true;
             }
         }
+
+        public virtual void HandleDroppedExcelFile(string filePath)
+        {
+            LastGeneratedExcelPath = filePath;
+            
+            // On s'assure que la modification de la collection se fait sur le thread UI
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                // Ajout d'une entrée avec action (IsLink = true) pour ouvrir le fichier
+                Logs.Add(new LogEntry(
+                    "INFO", 
+                    "Fichier Excel déplacé manuellement : ", 
+                    filePath
+                ));
+            });
+        }
     }
 }

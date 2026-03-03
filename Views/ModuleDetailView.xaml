@@ -93,7 +93,8 @@
 
         <!-- Log Section -->
         <Border Grid.Row="3" Background="White" BorderBrush="{StaticResource BorderBrush}"
-                BorderThickness="1,1,1,0" CornerRadius="8,8,0,0">
+                BorderThickness="1,1,1,0" CornerRadius="8,8,0,0"
+                AllowDrop="True" Drop="LogSection_Drop" Background="Transparent">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -110,10 +111,27 @@
                     <ItemsControl ItemsSource="{Binding Logs}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Margin="0,2">
+                                <TextBlock Margin="0,2" TextWrapping="Wrap">
                                     <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
                                     <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
                                     <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    
+                                    <!-- Affiche le nom du fichier sous forme de lien cliquable si présent -->
+                                    <Hyperlink Command="{Binding OpenFileCommand}" 
+                                               Foreground="{StaticResource AccentBlueBrush}" 
+                                               TextDecorations="Underline">
+                                        <Hyperlink.Style>
+                                            <Style TargetType="Hyperlink">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasFile}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Hyperlink.Style>
+                                        <Run Text="{Binding FileName}" />
+                                    </Hyperlink>
                                 </TextBlock>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
