@@ -31,14 +31,18 @@ namespace SmartSAP.Views
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 if (files != null && files.Length > 0)
                 {
-                    string droppedFile = files.FirstOrDefault(f => f.EndsWith(".xlsx", System.StringComparison.OrdinalIgnoreCase) || f.EndsWith(".xls", System.StringComparison.OrdinalIgnoreCase));
+                    string droppedFile = files.FirstOrDefault(f => 
+                        f.EndsWith(".xlsx", System.StringComparison.OrdinalIgnoreCase) || 
+                        f.EndsWith(".xls", System.StringComparison.OrdinalIgnoreCase) ||
+                        f.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase) ||
+                        f.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase));
                     
                     if (!string.IsNullOrEmpty(droppedFile))
                     {
                         var viewModel = this.DataContext as ModuleDetailViewModelBase;
                         if (viewModel != null)
                         {
-                            viewModel.HandleDroppedExcelFile(droppedFile);
+                            viewModel.HandleDroppedFile(droppedFile);
                         }
                     }
                 }

@@ -348,17 +348,55 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        public virtual void HandleDroppedFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return;
+
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
+
+            if (extension == ".xlsx" || extension == ".xls")
+            {
+                HandleDroppedExcelFile(filePath);
+            }
+            else if (extension == ".txt" || extension == ".csv")
+            {
+                HandleDroppedTexteFile(filePath);
+            }
+            else
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Logs.Add(new LogEntry(
+                        "WARNING", 
+                        $"Format de fichier non pris en charge déposé : {Path.GetFileName(filePath)}"
+                    ));
+                });
+            }
+        }
+
         public virtual void HandleDroppedExcelFile(string filePath)
         {
             LastGeneratedExcelPath = filePath;
             
-            // On s'assure que la modification de la collection se fait sur le thread UI
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                // Ajout d'une entrée avec action (IsLink = true) pour ouvrir le fichier
                 Logs.Add(new LogEntry(
                     "INFO", 
-                    "Fichier Excel déplacé manuellement : ", 
+                    "Fichier Excel déposé manuellement : ", 
+                    filePath
+                ));
+            });
+        }
+
+        public virtual void HandleDroppedTexteFile(string filePath)
+        {
+            LastExportedTextPath = filePath;
+            
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                Logs.Add(new LogEntry(
+                    "INFO", 
+                    "Fichier texte/CSV déposé manuellement : ", 
                     filePath
                 ));
             });

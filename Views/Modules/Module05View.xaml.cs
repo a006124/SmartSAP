@@ -29,14 +29,18 @@ namespace SmartSAP.Views.Modules
                 string[] files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
                 if (files != null && files.Length > 0)
                 {
-                    string droppedFile = System.Linq.Enumerable.FirstOrDefault(files, f => f.EndsWith(".xlsx", System.StringComparison.OrdinalIgnoreCase) || f.EndsWith(".xls", System.StringComparison.OrdinalIgnoreCase));
+                    string droppedFile = System.Linq.Enumerable.FirstOrDefault(files, f => 
+                        f.EndsWith(".xlsx", System.StringComparison.OrdinalIgnoreCase) || 
+                        f.EndsWith(".xls", System.StringComparison.OrdinalIgnoreCase) ||
+                        f.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase) ||
+                        f.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase));
                     
                     if (!string.IsNullOrEmpty(droppedFile))
                     {
                         var viewModel = this.DataContext as SmartSAP.ViewModels.Modules.ModuleDetailViewModelBase;
                         if (viewModel != null)
                         {
-                            viewModel.HandleDroppedExcelFile(droppedFile);
+                            viewModel.HandleDroppedFile(droppedFile);
                         }
                     }
                 }
