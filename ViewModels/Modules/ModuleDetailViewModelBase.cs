@@ -172,6 +172,13 @@ namespace SmartSAP.ViewModels.Modules
                     int errorCount = 0;
                     int rowIdx = 1;
 
+                    if (rows.Count() < 2)
+                    {
+                        Logs.Add(new LogEntry("WARNING", "Le nombre de ligne à traiter doit être supérieur ou égal à 2."));
+                        if (step != null) { step.Status = "Données insuffisantes"; step.ResultState = "Error"; }
+                        return;
+                    }
+
                     using (var writer = new StreamWriter(exportPath))
                     {
                         foreach (var row in rows)

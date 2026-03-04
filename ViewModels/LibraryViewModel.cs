@@ -50,7 +50,7 @@ namespace SmartSAP.ViewModels
                 
                 // Equipements
                 new ModuleInfo { Number="04", Title = "Création d'Equipements", Description = "Crée en masse de nouveaux équipements dans SAP via Excel.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIF", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
-                new ModuleInfo { Number="05", Title = "Modification d'Equipements", Description = "Modifie en masse les équipements existants dans SAP via Excel.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
+                new ModuleInfo { Number="05", Title = "Modification d'Equipements", Description = "Modifie en masse les équipements existants dans SAP via Excel.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="ACTIF", StatusForegroundColor="#10B981", StatusBackgroundColor="#D1FAE5" },
                 new ModuleInfo { Number="06", Title = "Suppression d'Equipements",  Description = "Supprime en masse des équipements dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 
                 //

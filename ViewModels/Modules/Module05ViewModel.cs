@@ -193,10 +193,10 @@ namespace SmartSAP.ViewModels.Modules
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° EQU LICENCE - 24 car", "Numéro licence équipement", "", 24));
+                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° EQU LICENCE - 20 car", "Numéro licence équipement", "", 20));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("(1) Poste technique - 30 car", "Poste technique lié", "", 30));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("(2) Equipement - 18 car", "Equipement lié", "", 18));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("(3) N° LICENCE DU PERE - 24 car", "Licence équipement parent", "", 24));
+                    ExcelColumns.Add(new Models.ExcelColumnDefinition("(3) N° LICENCE DU PERE - 20 car", "Licence équipement parent", "", 20));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Statut RFOU - 1 car", "Statut RFOU", "", 1));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Statut REF - 1 car", "Statut REF", "", 1));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "", 4));

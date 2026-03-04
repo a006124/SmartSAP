@@ -202,6 +202,143 @@ namespace SmartSAP.Services.SAP
             catch { return null; }
         }
 
+        private bool GoMainMenu(dynamic session)
+        {
+            try
+            {
+                if (session == null) return false;
+                session.findById("wnd[0]/tbar[0]/okcd").Text = "/n";
+                session.findById("wnd[0]").sendVKey(0);
+                return true;
+            }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// Détecte la valeur d'un objet de manière sécurisée.
+        /// </summary>
+        public string SafeGetText(dynamic session, string id, string defaultValue = "")
+        {
+            try
+            {
+                var element = session.findById(id);
+                if (element == null) return defaultValue;
+
+                string text = element.Text?.ToString().Trim();
+                return string.IsNullOrWhiteSpace(text) ? defaultValue : text;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Détecte un objet de manière sécurisée.
+        /// </summary>
+        public dynamic? SafeFindById(dynamic session, string id, bool throwIfNotFound = true)
+        {
+            try
+            {
+                var element = session.findById(id);
+                if (element == null && throwIfNotFound)
+                {
+                    throw new Exception($"✗ Élément SAP introuvable: {id}");
+                }
+                return element;
+            }
+            catch (Exception ex)
+            {
+                if (throwIfNotFound)
+                {
+                    throw new Exception($"✗ Erreur accès élément SAP '{id}': {ex.Message}", ex);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Récupère de manière sécurisée le titre d'une fenêtre SAP.
+        /// </summary>
+        public string SafeGetTitle(dynamic session, string windowId, string defaultValue = "")
+        {
+            try
+            {
+                var window = session.findById(windowId);
+                if (window == null) return defaultValue;
+
+                string title = window.Text?.ToString().Trim();
+                return string.IsNullOrWhiteSpace(title) ? defaultValue : title;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SAP] Erreur récupération titre fenêtre '{windowId}' : {ex.Message}");
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Affiche le type et les dimensions d'un objet SAP.
+        /// </summary>
+        public void DetecterTypeObjetSAP(dynamic session, string idObjet)
+        {
+            try
+            {
+                var sapObject = session.findById(idObjet);
+                if (sapObject != null)
+                {
+                    string typeObjet = sapObject.Type;
+                    Console.WriteLine("Le type de l'objet est : " + typeObjet);
+
+                    // Note: Ces méthodes peuvent ne pas exister sur tous les types d'objets, d'où le dynamic
+                    try
+                    {
+                        long rows = sapObject.RowCount() - 1;
+                        long cols = sapObject.ColumnCount() - 1;
+                        Console.WriteLine($"Dimensions : {rows} lignes, {cols} colonnes");
+                    }
+                    catch { }
+                }
+                else
+                {
+                    Console.WriteLine("✗ L'objet n'a pas été trouvé");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("✗ Une erreur s'est produite : " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Liste les éléments enfants d'un conteneur SAP.
+        /// </summary>
+        public void ListerElementsConteneur(dynamic session, string idConteneur)
+        {
+            try
+            {
+                var conteneur = session.findById(idConteneur);
+                if (conteneur != null)
+                {
+                    foreach (var element in conteneur.Children)
+                    {
+                        string typeElement = element.Type;
+                        string idElement = element.Id;
+                        Console.WriteLine($"Type : {typeElement}, ID : {idElement}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("✗ Le conteneur n'a pas été trouvé");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("✗ Une erreur s'est produite : " + ex.Message);
+            }
+        }
+
+
         // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO12 : CRÉATION EN MASSE DES ÉQUIPEMENTS
         public string ExecuteZSMNBAO12(dynamic session, string filePath, out string resultFilePath)
         {
@@ -223,7 +360,7 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                string result = $"{sSAPTransaction}|OK||0";
+                string result = $"{sSAPTransaction}|OK|0";
                 Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
             }
@@ -255,7 +392,7 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
-                string result = $"{sSAPTransaction}|OK||0";
+                string result = $"{sSAPTransaction}|OK|0";
                 return result;
             }
             catch (Exception ex)
@@ -377,138 +514,6 @@ namespace SmartSAP.Services.SAP
 
 
 
-        private bool GoMainMenu(dynamic session)
-        {
-            try
-            {
-                if (session == null) return false;
-                session.findById("wnd[0]/tbar[0]/okcd").Text = "/n";
-                session.findById("wnd[0]").sendVKey(0);
-                return true;
-            }
-            catch { return false; }
-        }
 
-        /// <summary>
-        /// Détecte la valeur d'un objet de manière sécurisée.
-        /// </summary>
-        public string SafeGetText(dynamic session, string id, string defaultValue = "")
-        {
-            try
-            {
-                var element = session.findById(id);
-                if (element == null) return defaultValue;
-
-                string text = element.Text?.ToString().Trim();
-                return string.IsNullOrWhiteSpace(text) ? defaultValue : text;
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-
-        /// <summary>
-        /// Détecte un objet de manière sécurisée.
-        /// </summary>
-        public dynamic? SafeFindById(dynamic session, string id, bool throwIfNotFound = true)
-        {
-            try
-            {
-                var element = session.findById(id);
-                if (element == null && throwIfNotFound)
-                {
-                    throw new Exception($"✗ Élément SAP introuvable: {id}");
-                }
-                return element;
-            }
-            catch (Exception ex)
-            {
-                if (throwIfNotFound)
-                {
-                    throw new Exception($"✗ Erreur accès élément SAP '{id}': {ex.Message}", ex);
-                }
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Récupère de manière sécurisée le titre d'une fenêtre SAP.
-        /// </summary>
-        public string SafeGetTitle(dynamic session, string windowId, string defaultValue = "")
-        {
-            try
-            {
-                var window = session.findById(windowId);
-                if (window == null) return defaultValue;
-
-                string title = window.Text?.ToString().Trim();
-                return string.IsNullOrWhiteSpace(title) ? defaultValue : title;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[SAP] Erreur récupération titre fenêtre '{windowId}' : {ex.Message}");
-                return defaultValue;
-            }
-        }
-
-        /// <summary>
-        /// Affiche le type et les dimensions d'un objet SAP.
-        /// </summary>
-        public void DetecterTypeObjetSAP(dynamic session, string idObjet)
-        {
-            try
-            {
-                var sapObject = session.findById(idObjet);
-                if (sapObject != null)
-                {
-                    string typeObjet = sapObject.Type;
-                    Console.WriteLine("Le type de l'objet est : " + typeObjet);
-
-                    // Note: Ces méthodes peuvent ne pas exister sur tous les types d'objets, d'où le dynamic
-                    try {
-                        long rows = sapObject.RowCount() - 1;
-                        long cols = sapObject.ColumnCount() - 1;
-                        Console.WriteLine($"Dimensions : {rows} lignes, {cols} colonnes");
-                    } catch { }
-                }
-                else
-                {
-                    Console.WriteLine("✗ L'objet n'a pas été trouvé");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("✗ Une erreur s'est produite : " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Liste les éléments enfants d'un conteneur SAP.
-        /// </summary>
-        public void ListerElementsConteneur(dynamic session, string idConteneur)
-        {
-            try
-            {
-                var conteneur = session.findById(idConteneur);
-                if (conteneur != null)
-                {
-                    foreach (var element in conteneur.Children)
-                    {
-                        string typeElement = element.Type;
-                        string idElement = element.Id;
-                        Console.WriteLine($"Type : {typeElement}, ID : {idElement}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("✗ Le conteneur n'a pas été trouvé");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("✗ Une erreur s'est produite : " + ex.Message);
-            }
-        }
     }
 }
