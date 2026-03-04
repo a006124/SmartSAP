@@ -200,8 +200,18 @@ namespace SmartSAP.Services.Excel
                         targetRow.Cell(2).Value = row.Cell(2).GetString(); // Langue
                         targetRow.Cell(3).Value = row.Cell(3).GetString(); // Numéro Equipement
                         targetRow.Cell(4).Value = row.Cell(25).GetString(); // License
-                        targetRow.Cell(5).Value = row.Cell(4).GetString(); // Poste Technique
-                        targetRow.Cell(6).Value = row.Cell(5).GetString(); // Equipement supérieur
+                        // Règle : si Equipement supérieur est documenté alors Poste Technique = "" sinon Equipement Supérieur = ""
+                        string equipSup = row.Cell(5).GetString();
+                        if (!string.IsNullOrEmpty(equipSup))
+                        {
+                            targetRow.Cell(5).Value = ""; // On efface le poste technique
+                            targetRow.Cell(6).Value = equipSup;
+                        }
+                        else
+                        {
+                            targetRow.Cell(5).Value = row.Cell(4).GetString(); // On garde le poste technique
+                            targetRow.Cell(6).Value = ""; 
+                        }
                         targetRow.Cell(7).Value = ""; // License du père
                         targetRow.Cell(8).Value = ""; // RFOU
                         targetRow.Cell(9).Value = ""; // REF
