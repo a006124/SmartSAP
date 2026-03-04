@@ -152,6 +152,15 @@ namespace SmartSAP.ViewModels.Modules
                 return;
             }
 
+            InitializeExcelColumns(step);
+
+            if (ExcelColumns.Count == 0)
+            {
+                Logs.Add(new LogEntry("WARNING", "Aucun modèle Excel n'est défini pour cette étape."));
+                if (step != null) { step.Status = "Warning"; step.ResultState = "Error"; }
+                return;
+            }
+
             try
             {
                 string exportPath = Path.ChangeExtension(LastGeneratedExcelPath, ".txt");

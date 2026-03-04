@@ -183,10 +183,12 @@ namespace SmartSAP.ViewModels.Modules
             switch (step?.ModuleStep)
             {
                 case "E1.1":
+                case "E1.2":
                     // LISTE DE NUMÉROS D'ÉQUIPEMENTS
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
                     break;
                 case "E2":
+                case "E3":
                     // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true));
