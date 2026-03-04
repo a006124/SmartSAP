@@ -104,7 +104,7 @@ namespace SmartSAP.ViewModels.Modules
                 // Exécution de la transaction appropriée en fonction de l'étape :
                 // - IH08 est utilisée pour l'extraction (Lecture seule) E1ter
                 // - ZSMNBAO13 est utilisée pour l'intégration (Écriture/Modification) E3
-                string sapTx = step?.ModuleStep == "E1ter" ? "IH08" : "ZSMNBAO13";
+                string sapTx = step?.ModuleStep == "E1.3" ? "IH08" : "ZSMNBAO13";
                 Logs.Add(new LogEntry("INFO", $"Lancement de la transaction {sapTx}..."));
                 
                 string resultFile = string.Empty;
@@ -126,8 +126,8 @@ namespace SmartSAP.ViewModels.Modules
                     {
                         Logs.Add(new LogEntry("SUCCESS", "Fichier Excel créé : ", resultFile));
                         
-                        // 3. Traitement du fichier Excel si étape E1ter
-                        if (step?.ModuleStep == "E1ter")
+                        // 3. Traitement du fichier Excel si étape E1.3
+                        if (step?.ModuleStep == "E1.3")
                         {
                             Logs.Add(new LogEntry("INFO", "Génération du modèle E2 pour enrichissement..."));
                             
