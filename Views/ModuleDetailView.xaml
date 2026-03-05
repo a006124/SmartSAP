@@ -93,52 +93,40 @@
 
         <!-- Log Section -->
         <Border Grid.Row="3" Background="White" BorderBrush="{StaticResource BorderBrush}"
-                BorderThickness="1" CornerRadius="8" Margin="0,5,0,0"
+                BorderThickness="1,1,1,0" CornerRadius="8,8,0,0"
                 AllowDrop="True" Drop="LogSection_Drop" DragEnter="LogSection_DragEnter" DragOver="LogSection_DragEnter">
-            <Grid>
+            <Grid Background="Transparent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <Border Grid.Row="0" Background="{StaticResource WindowBackgroundBrush}"
-                        CornerRadius="8,8,0,0" Padding="8">
-                    <TextBlock Text="Log d'exécution" FontWeight="Bold" FontSize="11"
+                        CornerRadius="8,8,0,0" Padding="10">
+                    <TextBlock Text="Execution Logs" FontWeight="Bold" FontSize="12"
                                Foreground="{StaticResource TextSecondaryBrush}"/>
                 </Border>
 
-                <!-- Utilisation d'une ListBox avec désactivation du défilement logique (CanContentScroll=False) 
-                     pour forcer le défilement horizontal par pixel, beaucoup plus fiable. -->
-                <ListBox Grid.Row="1" ItemsSource="{Binding Logs}" 
-                         Background="Transparent" BorderThickness="0" Margin="5"
-                         ScrollViewer.HorizontalScrollBarVisibility="Visible" 
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.CanContentScroll="False">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Focusable" Value="False"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <ContentPresenter />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock TextWrapping="NoWrap" Margin="0,1">
-                                <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
-                                <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
-                                <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <Hyperlink Command="{Binding OpenFileCommand}" Foreground="{StaticResource AccentBlueBrush}">
-                                    <Run Text="{Binding FileName}" />
-                                </Hyperlink>
-                            </TextBlock>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <ScrollViewer Grid.Row="1" Margin="10" Background="Transparent" HorizontalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Logs}">
+                         <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="0,2" TextWrapping="NoWrap">
+                                    <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
+                                    <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
+                                    <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    
+                                    <!-- Affiche le nom du fichier sous forme de lien cliquable si présent -->
+                                    <Hyperlink Command="{Binding OpenFileCommand}" 
+                                               Foreground="{StaticResource AccentBlueBrush}" 
+                                               TextDecorations="Underline">
+                                        <Run Text="{Binding FileName}" />
+                                    </Hyperlink>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </Grid>
         </Border>
     </Grid>

@@ -148,11 +148,11 @@
                     </Grid>
                 </Border>
 
-                <ScrollViewer Grid.Row="1" Margin="10">
+                <ScrollViewer Grid.Row="1" Margin="10" HorizontalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Logs}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <WrapPanel Margin="0,2">
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
                                     <TextBlock FontFamily="Consolas" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
