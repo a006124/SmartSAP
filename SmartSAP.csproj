@@ -11,6 +11,28 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Data\abc.json" />
+    <None Remove="Data\a_maintenir.json" />
+    <None Remove="Data\division.json" />
+    <None Remove="Data\langue.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\abc.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\a_maintenir.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\division.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\langue.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <!--
     Le SDK auto-inclut tous les .cs et .xaml.
     On utilise Update (pas Include) pour lier les code-behinds sans créer de doublons.

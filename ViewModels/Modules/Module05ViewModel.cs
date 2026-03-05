@@ -1,8 +1,11 @@
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SmartSAP.ViewModels.Modules
@@ -182,6 +185,12 @@ namespace SmartSAP.ViewModels.Modules
         {
             ExcelColumns.Clear();
 
+            // Chargement des données depuis JSON
+            string dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            // Note: En mode Debug/Développement, le chemin peut varier, on essaie aussi le chemin relatif au projet
+            if (!Directory.Exists(dataPath))
+                dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data");
+
             switch (step?.ModuleStep)
             {
                 case "E1.1":
@@ -259,6 +268,26 @@ namespace SmartSAP.ViewModels.Modules
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° pièce produit (4) - 30 car", "Pièce produit 4", "", 30));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice pièce produit (4) - 30 car", "Indice produit 4", "", 30));
                     break;
+            }
+        }
+
+        private string[] LoadJsonValues(string filePath, string propertyName)
+        {
+            try
+            {
+                if (!File.Exists(filePath)) return Array.Empty<string>();
+
+                string jsonContent = File.ReadAllText(filePath);
+                using var doc = JsonDocument.Parse(jsonContent);
+                return doc.RootElement.EnumerateArray()
+                    .Select(e => e.GetProperty(propertyName).GetString() ?? "")
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToArray();
+            }
+            catch (Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors du chargement de {filePath} : {ex.Message}"));
+                return Array.Empty<string>();
             }
         }
     }

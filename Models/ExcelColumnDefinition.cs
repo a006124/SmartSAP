@@ -9,7 +9,7 @@ namespace SmartSAP.Models
         public bool ForceUpperCase { get; set; } = true;
         public string[]? AllowedValues { get; set; }
 
-        public ExcelColumnDefinition(string header, string comment, string sampleData, int fixedWidth = 0, bool forceUpperCase = true, string jsonFile = "", string[]? allowedValues = null)
+        public ExcelColumnDefinition(string header, string comment, string sampleData, int fixedWidth = 0, bool forceUpperCase = true, string[]?  allowedValues = null)
         {
             Header = header;
             Comment = comment;

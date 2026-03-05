@@ -1,7 +1,10 @@
-using System.Linq;
-using System.IO;
-using System.Text.Json;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -120,7 +123,6 @@ namespace SmartSAP.ViewModels.Modules
             
             // Chargement des données depuis JSON
             string dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            // Note: En mode Debug/Développement, le chemin peut varier, on essaie aussi le chemin relatif au projet
             if (!Directory.Exists(dataPath)) 
                 dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data");
 
@@ -129,7 +131,7 @@ namespace SmartSAP.ViewModels.Modules
             var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
             var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
 
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Code Division", divisions.FirstOrDefault() ?? "MC02", 4, true, divisions));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Code Division", divisions.FirstOrDefault(), 4, true, divisions));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", langues.FirstOrDefault() ?? "FR", 2, true, langues));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT", 30, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, true));
@@ -157,7 +159,7 @@ namespace SmartSAP.ViewModels.Modules
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Erreur lors du chargement de {filePath} : {ex.Message}");
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors du chargement de {filePath} : {ex.Message}"));
                 return Array.Empty<string>();
             }
         }
