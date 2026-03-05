@@ -1,7 +1,7 @@
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Linq;
+using System.IO;
+using System.Text.Json;
+using System;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -117,17 +117,49 @@ namespace SmartSAP.ViewModels.Modules
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
             ExcelColumns.Clear();
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Code Division", "MC02", 4, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", "FR", 2, true));
+            
+            // Chargement des données depuis JSON
+            string dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            // Note: En mode Debug/Développement, le chemin peut varier, on essaie aussi le chemin relatif au projet
+            if (!Directory.Exists(dataPath)) 
+                dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data");
+
+            var divisions = LoadJsonValues(Path.Combine(dataPath, "division.json"), "01-Division Localisation");
+            var langues = LoadJsonValues(Path.Combine(dataPath, "langue.json"), "Langue préférée (division)");
+            var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
+            var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
+
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Code Division", divisions.FirstOrDefault() ?? "MC02", 4, true, divisions));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", langues.FirstOrDefault() ?? "FR", 2, true, langues));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT", 30, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Code de localisation", "150", 10, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "0010", 4, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, true, new[] { "1", "2", "3" }));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, true, abc));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Code projet - 30 car", "Référence projet", "", 30, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Code produit - 30 car", "Référence produit", "", 30, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, true, new[] { "0", "1" }));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, true, a_maintenir));
+        }
+
+        private string[] LoadJsonValues(string filePath, string propertyName)
+        {
+            try
+            {
+                if (!File.Exists(filePath)) return Array.Empty<string>();
+
+                string jsonContent = File.ReadAllText(filePath);
+                using var doc = JsonDocument.Parse(jsonContent);
+                return doc.RootElement.EnumerateArray()
+                    .Select(e => e.GetProperty(propertyName).GetString() ?? "")
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToArray();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors du chargement de {filePath} : {ex.Message}");
+                return Array.Empty<string>();
+            }
         }
     }
 }

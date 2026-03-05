@@ -194,8 +194,14 @@ namespace SmartSAP.ViewModels.Modules
                 case "E3":
                     // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true));
+
+                    var divisions = LoadJsonValues(Path.Combine(dataPath, "division.json"), "01-Division Localisation");
+                    var langues = LoadJsonValues(Path.Combine(dataPath, "langue.json"), "Langue préférée (division)");
+                    var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
+                    var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
+
+                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true, divisions));
+                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true, langues));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° EQU LICENCE - 20 car", "Numéro licence équipement", "", 20));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("(1) Poste technique - 30 car", "Poste technique lié", "", 30));
@@ -210,7 +216,7 @@ namespace SmartSAP.ViewModels.Modules
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Numéro de série fabricant - 30 car", "S/N Fabricant", "", 30));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Type équipement - 10 car", "Type d'équipement", "", 10));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° inventaire - 25 car", "Numéro d'inventaire", "", 25));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Criticité ABC", "", 1));
+                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Criticité ABC", "", 1,true,abc));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Localisation technique", "", 10));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Local - 8 car", "Local", "", 8));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Centre de coût SAP", "", 10));
@@ -238,7 +244,7 @@ namespace SmartSAP.ViewModels.Modules
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Famille - 6 car (*)", "Famille équipement", "", 6, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Capacité - 25 car", "Capacité", "", 25));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Alimentation - 25 car", "Alimentation", "", 25));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur maintenance", "1", 1));
+                    ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur maintenance", "1", 1,true,a_maintenir));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Uet de Fabrication - 30 car", "UET de fabrication", "", 30));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Dessiné par - 30 car", "Dessiné par", "", 30));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice Inventaire - 30 car", "Indice inventaire", "", 30));
