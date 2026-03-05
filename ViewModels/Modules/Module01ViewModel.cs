@@ -18,21 +18,23 @@ namespace SmartSAP.ViewModels.Modules
             {
                 new WorkflowStep { 
                     Title = "1. Saisie des données nécessaires à la création des Postes Techniques dans SAP", 
-                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
+                    Description = "Crée un nouveau fichier Excel modèle.", 
                     Icon = "\xE70F", 
-                    ModuleStep = "E1_Saisie",
+                    ModuleStep = "E1",
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
                     Title = "2. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
-                    Icon = "\xE762", 
+                    Icon = "\xE762",
+                    ModuleStep = "E2",
                     ActionCommand = ExportFixedWidthCommand 
                 },
                 new WorkflowStep { 
                     Title = "3. Intégration SAP", 
-                    Description = "Contrôle la connexion et exécute la transaction SAP ZSMNBAO15.", 
+                    Description = "Exécute la transaction SAP 'ZSMNBAO15'.", 
                     Icon = "\xE768", 
+                    ModuleStep = "E3",
                     ActionCommand = ExecuteSAPTransactionCommand 
                 }
             };
@@ -111,19 +113,20 @@ namespace SmartSAP.ViewModels.Modules
         }
 
         // DÉFINITION DES COLONNES DE L'EXCEL MODELE
+        // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
             ExcelColumns.Clear();
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Numéro unique de l'équipement dans SAP", "MC02", 4));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", "FR", 2));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT", 30));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Code de localisation", "150", 10));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "0010", 4));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Code Division", "MC02", 4, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", "FR", 2, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT", 30, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Code de localisation", "150", 10, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "0010", 4, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, true, new[] { "1", "2", "3" }));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code projet - 30 car", "Référence projet", "", 30));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code produit - 30 car", "Référence produit", "", 30));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code projet - 30 car", "Référence projet", "", 30, true));
+            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code produit - 30 car", "Référence produit", "", 30, true));
             ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, true, new[] { "0", "1" }));
         }
     }

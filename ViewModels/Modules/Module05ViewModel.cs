@@ -1,7 +1,9 @@
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -32,14 +34,14 @@ namespace SmartSAP.ViewModels.Modules
                 },
                 new WorkflowStep { 
                     Title = "[Option1] SAP->Excel E1.3", 
-                    Description = "Récupère les données des équipements via la transaction SAP IH08.", 
+                    Description = "Récupère les données des équipements via la transaction SAP 'IH08'.", 
                     Icon = "\xE768", 
                     ModuleStep = "E1.3",
                     ActionCommand = ExecuteSAPTransactionCommand
                 },
                 new WorkflowStep { 
                     Title = "[Option2] Modèle vierge", 
-                    Description = "Crée un fichier Excel à renseigner à partir d'un modèle.", 
+                    Description = "Crée un fichier Excel modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E2",
                     ActionCommand = GenerateTemplateCommand 
@@ -53,7 +55,7 @@ namespace SmartSAP.ViewModels.Modules
                 },
                 new WorkflowStep { 
                     Title = "4. Intégration des modifications dans SAP", 
-                    Description = "Contrôle la connexion et exécute la transaction SAP ZSMNBAO13.", 
+                    Description = "Exécute la transaction SAP 'ZSMNBAO13'.", 
                     Icon = "\xE768", 
                     ModuleStep = "E4",
                     ActionCommand = ExecuteSAPTransactionCommand
@@ -185,11 +187,13 @@ namespace SmartSAP.ViewModels.Modules
                 case "E1.1":
                 case "E1.2":
                     // LISTE DE NUMÉROS D'ÉQUIPEMENTS
+                    // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
                     break;
                 case "E2":
                 case "E3":
                     // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
+                    // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true));
                     ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));

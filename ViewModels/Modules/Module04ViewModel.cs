@@ -17,7 +17,7 @@ namespace SmartSAP.ViewModels.Modules
             {
                 new WorkflowStep { 
                     Title = "1. Saisie des données nécessaires à la création des Equipements dans SAP", 
-                    Description = "Crée un nouveau fichier Excel à renseigner à partir d'un modèle.", 
+                    Description = "Crée un nouveau fichier Excel modèle.", 
                     Icon = "\xE70F", 
                     ModuleStep = "E1_Saisie",
                     ActionCommand = GenerateTemplateCommand 
@@ -30,7 +30,7 @@ namespace SmartSAP.ViewModels.Modules
                 },
                 new WorkflowStep { 
                     Title = "3. Intégration SAP", 
-                    Description = "Contrôle la connexion et exécute la transaction SAP ZSMNBAO12.", 
+                    Description = "Exécute la transaction SAP 'ZSMNBAO12'.", 
                     Icon = "\xE768", 
                     ActionCommand = ExecuteSAPTransactionCommand 
                 }
