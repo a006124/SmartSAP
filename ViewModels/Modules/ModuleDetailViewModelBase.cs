@@ -213,7 +213,8 @@ namespace SmartSAP.ViewModels.Modules
 
                                     if (!match)
                                     {
-                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Header}'."));
+                                        string allowedStr = string.Join(", ", colDef.AllowedValues);
+                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Header}'. Valeurs attendues : {allowedStr}"));
                                         rowValid = false;
                                         errorCount++;
                                     }
