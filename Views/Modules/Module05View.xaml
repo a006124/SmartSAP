@@ -187,7 +187,7 @@
                                             <Run Text="{Binding LinkText, Mode=OneWay}"/>
                                         </Hyperlink>
                                     </TextBlock>
-                                </WrapPanel>
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
