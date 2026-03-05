@@ -107,26 +107,40 @@
                                Foreground="{StaticResource TextSecondaryBrush}"/>
                 </Border>
 
-                <ScrollViewer Grid.Row="1" Margin="10" Background="Transparent">
-                    <ItemsControl ItemsSource="{Binding Logs}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Margin="0,2" TextWrapping="Wrap">
-                                    <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
-                                    <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
-                                    <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    
-                                    <!-- Affiche le nom du fichier sous forme de lien cliquable si présent -->
-                                    <Hyperlink Command="{Binding OpenFileCommand}" 
-                                               Foreground="{StaticResource AccentBlueBrush}" 
-                                               TextDecorations="Underline">
-                                        <Run Text="{Binding FileName}" />
-                                    </Hyperlink>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <ListBox Grid.Row="1" Margin="10" Background="Transparent" BorderThickness="0"
+                         ItemsSource="{Binding Logs}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border Background="Transparent">
+                                            <ContentPresenter />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="0,2" TextWrapping="NoWrap">
+                                <Run Text="{Binding Timestamp}" Foreground="#94A3B8" FontFamily="Consolas"/>
+                                <Run Text=" ["/><Run Text="{Binding Type}" FontWeight="Bold"/><Run Text="] "/>
+                                <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                
+                                <Hyperlink Command="{Binding OpenFileCommand}" 
+                                           Foreground="{StaticResource AccentBlueBrush}" 
+                                           TextDecorations="Underline">
+                                    <Run Text="{Binding FileName}" />
+                                </Hyperlink>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Grid>
         </Border>
     </Grid>
