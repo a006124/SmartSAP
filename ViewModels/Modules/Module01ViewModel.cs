@@ -16,6 +16,18 @@ namespace SmartSAP.ViewModels.Modules
         {
         }
 
+        public record ExcelColumnModel(
+            string entete,
+            string commentaires,
+            string exemple,
+            int longueurMaxi,
+            IEnumerable<string>? valeursAutorisees,
+            bool forcerMajuscule,
+            bool forcerVide,
+            bool forcerDocumentation,
+            string[]? règleDeGestion
+        );
+
         protected override void InitializeSteps()
         {
             Steps = new ObservableCollection<WorkflowStep>
@@ -132,19 +144,19 @@ namespace SmartSAP.ViewModels.Modules
             var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
             var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
 
-            var ExcelModel =new[]
+            var ExcelModel = new List<ExcelColumnModel>
             {
-                new { entete="Division - 4 car (*)", commentaires="Division SAP", exemple="MC02", longueurMaxi=4, valeursAutorisees=divisions, forcerMajuscule=true, forcerVide=false,forcerDocumentation=true,règleDeGestion=null },
-                new { entete="Langue - 2 car (*)", commentaires="Code langue", exemple="FR", longueurMaxi=2, valeursAutorisees=langues, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
-                new { entete="Poste technique - 30 car (*)", commentaires="Poste technique lié", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
-                new { entete="Désignation - 40 car (*)", commentaires="Désignation de l'équipement", exemple="PRESSE TRANSFERT", longueurMaxi=40, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
-                new { entete="Localisation - 10 car", commentaires="Code de localisation", exemple="150", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
-                new { entete="Centre de coût - 10 car", commentaires="Code du centre de coût", exemple="AC004510", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
-                new { entete="Poste - 4 car", commentaires="Numéro de poste", exemple="0010", longueurMaxi=4, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M01.2.G" },
-                new { entete="Code ABC - 1 car", commentaires="Indicateur de criticité ABC", exemple="1", longueurMaxi=1, valeursAutorisees=abc, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
-                new { entete="Code projet - 30 car", commentaires="Référence projet", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
-                new { entete="Code produit - 30 car", commentaires="Référence produit", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
-                new { entete="A maintenir - 1 car", commentaires="Indicateur de maintenance (1=Oui)", exemple="1", longueurMaxi=1, valeursAutorisees=a_maintenir, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                new ("Division - 4 car (*)", "Division SAP", "MC02", 4, divisions, true, false,true,null),
+                new ("Langue - 2 car (*)", "Code langue", "FR", 2, langues, true, false, true, null),
+                new ("Poste technique - 30 car (*)", "Poste technique lié", "", 30, null, true, false, true, null),
+                new ("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, null, true, false, true, null),
+                new ("Localisation - 10 car", "Code de localisation", "150", 10, null, true, false, false, null),
+                new ("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, null, true, false, false, null),
+                new ("Poste - 4 car", "Numéro de poste", "0010", 4, null, true, false, false, "M01.2.G"),
+                new ("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, abc, true, false, false, null),
+                new ("Code projet - 30 car", "Référence projet", "", 30, null, true, false, false, null),
+                new ("Code produit - 30 car", "Référence produit", "", 30, null, true, false, false, null),
+                new ("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, a_maintenir, true, false, false, null),
             };
 
                 ExcelColumns.AddRange(ExcelModel.Select(d =>
