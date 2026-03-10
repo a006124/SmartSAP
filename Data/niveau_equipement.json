@@ -1,0 +1,5 @@
+[
+  { "niveau_equipement": "GE" }, // N = Norma
+  { "niveau_equipement": "E" }, // I = Interchangeable
+  { "niveau_equipement": "S/E" }  // R = Référence
+]

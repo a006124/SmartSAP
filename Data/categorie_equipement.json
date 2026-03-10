@@ -1,0 +1,5 @@
+[
+  { "categorie_equipement": "N" }, // N = Norma
+  { "categorie_equipement": "I" }, // I = Interchangeable
+  { "categorie_equipement": "R" }  // R = Référence
+]

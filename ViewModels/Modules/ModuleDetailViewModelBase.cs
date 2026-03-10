@@ -1,13 +1,16 @@
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
+using NPOI.SS.Formula.Functions;
+using SmartSAP.Models;
+using SmartSAP.Services.SAP;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ClosedXML.Excel;
-using SmartSAP.Models;
-using System.Diagnostics;
-using System.Linq;
-using SmartSAP.Services.SAP;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -84,8 +87,6 @@ namespace SmartSAP.ViewModels.Modules
 
             try
             {
-                // Note: Dans une application réelle on utiliserait un SaveFileDialog.
-                // Ici on génère un nom par défaut pour la démonstration.
                 string dateExecution = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 string moduleStepPart = !string.IsNullOrEmpty(step?.ModuleStep) ? $"{step.ModuleStep}" : "";
                 string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}_{moduleStepPart}.xlsx";
@@ -102,19 +103,19 @@ namespace SmartSAP.ViewModels.Modules
                         var cell = worksheet.Cell(1, i + 1);
                         
                         // Header
-                        cell.Value = colDef.Header;
+                        cell.Value = colDef.Entete;
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#3B82F6");
                         cell.Style.Font.FontColor = XLColor.White;
 
                         // Comment
-                        if (!string.IsNullOrEmpty(colDef.Comment))
+                        if (!string.IsNullOrEmpty(colDef.Commentaires))
                         {
-                            cell.GetComment().AddText(colDef.Comment);
+                            cell.GetComment().AddText(colDef.Commentaires);
                         }
 
                         // Sample Data
-                        worksheet.Cell(2, i + 1).Value = colDef.SampleData;
+                        worksheet.Cell(2, i + 1).Value = colDef.Exemple;
                     }
 
                     worksheet.Columns().AdjustToContents();
@@ -190,36 +191,136 @@ namespace SmartSAP.ViewModels.Modules
                             for (int i = 0; i < ExcelColumns.Count; i++)
                             {
                                 var colDef = ExcelColumns[i];
-                                int width = colDef.FixedWidth;
+                                int width = colDef.LongueurMaxi;
                                 string rawValue = row.Cell(i + 1).Value.ToString();
-                                
-                                // Cleansing
-                                string processedValue = rawValue?.Trim() ?? "";
-                                if (colDef.ForceUpperCase)
-                                    processedValue = processedValue.ToUpper();
+                                string processedValue = string.Empty;
 
-                                // Validation
-                                if (colDef.AllowedValues != null && colDef.AllowedValues.Length > 0)
+                                if (!colDef.ForcerVide){
                                 {
-                                    bool match = false;
-                                    foreach (var allowed in colDef.AllowedValues)
+                                    // Cleaning
+                                    if (rawValue != null) {
+                                        processedValue = rawValue.Replace("\r", " ").Replace("\n", " "); // Remplacer les retours à la ligne par des espaces pour éviter de casser le format fixe                                            
+                                        processedValue = processedValue?.Trim() ?? ""; // Suppression des espaces superflus
+                                    }
+                                    else {
+                                        rawValue = string.Empty;
+                                    }
+
+                                    // Majuscules si nécessaire
+                                    if (colDef.ForcerMajuscule)
+                                        processedValue = processedValue.ToUpper();
+
+                                    // Valeurs autorisées ?
+                                    if (colDef.ValeursAutorisées != null && colDef.ValeursAutorisées.Length > 0)
                                     {
-                                        if (processedValue == allowed.ToUpper())
+                                        bool match = false;
+                                        foreach (var allowed in colDef.ValeursAutorisées)
                                         {
-                                            match = true;
-                                            break;
+                                            if (processedValue == allowed.ToUpper())
+                                            {
+                                                match = true;
+                                                break;
+                                            }
+                                        }
+
+                                       if (!match)
+                                       {
+                                            string allowedStr = string.Join(", ", colDef.ValeursAutorisées);
+                                            Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : {allowedStr}"));
+                                            rowValid = false;
+                                            errorCount++;
+                                       }
+                                    }
+
+                                    // Règles de gestion
+                                    if (colDef.RègleDeGestion != null && colDef.RègleDeGestion.Length > 0)
+                                    {
+                                        foreach (var règle in colDef.RègleDeGestion)
+                                        {
+                                            switch (règle)
+                                            {
+                                                case "E01.C":
+                                                case "E01.F":
+                                                case "E01.W":
+                                                case "E01.AK": // Doit être numérique
+                                                    bool match = false;
+                                                    if (string.IsNullOrEmpty(processedValue))
+                                                        match = true; // Autoriser les champs vides
+                                                    else
+                                                        match = Regex.IsMatch(processedValue, @"^\d+$");
+                                                    if (!match)
+                                                    {
+                                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : uniquement des chiffres"));
+                                                        rowValid = false;
+                                                        errorCount++;
+                                                    }
+                                                    break;
+                                                case "E01.J": // Doit être au format 9999
+                                                    if (string.IsNullOrEmpty(processedValue))
+                                                        match = true; // Autoriser les champs vides
+                                                    else
+                                                        match = Regex.IsMatch(processedValue, @"^\d{4}$");
+                                                    if (!match)
+                                                    {
+                                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : uniquement un nombre au format 9999"));
+                                                        rowValid = false;
+                                                        errorCount++;
+                                                    }
+                                                    break;
+                                                    case "E01.Y":
+                                                    case "E01.Z":
+                                                    case "E01.AA":
+                                                    case "E01.AW": // Doit être au format JJMMAAAA
+                                                        if (string.IsNullOrEmpty(processedValue))
+                                                            match = true; // Autoriser les champs vides
+                                                        else
+                                                            {
+                                                                string pattern = @"^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{4}$";
+                                                                match = Regex.IsMatch(processedValue,pattern);
+                                                            }
+                                                        if (!match)
+                                                        {
+                                                            Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : une date au format JJMMAAA"));
+                                                            rowValid = false;
+                                                            errorCount++;
+                                                        }
+                                                        break;
+                                                case "E01.AD": // Doit être au format code MABEC
+                                                    if (string.IsNullOrEmpty(processedValue))
+                                                        match = true; // Autoriser les champs vides
+                                                    else
+                                                    {
+                                                        string pattern = @"^.{10}$";
+                                                        match = Regex.IsMatch(processedValue, pattern);
+                                                    }
+                                                    if (!match)
+                                                    {
+                                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : une chaine de 10 caractères"));
+                                                        rowValid = false;
+                                                        errorCount++;
+                                                    }
+                                                    break;
+                                                case "E01.AP": // 6 caractères numériques ou ZZZBDN
+                                                    if (string.IsNullOrEmpty(processedValue))
+                                                        match = true; // Autoriser les champs vides
+                                                    else
+                                                    {
+                                                        string pattern = @"^(\d{6}|ZZZBDN)$";
+                                                        match = Regex.IsMatch(processedValue, pattern);
+                                                    }
+                                                    if (!match)
+                                                    {
+                                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : une chaine de 6 chiffres ou ZZZBFN"));
+                                                        rowValid = false;
+                                                        errorCount++;
+                                                    }
+                                                    break;
+
+                                            }
                                         }
                                     }
-
-                                    if (!match)
-                                    {
-                                        string allowedStr = string.Join(", ", colDef.AllowedValues);
-                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Header}'. Valeurs attendues : {allowedStr}"));
-                                        rowValid = false;
-                                        errorCount++;
-                                    }
                                 }
-                                
+
                                 if (width > 0)
                                 {
                                     // Tronquer ou Padder à droite
@@ -227,7 +328,7 @@ namespace SmartSAP.ViewModels.Modules
                                         processedValue = processedValue.Substring(0, width);
                                     else
                                         processedValue = processedValue.PadRight(width);
-                                    
+                                        
                                     line += processedValue;
                                 }
                                 else

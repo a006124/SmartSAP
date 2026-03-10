@@ -1,0 +1,5 @@
+[
+  { "groupe_autorisation": "" },
+  { "groupe_autorisation": "SEQR" }, // SEQR : Equipement de Référence sur RE00
+  { "groupe_autorisation": "SEQD" }  // SEQD : Equipement de Référence sur une autre division que RE00
+]

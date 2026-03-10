@@ -353,7 +353,7 @@ namespace SmartSAP.Services.SAP
 
                 // Écran de sélection
                 SafeFindById(session, "wnd[0]/usr/ctxtFIC_FILE").Text = filePath;
-                // SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
 
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
