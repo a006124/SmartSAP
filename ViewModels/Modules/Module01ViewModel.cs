@@ -8,6 +8,7 @@ using System.Text.Json;
 
 namespace SmartSAP.ViewModels.Modules
 {
+    // Poste Technique : Création en masse
     public class Module01ViewModel : ModuleDetailViewModelBase
     {
         public Module01ViewModel(MainViewModel mainViewModel, string title) 
@@ -131,17 +132,34 @@ namespace SmartSAP.ViewModels.Modules
             var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
             var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
 
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Code Division", divisions.FirstOrDefault(), 4, true, divisions));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code de langue (ex: FR)", langues.FirstOrDefault() ?? "FR", 2, true, langues));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste technique - 30 car (*)", "Nom du poste technique", "MC02_E_PT", 30, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Code de localisation", "150", 10, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "0010", 4, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, true, abc));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code projet - 30 car", "Référence projet", "", 30, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("Code produit - 30 car", "Référence produit", "", 30, true));
-            ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, true, a_maintenir));
+            var ExcelModel =new[]
+            {
+                new { entete="Division - 4 car (*)", commentaires="Division SAP", exemple="MC02", longueurMaxi=4, valeursAutorisees=divisions, forcerMajuscule=true, forcerVide=false,forcerDocumentation=true,règleDeGestion=null },
+                new { entete="Langue - 2 car (*)", commentaires="Code langue", exemple="FR", longueurMaxi=2, valeursAutorisees=langues, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                new { entete="Poste technique - 30 car (*)", commentaires="Poste technique lié", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                new { entete="Désignation - 40 car (*)", commentaires="Désignation de l'équipement", exemple="PRESSE TRANSFERT", longueurMaxi=40, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                new { entete="Localisation - 10 car", commentaires="Code de localisation", exemple="150", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                new { entete="Centre de coût - 10 car", commentaires="Code du centre de coût", exemple="AC004510", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                new { entete="Poste - 4 car", commentaires="Numéro de poste", exemple="0010", longueurMaxi=4, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M01.2.G" },
+                new { entete="Code ABC - 1 car", commentaires="Indicateur de criticité ABC", exemple="1", longueurMaxi=1, valeursAutorisees=abc, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                new { entete="Code projet - 30 car", commentaires="Référence projet", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                new { entete="Code produit - 30 car", commentaires="Référence produit", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                new { entete="A maintenir - 1 car", commentaires="Indicateur de maintenance (1=Oui)", exemple="1", longueurMaxi=1, valeursAutorisees=a_maintenir, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+            };
+
+                ExcelColumns.AddRange(ExcelModel.Select(d =>
+                    new Models.ExcelColumnDefinition(
+                        entete: d.entete,
+                        commentaires: d.commentaires,
+                        exemple: d.exemple,
+                        longueurMaxi: d.longueurMaxi,
+                        valeursAutorisees: d.valeursAutorisees,
+                        forcerMajuscule: d.forcerMajuscule,
+                        forcerVide: d.forcerVide,
+                        forcerDocumentation: d.forcerDocumentation,
+                        regleDeGestion: d.règleDeGestion
+                )));
+
         }
 
         private string[] LoadJsonValues(string filePath, string propertyName)

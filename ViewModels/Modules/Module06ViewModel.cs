@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 
 namespace SmartSAP.ViewModels.Modules
 {
+    // Equipement : Suppression en masse
     public class Module06ViewModel : ModuleDetailViewModelBase
     {
         public Module06ViewModel(MainViewModel mainViewModel, string title) 

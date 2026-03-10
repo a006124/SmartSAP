@@ -1,4 +1,4 @@
 [
-  { "type_equipement": "SMN-REG" }, // Equipement réglementé
-  { "type_equipement": "SMN-CSR" } // Equipement de sécurité
+  { "type_equipement": "SMN-REG" },
+  { "type_equipement": "SMN-CSR" }
 ]

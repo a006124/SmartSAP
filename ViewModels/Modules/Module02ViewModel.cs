@@ -4,6 +4,7 @@ namespace SmartSAP.ViewModels.Modules
 {
     public class Module02ViewModel : ModuleDetailViewModelBase
     {
+        // Poste Technique : Modification en masse
         public Module02ViewModel(MainViewModel mainViewModel, string title) 
             : base(mainViewModel, title)
         {

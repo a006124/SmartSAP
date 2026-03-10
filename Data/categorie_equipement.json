@@ -1,5 +1,5 @@
 [
-  { "categorie_equipement": "N" }, // N = Norma
-  { "categorie_equipement": "I" }, // I = Interchangeable
-  { "categorie_equipement": "R" }  // R = Référence
+  { "categorie_equipement": "N" },
+  { "categorie_equipement": "I" },
+  { "categorie_equipement": "R" }
 ]

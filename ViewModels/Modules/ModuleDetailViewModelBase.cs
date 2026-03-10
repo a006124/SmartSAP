@@ -237,12 +237,12 @@ namespace SmartSAP.ViewModels.Modules
                                     {
                                         foreach (var règle in colDef.RègleDeGestion)
                                         {
-                                            switch (règle)
+                                            switch (règle) // Mnn.n.A : Fichier utilisé dans le module Mnn Etape n colonne A
                                             {
-                                                case "E01.C":
-                                                case "E01.F":
-                                                case "E01.W":
-                                                case "E01.AK": // Doit être numérique
+                                                case "M04.2.W":
+                                                case "M05.1.2.C":
+                                                case "M05.3.W":
+                                                case "M05.3.AK": // Doit être numérique
                                                     bool match = false;
                                                     if (string.IsNullOrEmpty(processedValue))
                                                         match = true; // Autoriser les champs vides
@@ -255,7 +255,9 @@ namespace SmartSAP.ViewModels.Modules
                                                         errorCount++;
                                                     }
                                                     break;
-                                                case "E01.J": // Doit être au format 9999
+                                                case "M01.2.G":
+                                                case "M04.2.J":
+                                                case "M05.3.J": // Doit être au format 9999
                                                     if (string.IsNullOrEmpty(processedValue))
                                                         match = true; // Autoriser les champs vides
                                                     else
@@ -267,10 +269,14 @@ namespace SmartSAP.ViewModels.Modules
                                                         errorCount++;
                                                     }
                                                     break;
-                                                    case "E01.Y":
-                                                    case "E01.Z":
-                                                    case "E01.AA":
-                                                    case "E01.AW": // Doit être au format JJMMAAAA
+                                                    case "M04.2.Y":
+                                                    case "M04.2.Z":
+                                                    case "M04.2.AA":
+                                                    case "M04.2.AW":
+                                                    case "M05.3.Y":
+                                                    case "M05.3.Z":
+                                                    case "M05.3.AA":
+                                                    case "M05.3.AW": // Doit être au format JJMMAAAA
                                                         if (string.IsNullOrEmpty(processedValue))
                                                             match = true; // Autoriser les champs vides
                                                         else
@@ -285,7 +291,8 @@ namespace SmartSAP.ViewModels.Modules
                                                             errorCount++;
                                                         }
                                                         break;
-                                                case "E01.AD": // Doit être au format code MABEC
+                                                case "M04.2.AD":
+                                                case "M05.3.AD": // Doit être au format code MABEC
                                                     if (string.IsNullOrEmpty(processedValue))
                                                         match = true; // Autoriser les champs vides
                                                     else
@@ -300,7 +307,8 @@ namespace SmartSAP.ViewModels.Modules
                                                         errorCount++;
                                                     }
                                                     break;
-                                                case "E01.AP": // 6 caractères numériques ou ZZZBDN
+                                                case "M04.2.AP":
+                                                case "M05.3.AP": // 6 caractères numériques ou ZZZBDN
                                                     if (string.IsNullOrEmpty(processedValue))
                                                         match = true; // Autoriser les champs vides
                                                     else

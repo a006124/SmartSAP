@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace SmartSAP.ViewModels.Modules
 {
+    // Equipement : Modification en masse
     public class Module05ViewModel : ModuleDetailViewModelBase
     {
         public Module05ViewModel(MainViewModel mainViewModel, string title) 
@@ -197,7 +198,22 @@ namespace SmartSAP.ViewModels.Modules
                 case "E1.2":
                     // LISTE DE NUMÉROS D'ÉQUIPEMENTS
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
+                    var ExcelModel = new[]
+                    {
+                        new { entete="N° Equ SAP - 18 car", commentaires="Numéro équipement SAP", exemple="", longueurMaxi=18, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion="M05.1.2.A" },
+                    };   
+                    ExcelColumns.AddRange(ExcelModel.Select(d =>
+                        new Models.ExcelColumnDefinition(
+                            entete: d.entete,
+                            commentaires: d.commentaires,
+                            exemple: d.exemple,
+                            longueurMaxi: d.longueurMaxi,
+                            valeursAutorisees: d.valeursAutorisees,
+                            forcerMajuscule: d.forcerMajuscule,
+                            forcerVide: d.forcerVide,
+                            forcerDocumentation: d.forcerDocumentation,
+                            regleDeGestion: d.règleDeGestion
+                    )));   
                     break;
                 case "E2":
                 case "E3":
@@ -206,67 +222,93 @@ namespace SmartSAP.ViewModels.Modules
 
                     var divisions = LoadJsonValues(Path.Combine(dataPath, "division.json"), "01-Division Localisation");
                     var langues = LoadJsonValues(Path.Combine(dataPath, "langue.json"), "Langue préférée (division)");
+                    var groupe_autorisation = LoadJsonValues(Path.Combine(dataPath, "groupe_autorisation.json"), "groupe_autorisation");
+                    var categorie_equipement = LoadJsonValues(Path.Combine(dataPath, "categorie_equipement.json"), "categorie_equipement");
+                    var type_equipement = LoadJsonValues(Path.Combine(dataPath, "type_equipement.json"), "type_equipement");
                     var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
+                    var niveau_equipement = LoadJsonValues(Path.Combine(dataPath, "niveau_equipement.json"), "niveau_equipement");
+                    var nature_equipement = LoadJsonValues(Path.Combine(dataPath, "nature_equipement.json"), "nature_equipement");
                     var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
 
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Division - 4 car (*)", "Division SAP", "MC02", 4, true, divisions));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Langue - 2 car (*)", "Code langue", "FR", 2, true, langues));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° EQU LICENCE - 20 car", "Numéro licence équipement", "", 20));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("(1) Poste technique - 30 car", "Poste technique lié", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("(2) Equipement - 18 car", "Equipement lié", "", 18));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("(3) N° LICENCE DU PERE - 20 car", "Licence équipement parent", "", 20));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Statut RFOU - 1 car", "Statut RFOU", "", 1));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Statut REF - 1 car", "Statut REF", "", 1));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Poste - 4 car", "Numéro de poste", "", 4));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Groupe autorisation - 4 car", "Groupe d'autorisation", "", 4));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Catégorie équipement - 1 car (*)", "Catégorie équipement", "", 1, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Libellé fonctionnel de l'équip - 40 car", "Désignation fonctionnelle", "", 40));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Numéro de série fabricant - 30 car", "S/N Fabricant", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Type équipement - 10 car", "Type d'équipement", "", 10));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° inventaire - 25 car", "Numéro d'inventaire", "", 25));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Code ABC - 1 car", "Criticité ABC", "", 1,true,abc));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Localisation - 10 car", "Localisation technique", "", 10));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Local - 8 car", "Local", "", 8));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Centre de coût - 10 car", "Centre de coût SAP", "", 10));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Immobilisation principale - 12 car", "Immobilisation principale", "", 12));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Immobilisation subsidiaire - 4 car", "Immobilisation subsidiaire", "", 4));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Valeur d'acquisition - 17 car", "Valeur d'acquisition", "", 17));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Devise - 5 car", "Devise", "EUR", 5));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Date d'acquisition - 8 car", "Date d'acquisition (AAAAMMJJ)", "", 8));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Date début garanti - 8 car", "Début de garantie (AAAAMMJJ)", "", 8));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Date fin garanti - 8 car", "Fin de garantie (AAAAMMJJ)", "", 8));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Repère - 30 car", "Repère équipement", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° LICENCE - 24 car", "Numéro de licence", "", 24));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Code MABEC - 18 car", "Code MABEC", "", 18));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Libellé matériel de l'équipement - 30 car (*)", "Libellé matériel", "", 30, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Niveau équipement - 3 car (*)", "Niveau de l'équipement", "", 3, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Référence fournisseur - 25 car (*)", "Réf fournisseur", "", 25, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Nom fournisseur - 30 car (*)", "Nom fournisseur", "", 30, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Référence intégrateur - 30 car", "Réf intégrateur", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Nom intégrateur - 30 car", "Nom intégrateur", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Quantité équipement - 17 car", "Quantité", "1", 17));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Mnémonique - 10 car", "Mnémonique", "", 10));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Catégorie d'équipement - 1 car (*)", "Catégorie équipement (Bis)", "", 1, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Code Projet - 30 car", "Référence projet", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Modèle - 25 car", "Modèle fabricant", "", 25));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Famille - 6 car (*)", "Famille équipement", "", 6, true));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Capacité - 25 car", "Capacité", "", 25));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Alimentation - 25 car", "Alimentation", "", 25));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("A maintenir - 1 car", "Indicateur maintenance", "1", 1,true,a_maintenir));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Uet de Fabrication - 30 car", "UET de fabrication", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Dessiné par - 30 car", "Dessiné par", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice Inventaire - 30 car", "Indice inventaire", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Date de l'indice - 8 car", "Date de l'indice (AAAAMMJJ)", "", 8));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Responsable de l'indice - 30 car", "Responsable indice", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° pièce produit (1) - 30 car", "Pièce produit 1", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice pièce produit (1) - 30 car", "Indice produit 1", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° pièce produit (2) - 30 car", "Pièce produit 2", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice pièce produit (2) - 30 car", "Indice produit 2", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° pièce produit (3) - 30 car", "Pièce produit 3", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice pièce produit (3) - 30 car", "Indice produit 3", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("N° pièce produit (4) - 30 car", "Pièce produit 4", "", 30));
-                    ExcelColumns.Add(new Models.ExcelColumnDefinition("Indice pièce produit (4) - 30 car", "Indice produit 4", "", 30));
+                    var ExcelModel =new[]
+                    {
+                        new { entete="Division - 4 car (*)", commentaires="Division SAP", exemple="MC02", longueurMaxi=4, valeursAutorisees=divisions, forcerMajuscule=true, forcerVide=false,forcerDocumentation=true,règleDeGestion=null },
+                        new { entete="Langue - 2 car (*)", commentaires="Code langue", exemple="FR", longueurMaxi=2, valeursAutorisees=langues, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="N° Equ SAP - 18 car", commentaires="Numéro équipement SAP", exemple="", longueurMaxi=18, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion="M05.3.C" },
+                        new { entete="N° EQU LICENCE - 20 car", commentaires="Numéro licence équipement", exemple="", longueurMaxi=20, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="(1) Poste technique - 30 car", commentaires="Poste technique lié", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="(2) Equipement - 18 car", commentaires="Equipement lié", exemple="", longueurMaxi=18, valeursAutorisees=null, forcerMajuscule=false, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="(3) N° LICENCE DU PERE - 20 car", commentaires="Licence équipement parent", exemple="", longueurMaxi=20, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Statut RFOU - 1 car", commentaires="Statut RFOU", exemple="", longueurMaxi=1, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Statut REF - 1 car", commentaires="Statut REF", exemple="", longueurMaxi=1, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="N° position - 4 car", commentaires="Numéro de poste", exemple="", longueurMaxi=4, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.J" },
+                        new { entete="Groupe autorisation - 4 car", commentaires="Groupe d'autorisation : SEQR (RE00), SEQD (autre division)", exemple="", longueurMaxi=4, valeursAutorisees=groupe_autorisation, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        
+                        new { entete="Catégorie équipement - 1 car (*)", commentaires="Catégorie équipement : N, I, R", exemple="N", longueurMaxi=1, valeursAutorisees=categorie_equipement, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Libellé fonctionnel de l'équip - 40 car", commentaires="Désignation fonctionnelle", exemple="", longueurMaxi=40, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Numéro de série fabricant - 30 car", commentaires="S/N Fabricant : non documenté pour un équipement de type R", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Type équipement - 10 car", commentaires="Type d'équipement : SMN-REG, SMN-CSR", exemple="SMN-REG", longueurMaxi=10, valeursAutorisees=type_equipement, forcerMajuscule=false, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="N° inventaire - 25 car", commentaires="Numéro d'inventaire", exemple="", longueurMaxi=25, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Code ABC - 1 car", commentaires="Criticité ABC : si non documenté, il sera mis la valeur 3 - 1, 2, 3", exemple="1", longueurMaxi=1, valeursAutorisees=abc, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Localisation - 10 car", commentaires="Localisation technique", exemple="", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Local - 8 car", commentaires="Local", exemple="", longueurMaxi=8, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Centre de coût - 10 car", commentaires="Centre de coût SAP", exemple="AC01130", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Immobilisation principale - 12 car", commentaires="Immobilisation principale : non documenté pour un équipement de type R", exemple="", longueurMaxi=12, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Immobilisation subsidiaire - 4 car", commentaires="Immobilisation subsidiaire : non documenté pour un équipement de type R", exemple="", longueurMaxi=4, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        
+                        new { entete="Valeur d'acquisition - 17 car", commentaires="Valeur d'acquisition", exemple="", longueurMaxi=17, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.W" },
+                        new { entete="Devise - 5 car", commentaires="Devise : non documenté pour un équipement de type R", exemple="EUR", longueurMaxi=5, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Date d'acquisition - 8 car", commentaires="Date d'acquisition (JJMMAAAA)", exemple="10091969", longueurMaxi=8, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.Y" },
+                        new { entete="Date début garanti - 8 car", commentaires="Début de garantie (JJMMAAAA)", exemple="10091969", longueurMaxi=8, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.Z" },
+                        new { entete="Date fin garanti - 8 car", commentaires="Fin de garantie (JJMMAAAA)", exemple="10091969", longueurMaxi=8, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.AA" },
+                        new { entete="Repère - 30 car", commentaires="Repère équipement : non documenté pour un équipement de type R", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="N° LICENCE - 24 car", commentaires="Numéro de licence : non documenté pour un équipement de type R", exemple="", longueurMaxi=24, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Code MABEC - 18 car", commentaires="Code MABEC", exemple="", longueurMaxi=18, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.AD" },
+                        new { entete="Libellé matériel de l'équipement - 30 car (*)", commentaires="Libellé matériel", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Niveau équipement - 3 car (*)", commentaires="Niveau de l'équipement : GE, E, S/E", exemple="S/E", longueurMaxi=3, valeursAutorisees=niveau_equipement, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        
+                        new { entete="Référence fournisseur - 25 car (*)", commentaires="Réf fournisseur", exemple="", longueurMaxi=25, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Nom fournisseur - 30 car (*)", commentaires="Nom fournisseur", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Référence intégrateur - 30 car", commentaires="Réf intégrateur", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Nom intégrateur - 30 car", commentaires="Nom intégrateur", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Quantité équipement - 17 car", commentaires="Quantité : si non documenté, il sera mis la valeur 1 par défaut", exemple="1", longueurMaxi=17, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="E05.AK" },
+                        new { entete="Mnémonique - 10 car", commentaires="Mnémonique", exemple="", longueurMaxi=10, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Nature d'équipement - 1 car (*)", commentaires="Nature équipement : C=Commerce, F=Fournisseur, B=Renault, R=Standard", exemple="C", longueurMaxi=1, valeursAutorisees=nature_equipement, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Code Projet - 30 car", commentaires="Référence projet", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Modèle - 25 car", commentaires="Modèle fabricant", exemple="", longueurMaxi=25, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        
+                        new { entete="Famille - 6 car (*)", commentaires="Famille équipement SAP", exemple="", longueurMaxi=6, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion="M05.3.AP" },
+                        new { entete="Capacité - 25 car", commentaires="Capacité", exemple="", longueurMaxi=25, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Alimentation - 25 car", commentaires="Alimentation", exemple="", longueurMaxi=25, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="A maintenir - 1 car", commentaires="Précise si une maintenance est nécessaire : 0, 1", exemple="1", longueurMaxi=1, valeursAutorisees=a_maintenir, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion=null },
+                        new { entete="Uet de Fabrication - 30 car", commentaires="UET de fabrication", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        
+                        new { entete="Dessiné par - 30 car", commentaires="Dessiné par", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Indice Inventaire - 30 car", commentaires="Indice inventaire", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Date de l'indice - 8 car", commentaires="Date de l'indice (JJMMAAAA)", exemple="10091969", longueurMaxi=8, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion="M05.3.AW" },
+                        new { entete="Responsable de l'indice - 30 car", commentaires="Responsable indice", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="N° pièce produit (1) - 30 car", commentaires="Pièce produit 1", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Indice pièce produit (1) - 30 car", commentaires="Indice produit 1", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null }
+                        new { entete="N° pièce produit (2) - 30 car", commentaires="Pièce produit 2", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Indice pièce produit (2) - 30 car", commentaires="Indice produit 2", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null }
+                        new { entete="N° pièce produit (3) - 30 car", commentaires="Pièce produit 3", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Indice pièce produit (3) - 30 car", commentaires="Indice produit 3", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null }
+                        new { entete="N° pièce produit (4) - 30 car", commentaires="Pièce produit 4", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null },
+                        new { entete="Indice pièce produit (4) - 30 car", commentaires="Indice produit 4", exemple="", longueurMaxi=30, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=false, règleDeGestion=null }
+                    }
+
+                    ExcelColumns.AddRange(ExcelModel.Select(d =>
+                        new Models.ExcelColumnDefinition(
+                            entete: d.entete,
+                            commentaires: d.commentaires,
+                            exemple: d.exemple,
+                            longueurMaxi: d.longueurMaxi,
+                            valeursAutorisees: d.valeursAutorisees,
+                            forcerMajuscule: d.forcerMajuscule,
+                            forcerVide: d.forcerVide,
+                            forcerDocumentation: d.forcerDocumentation,
+                            regleDeGestion: d.règleDeGestion
+                    )));
                     break;
             }
         }
