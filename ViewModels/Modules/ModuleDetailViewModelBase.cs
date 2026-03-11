@@ -1,8 +1,8 @@
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
-using NPOI.SS.Formula.Functions;
 using SmartSAP.Models;
 using SmartSAP.Services.SAP;
+using SmartSAP.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -48,8 +48,8 @@ namespace SmartSAP.ViewModels.Modules
             ExportFixedWidthCommand = new RelayCommand(p => ExportLastGeneratedToFixedWidth(p as WorkflowStep));
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
             PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
-            CheckSAPConnectionCommand = new RelayCommand(async _ => await CheckSAPConnectionAsync());
-            ExecuteSAPTransactionCommand = new RelayCommand(async p => await ExecuteSAPTransactionAsync(p as WorkflowStep));
+            CheckSAPConnectionCommand = new RelayCommand(async p => await this.CheckSAPConnectionAsync());
+            ExecuteSAPTransactionCommand = new RelayCommand(async p => await this.ExecuteSAPTransactionAsync(p as WorkflowStep));
 
             SAPManager = new SAPManager();
 
@@ -195,7 +195,7 @@ namespace SmartSAP.ViewModels.Modules
                                 string rawValue = row.Cell(i + 1).Value.ToString();
                                 string processedValue = string.Empty;
 
-                                if (!colDef.ForcerVide){
+                                if (!colDef.ForcerVide)
                                 {
                                     // Cleaning
                                     if (rawValue != null) {
@@ -235,7 +235,8 @@ namespace SmartSAP.ViewModels.Modules
                                     // Règles de gestion
                                     if (colDef.RègleDeGestion != null && colDef.RègleDeGestion.Length > 0)
                                     {
-                                        foreach (var règle in colDef.RègleDeGestion)
+                                        var rules = colDef.RègleDeGestion.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(r => r.Trim());
+                                        foreach (var règle in rules)
                                         {
                                             switch (règle) // Mnn.n.A : Fichier utilisé dans le module Mnn Etape n colonne A
                                             {
@@ -437,7 +438,7 @@ namespace SmartSAP.ViewModels.Modules
 
         protected virtual void PickExcelFile()
         {
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Filter = "Excel Files (*.xlsx)|*.xlsx",
                 Title = "Sélectionner le fichier de données"
