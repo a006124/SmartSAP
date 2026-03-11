@@ -248,7 +248,7 @@ namespace SmartSAP.ViewModels.Modules
                     var nature_equipement = LoadJsonValues(Path.Combine(dataPath, "nature_equipement.json"), "nature_equipement");
                     var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
 
-                    var ExcelModel = new List<ExcelColumnModel>
+                    var ExcelModelFull = new List<ExcelColumnModel>
                      {
                         // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
                         new ("Division - 4 car (*)","Division SAP","MC02",4,divisions,true,false,true,""),
@@ -311,7 +311,7 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Indice pièce produit (4) - 30 car","Indice produit 4","",30,null,true,false,false,""),
                     };
 
-                    var columnsToAdd2 = ExcelModel.Select(d =>
+                    var columnsToAdd2 = ExcelModelFull.Select(d =>
                             new Models.ExcelColumnDefinition(
                                 entete: d.entete,
                                 commentaires: d.commentaires,
