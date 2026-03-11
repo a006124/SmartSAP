@@ -23,11 +23,11 @@ namespace SmartSAP.ViewModels.Modules
             string commentaires,
             string exemple,
             int longueurMaxi,
-            IEnumerable<string>? valeursAutorisees,
+            IEnumerable<string>? valeursAutorisées,
             bool forcerMajuscule,
             bool forcerVide,
             bool forcerDocumentation,
-            string[]? règleDeGestion
+            string règleDeGestion
         );
 
         protected override void InitializeSteps()
@@ -220,7 +220,7 @@ namespace SmartSAP.ViewModels.Modules
                             commentaires: d.commentaires,
                             exemple: d.exemple,
                             longueurMaxi: d.longueurMaxi,
-                            valeursAutorisees: d.valeursAutorisees,
+                            valeursAutorisées: d.valeursAutorisées,
                             forcerMajuscule: d.forcerMajuscule,
                             forcerVide: d.forcerVide,
                             forcerDocumentation: d.forcerDocumentation,
@@ -302,7 +302,7 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Indice pièce produit (3) - 30 car","Indice produit 3","",30,null,true,false,false,null),
                         new ("N° pièce produit (4) - 30 car","Pièce produit 4","",30,null,true,false,false,null),
                         new ("Indice pièce produit (4) - 30 car","Indice produit 4","",30,null,true,false,false,null),
-                    }
+                    };
 
                     ExcelColumns.AddRange(ExcelModel.Select(d =>
                         new Models.ExcelColumnDefinition(
