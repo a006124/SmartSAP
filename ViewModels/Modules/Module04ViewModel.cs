@@ -89,7 +89,7 @@ namespace SmartSAP.ViewModels.Modules
 
                 // 2. Récupération de la session
                 dynamic session = SAPManager.GetActiveSession();
-                if (session == null || session == "")
+                if (session == null)
                 {
                     Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active."));
                     if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
@@ -156,13 +156,13 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Langue - 2 car (*)","Code langue","FR",2,langues,true,false,true,""),
                         new ("N° Equ SAP - 18 car","Numéro équipement SAP","",18,null,true,true,false,""),
                         new ("N° EQU LICENCE - 20 car","Numéro licence équipement","",20,null,true,true,false,""),
-                        new ("(1) Poste technique - 30 car","Poste technique lié","",30,null,true,true,false,""),
-                        new ("(2) Equipement - 18 car","Equipement lié","",18,null,false,true,false,""),
-                        new ("(3) N° LICENCE DU PERE - 20 car","Licence équipement parent","",20,null,true,true,false,""),
+                        new ("(1) Poste technique - 30 car","Poste technique lié","",30,null,true,false,false,""),
+                        new ("(2) Equipement - 18 car","Equipement lié","",18,null,false,false,false,""),
+                        new ("(3) N° LICENCE DU PERE - 20 car","Licence équipement parent","",20,null,true,false,false,""),
                         new ("Statut RFOU - 1 car","Statut RFOU","",1,null,true,true,false,""),
                         new ("Statut REF - 1 car","Statut REF","",1,null,true,true,false,""),
                         new ("N° position - 4 car","Numéro de poste","",4,null,true,false,false,"M04.2.J"),
-                        new ("Groupe autorisation - 4 car","Groupe d'autorisation : SEQR (RE00), SEQD (autre division)","",4,groupe_autorisation,true,false,false,""),
+                        new ("Groupe autorisation - 4 car","Groupe d'autorisation : obligatoire pour la catégorie R : SEQR (RE00), SEQD (autre division)","",4,groupe_autorisation,true,false,false,""),
                         new ("Catégorie équipement - 1 car (*)","Catégorie équipement : N, I, R","N",1,categorie_equipement,true,false,true,""),
                         new ("Libellé fonctionnel de l'équip - 40 car","Désignation fonctionnelle","",40,null,true,false,false,""),
                         new ("Numéro de série fabricant - 30 car","S/N Fabricant : non documenté pour un équipement de type R","",30,null,true,false,false,""),
@@ -180,7 +180,7 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Date début garanti - 8 car","Début de garantie (JJMMAAAA)","10091969",8,null,true,false,false,"M04.2.Z"),
                         new ("Date fin garanti - 8 car","Fin de garantie (JJMMAAAA)","10091969",8,null,true,false,false,"M04.2.AA"),
                         new ("Repère - 30 car","Repère équipement : non documenté pour un équipement de type R","",30,null,true,false,false,""),
-                        new ("N° LICENCE - 24 car","Numéro de licence : non documenté pour un équipement de type R","",24,null,true,false,false,""),
+                        new ("N° LICENCE - 20 car","Numéro de licence : non documenté pour un équipement de type R","",20,null,true,false,false,""),
                         new ("Code MABEC - 18 car","Code MABEC","",18,null,true,false,false,"M04.2.AD"),
                         new ("Libellé matériel de l'équipement - 30 car (*)","Libellé matériel","",30,null,true,false,true,""),
                         new ("Niveau équipement - 3 car (*)","Niveau de l'équipement : GE, E, S/E","S/E",3,niveau_equipement,true,false,true,""),
@@ -193,7 +193,7 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Nature d'équipement - 1 car (*)","Nature équipement : C=Commerce, F=Fournisseur, B=Renault, R=Standard","C",1,nature_equipement,true,false,true,""),
                         new ("Code Projet - 30 car","Référence projet","",30,null,true,false,false,""),
                         new ("Modèle - 25 car","Modèle fabricant","",25,null,true,false,false,""),
-                        new ("Famille - 6 car (*)","Famille équipement SAP","",6,null,true,false,true,"M04.2.AP"),
+                        new ("Famille - 6 car (*)","Famille équipement SAP","",6,null,true,false,true,""),
                         new ("Capacité - 25 car","Capacité","",25,null,true,false,false,""),
                         new ("Alimentation - 25 car","Alimentation","",25,null,true,false,false,""),
                         new ("A maintenir - 1 car","Précise si une maintenance est nécessaire : 0, 1","1",1,a_maintenir,true,false,true,""),
@@ -242,8 +242,8 @@ namespace SmartSAP.ViewModels.Modules
                 string jsonContent = File.ReadAllText(filePath);
                 using var doc = JsonDocument.Parse(jsonContent);
                 return doc.RootElement.EnumerateArray()
-                    .Select(e => e.GetProperty(propertyName).GetString() ?? "")
-                    .Where(s => !string.IsNullOrEmpty(s))
+                    .Select(e => e.GetProperty(propertyName).GetString())
+                    .Where(s => s != null)
                     .ToArray();
             }
             catch (Exception ex)

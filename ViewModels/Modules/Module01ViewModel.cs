@@ -190,8 +190,8 @@ namespace SmartSAP.ViewModels.Modules
                 string jsonContent = File.ReadAllText(filePath);
                 using var doc = JsonDocument.Parse(jsonContent);
                 return doc.RootElement.EnumerateArray()
-                    .Select(e => e.GetProperty(propertyName).GetString() ?? "")
-                    .Where(s => !string.IsNullOrEmpty(s))
+                    .Select(e => e.GetProperty(propertyName).GetString())
+                    .Where(s => s != null)
                     .ToArray();
             }
             catch (Exception ex)

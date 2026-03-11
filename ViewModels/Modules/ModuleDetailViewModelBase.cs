@@ -308,23 +308,6 @@ namespace SmartSAP.ViewModels.Modules
                                                         errorCount++;
                                                     }
                                                     break;
-                                                case "M04.2.AP":
-                                                case "M05.3.AP": // 6 caractères numériques ou ZZZBDN
-                                                    if (string.IsNullOrEmpty(processedValue))
-                                                        match = true; // Autoriser les champs vides
-                                                    else
-                                                    {
-                                                        string pattern = @"^(\d{6}|ZZZBDN)$";
-                                                        match = Regex.IsMatch(processedValue, pattern);
-                                                    }
-                                                    if (!match)
-                                                    {
-                                                        Logs.Add(new LogEntry("ERROR", $"Ligne {rowIdx} : Valeur '{processedValue}' non autorisée pour '{colDef.Entete}'. Valeur attendue : une chaine de 6 chiffres ou ZZZBFN"));
-                                                        rowValid = false;
-                                                        errorCount++;
-                                                    }
-                                                    break;
-
                                             }
                                         }
                                     }
