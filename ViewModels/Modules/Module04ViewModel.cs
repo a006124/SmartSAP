@@ -212,21 +212,24 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Indice pièce produit (4) - 30 car","Indice produit 4","",30,null,true,false,false,""),
                     };
 
-                    ExcelColumns.AddRange(
-                        ExcelModel.Select(d =>
-                            new Models.ExcelColumnDefinition(
-                                entete: d.entete,
-                                commentaires: d.commentaires,
-                                exemple: d.exemple,
-                                longueurMaxi: d.longueurMaxi,
-                                valeursAutorisées: d.valeursAutorisées?.ToArray(),
-                                forcerMajuscule: d.forcerMajuscule,
-                                forcerVide: d.forcerVide,
-                                forcerDocumentation: d.forcerDocumentation,
-                                règleDeGestion: d.règleDeGestion
-                            )
+                    var columnsToAdd = ExcelModel.Select(d =>
+                        new Models.ExcelColumnDefinition(
+                            entete: d.entete,
+                            commentaires: d.commentaires,
+                            exemple: d.exemple,
+                            longueurMaxi: d.longueurMaxi,
+                            valeursAutorisées: d.valeursAutorisées?.ToArray(),
+                            forcerMajuscule: d.forcerMajuscule,
+                            forcerVide: d.forcerVide,
+                            forcerDocumentation: d.forcerDocumentation,
+                            règleDeGestion: d.règleDeGestion
                         )
                     );
+
+                    foreach (var col in columnsToAdd)
+                    {
+                        ExcelColumns.Add(col);
+                    }
 
  }
 

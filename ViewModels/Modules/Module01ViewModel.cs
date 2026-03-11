@@ -159,21 +159,24 @@ namespace SmartSAP.ViewModels.Modules
                 new ("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, a_maintenir, true, false, false, "")
             };
 
-            ExcelColumns.AddRange(
-                ExcelModel.Select(d =>
-                    new Models.ExcelColumnDefinition(
-                        entete: d.entete,
-                        commentaires: d.commentaires,
-                        exemple: d.exemple,
-                        longueurMaxi: d.longueurMaxi,
-                        valeursAutorisées: d.valeursAutorisées?.ToArray(),
-                        forcerMajuscule: d.forcerMajuscule,
-                        forcerVide: d.forcerVide,
-                        forcerDocumentation: d.forcerDocumentation,
-                        règleDeGestion: d.règleDeGestion
-                    )
+            var columnsToAdd = ExcelModel.Select(d =>
+                new Models.ExcelColumnDefinition(
+                    entete: d.entete,
+                    commentaires: d.commentaires,
+                    exemple: d.exemple,
+                    longueurMaxi: d.longueurMaxi,
+                    valeursAutorisées: d.valeursAutorisées?.ToArray(),
+                    forcerMajuscule: d.forcerMajuscule,
+                    forcerVide: d.forcerVide,
+                    forcerDocumentation: d.forcerDocumentation,
+                    règleDeGestion: d.règleDeGestion
                 )
             );
+
+            foreach (var col in columnsToAdd)
+            {
+                ExcelColumns.Add(col);
+            }
 
 
         }

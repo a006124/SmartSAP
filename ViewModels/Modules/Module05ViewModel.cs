@@ -215,7 +215,7 @@ namespace SmartSAP.ViewModels.Modules
                     {
                         new { "N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18, null, true, false, true, "M05.1.2.A" },
                     };   
-                    ExcelColumns.AddRange(ExcelModel.Select(d =>
+                    var columnsToAdd1 = ExcelModel.Select(d =>
                         new Models.ExcelColumnDefinition(
                             entete: d.entete,
                             commentaires: d.commentaires,
@@ -226,7 +226,12 @@ namespace SmartSAP.ViewModels.Modules
                             forcerVide: d.forcerVide,
                             forcerDocumentation: d.forcerDocumentation,
                             regleDeGestion: d.règleDeGestion
-                    )));   
+                    ));
+
+                    foreach (var col in columnsToAdd1)
+                    {
+                        ExcelColumns.Add(col);
+                    }
                     break;
                 case "E2":
                 case "E3":
@@ -306,8 +311,7 @@ namespace SmartSAP.ViewModels.Modules
                         new ("Indice pièce produit (4) - 30 car","Indice produit 4","",30,null,true,false,false,""),
                     };
 
-                    ExcelColumns.AddRange(
-                        ExcelModel.Select(d =>
+                    var columnsToAdd2 = ExcelModel.Select(d =>
                             new Models.ExcelColumnDefinition(
                                 entete: d.entete,
                                 commentaires: d.commentaires,
@@ -319,8 +323,12 @@ namespace SmartSAP.ViewModels.Modules
                                 forcerDocumentation: d.forcerDocumentation,
                                 règleDeGestion: d.règleDeGestion
                             )
-                        )
-                    );
+                        );
+                        
+                    foreach (var col in columnsToAdd2)
+                    {
+                        ExcelColumns.Add(col);
+                    }
 
                     break;
             }
