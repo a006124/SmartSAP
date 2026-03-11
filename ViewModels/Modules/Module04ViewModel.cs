@@ -220,7 +220,7 @@ namespace SmartSAP.ViewModels.Modules
                             forcerMajuscule: d.forcerMajuscule,
                             forcerVide: d.forcerVide,
                             forcerDocumentation: d.forcerDocumentation,
-                            regleDeGestion: d.règleDeGestion
+                            règleDeGestion: d.règleDeGestion
                     )));
  }
 

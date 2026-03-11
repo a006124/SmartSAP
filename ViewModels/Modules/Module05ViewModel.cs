@@ -27,7 +27,7 @@ namespace SmartSAP.ViewModels.Modules
             bool forcerMajuscule,
             bool forcerVide,
             bool forcerDocumentation,
-            string règleDeGestion
+            string[]? règleDeGestion
         );
 
         protected override void InitializeSteps()
@@ -212,7 +212,7 @@ namespace SmartSAP.ViewModels.Modules
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
                     var ExcelModel = new[]
                     {
-                        new { entete="N° Equ SAP - 18 car", commentaires="Numéro équipement SAP", exemple="", longueurMaxi=18, valeursAutorisees=null, forcerMajuscule=true, forcerVide=false, forcerDocumentation=true, règleDeGestion="M05.1.2.A" },
+                        new { "N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18, null, true, false, true, "M05.1.2.A" },
                     };   
                     ExcelColumns.AddRange(ExcelModel.Select(d =>
                         new Models.ExcelColumnDefinition(
@@ -310,11 +310,11 @@ namespace SmartSAP.ViewModels.Modules
                             commentaires: d.commentaires,
                             exemple: d.exemple,
                             longueurMaxi: d.longueurMaxi,
-                            valeursAutorisees: d.valeursAutorisees,
+                            valeursAutorisées: d.valeursAutorisées,
                             forcerMajuscule: d.forcerMajuscule,
                             forcerVide: d.forcerVide,
                             forcerDocumentation: d.forcerDocumentation,
-                            regleDeGestion: d.règleDeGestion
+                            règleDeGestion: d.règleDeGestion
                     )));
                     break;
             }
