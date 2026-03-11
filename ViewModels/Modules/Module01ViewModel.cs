@@ -25,7 +25,7 @@ namespace SmartSAP.ViewModels.Modules
             bool forcerMajuscule,
             bool forcerVide,
             bool forcerDocumentation,
-            string[]? règleDeGestion
+            string règleDeGestion
         );
 
         protected override void InitializeSteps()
@@ -146,17 +146,18 @@ namespace SmartSAP.ViewModels.Modules
 
             var ExcelModel = new List<ExcelColumnModel>
             {
-                new ("Division - 4 car (*)", "Division SAP", "MC02", 4, divisions, true, false,true,null),
-                new ("Langue - 2 car (*)", "Code langue", "FR", 2, langues, true, false, true, null),
-                new ("Poste technique - 30 car (*)", "Poste technique lié", "", 30, null, true, false, true, null),
-                new ("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, null, true, false, true, null),
-                new ("Localisation - 10 car", "Code de localisation", "150", 10, null, true, false, false, null),
-                new ("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, null, true, false, false, null),
+                // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
+                new ("Division - 4 car (*)", "Division SAP", "MC02", 4, divisions, true, false,true),
+                new ("Langue - 2 car (*)", "Code langue", "FR", 2, langues, true, false, true),
+                new ("Poste technique - 30 car (*)", "Poste technique lié", "", 30, null, true, false, true,""),
+                new ("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, null, true, false, true,""),
+                new ("Localisation - 10 car", "Code de localisation", "150", 10, null, true, false, false,""),
+                new ("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, null, true, false, false,""),
                 new ("Poste - 4 car", "Numéro de poste", "0010", 4, null, true, false, false, "M01.2.G"),
-                new ("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, abc, true, false, false, null),
-                new ("Code projet - 30 car", "Référence projet", "", 30, null, true, false, false, null),
-                new ("Code produit - 30 car", "Référence produit", "", 30, null, true, false, false, null),
-                new ("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, a_maintenir, true, false, false, null),
+                new ("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, abc, true, false, false,""),
+                new ("Code projet - 30 car", "Référence projet", "", 30, null, true, false, false,""),
+                new ("Code produit - 30 car", "Référence produit", "", 30, null, true, false, false,""),
+                new ("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, a_maintenir, true, false, false,""),,
             };
 
                 ExcelColumns.AddRange(ExcelModel.Select(d =>
