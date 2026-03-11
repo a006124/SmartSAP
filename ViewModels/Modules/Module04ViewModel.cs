@@ -57,11 +57,11 @@ namespace SmartSAP.ViewModels.Modules
         }
 
         // EXÉCUTION DE LA TRANSACTION SAP
-        protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = "")
+        protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
             await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
             
-            if (step == "")
+            if (step == null)
             {
                 step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
             }
@@ -81,7 +81,7 @@ namespace SmartSAP.ViewModels.Modules
                 if (!connResult.IsSuccess)
                 {
                     Logs.Add(new LogEntry("ERROR", connResult.ErrorMessage));
-                    if (step != "") { step.Status = "Erreur Connexion"; step.ResultState = "Error"; }
+                    if (step != null) { step.Status = "Erreur Connexion"; step.ResultState = "Error"; }
                     return;
                 }
 
@@ -89,10 +89,10 @@ namespace SmartSAP.ViewModels.Modules
 
                 // 2. Récupération de la session
                 dynamic session = SAPManager.GetActiveSession();
-                if (session == "")
+                if (session == null || session == "")
                 {
                     Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active."));
-                    if (step != "") { step.Status = "Erreur session"; step.ResultState = "Error"; }
+                    if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
                     return;
                 }
 
@@ -108,28 +108,28 @@ namespace SmartSAP.ViewModels.Modules
                 if (parts.Length >= 2 && parts[1] == "OK")
                 {
                     Logs.Add(new LogEntry("SUCCESS", $"✓ Transaction terminée avec succès. Lignes lues: {parts[2]}."));
-                    if (step != "") { step.Status = "Terminé"; step.ResultState = "Success"; }
+                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
                 }
                 else if (parts.Length >= 2 && parts[1] == "NOK")
                 {
                     Logs.Add(new LogEntry("WARNING", $"⚠ Transaction terminée avec {parts[3]} erreur(s)."));
-                    if (step != "") { step.Status = "Succès partiel"; step.ResultState = "Error"; }
+                    if (step != null) { step.Status = "Succès partiel"; step.ResultState = "Error"; }
                 }
                 else
                 {
                     Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
-                    if (step != "") { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
+                    if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
                 }
             }
             catch (System.Exception ex)
             {
                 Logs.Add(new LogEntry("ERROR", $"Erreur fatale lors de l'intégration SAP : {ex.Message}"));
-                if (step != "") { step.Status = "Crash"; step.ResultState = "Error"; }
+                if (step != null) { step.Status = "Crash"; step.ResultState = "Error"; }
             }
         }
 
         // DÉFINITION DES COLONNES DE L'EXCEL MODELE
-        protected override void InitializeExcelColumns(WorkflowStep? step = "")
+        protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
             // Chargement des données depuis JSON
             string dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
