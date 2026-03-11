@@ -213,7 +213,7 @@ namespace SmartSAP.ViewModels.Modules
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
                     var ExcelModel = new[]
                     {
-                        new { "N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18, null, true, false, true, "M05.1.2.A" },
+                        new ExcelColumnModel("N° Equ SAP - 18 car", "Numéro équipement SAP", "", 18, null, true, false, true, "M05.1.2.A")
                     };   
                     var columnsToAdd1 = ExcelModel.Select(d =>
                         new Models.ExcelColumnDefinition(
@@ -221,11 +221,11 @@ namespace SmartSAP.ViewModels.Modules
                             commentaires: d.commentaires,
                             exemple: d.exemple,
                             longueurMaxi: d.longueurMaxi,
-                            valeursAutorisées: d.valeursAutorisées,
+                            valeursAutorisées: d.valeursAutorisées?.ToArray(),
                             forcerMajuscule: d.forcerMajuscule,
                             forcerVide: d.forcerVide,
                             forcerDocumentation: d.forcerDocumentation,
-                            regleDeGestion: d.règleDeGestion
+                            règleDeGestion: d.règleDeGestion
                     ));
 
                     foreach (var col in columnsToAdd1)
