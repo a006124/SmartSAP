@@ -113,7 +113,7 @@ namespace SmartSAP.ViewModels.Modules
 
                 // 2. Récupération de la session
                 dynamic session = SAPManager.GetActiveSession();
-                if (session == null || session == "")
+                if (session == null)
                 {
                     Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active."));
                     if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
@@ -251,8 +251,8 @@ namespace SmartSAP.ViewModels.Modules
                     var ExcelModelFull = new List<ExcelColumnModel>
                      {
                         // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
-                        new ("Division - 4 car (*)","Division SAP","MC02",4,divisions,true,false,true,""),
-                        new ("Langue - 2 car (*)","Code langue","FR",2,langues,true,false,true,""),
+                        new ("Division - 4 car (*)","Documenter le code suivant les divisions gérées dans SAP","MC02",4,divisions,true,false,true,""),
+                        new ("Langue - 2 car (*)","Documenter le code correspondant à la langue utilisée dans la Désignation","FR",2,langues,true,false,true,""),
                         new ("N° Equ SAP - 18 car","Numéro équipement SAP","",18,null,true,false,true,"M05.3.C"),
                         new ("N° EQU LICENCE - 20 car","Numéro licence équipement","",20,null,true,false,false,""),
                         new ("(1) Poste technique - 30 car","Poste technique lié","",30,null,true,false,false,""),

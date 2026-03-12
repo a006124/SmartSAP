@@ -256,7 +256,6 @@ namespace SmartSAP.ViewModels.Modules
                                                         errorCount++;
                                                     }
                                                     break;
-                                                case "M01.2.G":
                                                 case "M04.2.J":
                                                 case "M05.3.J": // Doit être au format 9999
                                                     if (string.IsNullOrEmpty(processedValue))

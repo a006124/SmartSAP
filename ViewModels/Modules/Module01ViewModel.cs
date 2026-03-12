@@ -129,7 +129,6 @@ namespace SmartSAP.ViewModels.Modules
         }
 
         // DÉFINITION DES COLONNES DE L'EXCEL MODELE
-        // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
             ExcelColumns.Clear();
@@ -146,17 +145,18 @@ namespace SmartSAP.ViewModels.Modules
 
             var ExcelModel = new List<ExcelColumnModel>
             {
-                new ("Division - 4 car (*)", "Division SAP", "MC02", 4, divisions, true, false, true, ""),
-                new ("Langue - 2 car (*)", "Code langue", "FR", 2, langues, true, false, true, ""),
-                new ("Poste technique - 30 car (*)", "Poste technique lié", "", 30, null, true, false, true, ""),
-                new ("Désignation - 40 car (*)", "Désignation de l'équipement", "PRESSE TRANSFERT", 40, null, true, false, true, ""),
-                new ("Localisation - 10 car", "Code de localisation", "150", 10, null, true, false, false, ""),
-                new ("Centre de coût - 10 car", "Code du centre de coût", "AC004510", 10, null, true, false, false, ""),
-                new ("Poste - 4 car", "Numéro de poste", "0010", 4, null, true, false, false, "M01.2.G"),
-                new ("Code ABC - 1 car", "Indicateur de criticité ABC", "1", 1, abc, true, false, false, ""),
+                // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
+                new ("Division - 4 car (*)", "Documenter le code suivant les divisions gérées dans SAP", "MC02", 4, divisions, true, false, true, ""),
+                new ("Langue - 2 car (*)", "Documenter le code correspondant à la langue utilisée dans la Désignation", "FR", 2, langues, true, false, true, ""),
+                new ("Poste technique - 30 car (*)", "La valeur saisie doit respecter le code structure défini dans SAP SIMON. Si le poste technique existe déjà dans la base Simon, la ligne est traitée en erreur dans le compte rendu BAO", "", 30, null, true, false, true, ""),
+                new ("Désignation - 40 car (*)", "La désignation saisie sera associée au code langue documenté", "PRESSE TRANSFERT", 40, null, true, false, true, ""),
+                new ("Localisation - 10 car", "Code de localisation, contrôlé suivant table Localisation SAP SIMON", "150", 10, null, true, false, false, ""),
+                new ("Centre de coût - 10 car", "Code du centre de coût, contrôlé dans table des Centres de coûts SAP SIMON", "AC004510", 10, null, true, false, false, ""),
+                new ("Poste - 4 car", "Numéro de poste : Permet dans SAP SIMON de définir un ordre d’affichage du poste technique. Lorsque la donnée est vide, le poste technique sera affiché en 1er dans Simon", "0010", 4, null, true, false, false, "M01.2.G"),
+                new ("Code ABC - 1 car", "Indicateur de criticité 1, 2 ou 3. Si non documenté, Valeur 3 mise par défaut", "1", 1, abc, true, false, false, ""),
                 new ("Code projet - 30 car", "Référence projet", "", 30, null, true, false, false, ""),
                 new ("Code produit - 30 car", "Référence produit", "", 30, null, true, false, false, ""),
-                new ("A maintenir - 1 car", "Indicateur de maintenance (1=Oui)", "1", 1, a_maintenir, true, false, false, "")
+                new ("A maintenir - 1 car", "Indicateur de maintenance (0=Non, 1=Oui)", "1", 1, a_maintenir, true, false, false, "")
             };
 
             var columnsToAdd = ExcelModel.Select(d =>

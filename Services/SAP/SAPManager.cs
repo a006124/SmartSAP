@@ -434,7 +434,119 @@ namespace SmartSAP.Services.SAP
             }
         }
 
-        // EXÉCUTION DE LA TRANSACTION SAP IH08
+        // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO15 : CRÉATION EN MASSE DES POSTES TECHNIQUES
+        public string ExecuteZSMNBAO16(dynamic session, string filePath, out string resultFilePath)
+        {
+            const string sSAPTransaction = "ZSMNBAO15";
+            resultFilePath = string.Empty;
+
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                // Écran de sélection
+                SafeFindById(session, "wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
+                // SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
+
+                // Retour et Nettoyage
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+
+                // Formatage du résultat compact
+                string result = $"{sSAPTransaction}|OK||0";
+                Console.WriteLine($"[SAP] Resultat : {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                string errorResult = $"{sSAPTransaction}|ERROR|{ex.Message}";
+                Console.WriteLine($"[SAP] Erreur : {errorResult}");
+                return errorResult;
+            }
+        }
+
+
+        // EXÉCUTION DE LA TRANSACTION SAP IH06 : Poste Technique / Afficher / Liste
+        public string ExecuteIH06(dynamic session, string filePath, out string resultFilePath)
+        {
+            const string sSAPTransaction = "IH06";
+            resultFilePath = string.Empty;
+
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                // Sélection multiple postes techniques via import de fichier texte
+                SafeFindById(session, "wnd[0]/usr/btn%_STRNO_%_APP_%-VALU_PUSH").press(); // Sélection multiple équipements
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[23]").press(); // Import de fichier texte
+
+                // On sépare le chemin du nom de fichier car c'est requis par SAP
+                string directory = Path.GetDirectoryName(filePath) ?? "";
+                string filename = Path.GetFileName(filePath);
+
+                SafeFindById(session, "wnd[2]/usr/ctxtDY_PATH").Text = directory; // Répertoire
+                SafeFindById(session, "wnd[2]/usr/ctxtDY_FILENAME").Text = filename; // Nom du fichier
+                SafeFindById(session, "wnd[2]/tbar[0]/btn[0]").press(); // Suite
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[8]").press(); // Reprendre (F8)
+
+                // Exécuter (F8)
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press();
+
+                // Sauvegarde au format EXCEL
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[16]").press(); // Tableur
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite Nombre de colonnes clés
+
+                // Table
+                var tableOption = SafeFindById(session, "wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[0,0]");
+                tableOption.Select();
+                tableOption.SetFocus();
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite Export d'un objet
+
+                // Attendre la fenêtre "Information"
+                string windowTitle = SafeGetTitle(session, "wnd[1]", "");
+                while (windowTitle != "Information")
+                {
+                    windowTitle = SafeGetTitle(session, "wnd[1]", "");
+                }
+
+                // Sauvegarde du classeur Excel via le nouveau service (le service inclut maintenant une attente dynamique de 30s max)
+                var excelService = new ExcelManager();
+                string tempExcelPath = Path.Combine(directory, $"IH06_{Guid.NewGuid()}.xlsx");
+
+                // On cherche le classeur "Feuille de calcul dans Basis" (nom standard SAP)
+                string saveResult = excelService.SaveSAPExcelWorkbook("Feuille de calcul dans Basis", tempExcelPath);
+
+                if (saveResult.StartsWith("✅"))
+                {
+                    resultFilePath = tempExcelPath;
+                }
+                else
+                {
+                    Debug.WriteLine($"[Excel] {saveResult}");
+                }
+
+                // Fermer la fenêtre d'information
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Suite
+
+                // Retour au menu principal
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour écran IH06
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
+
+                string result = $"{sSAPTransaction}|OK|Exporté|0";
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return $"{sSAPTransaction}|ERROR|{ex.Message}";
+            }
+        }
+
+        // EXÉCUTION DE LA TRANSACTION SAP IH08 : Equipement / Afficher / Liste
         public string ExecuteIH08(dynamic session, string filePath, out string resultFilePath)
         {
             const string sSAPTransaction = "IH08";
