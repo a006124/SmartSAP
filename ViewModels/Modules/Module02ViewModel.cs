@@ -31,51 +31,55 @@ namespace SmartSAP.ViewModels.Modules
             string règleDeGestion
         );
 
-
+        // INITIALISATION DES ÉTAPES DU WORKFLOW
         protected override void InitializeSteps()
         {
             Steps = new ObservableCollection<WorkflowStep>
             {
                 new WorkflowStep {
-                    Title = "[Option1] SAP->Excel E1.1",
+                    Title = "[Option1] 1. Modèle Excel",
                     Description = "Crée un fichier Excel pour saisir le code des postes techniques à exporter.",
                     Icon = "\xE70F",
-                    ModuleStep = "E1.1",
+                    ModuleStep = "M02-E1.1",
+                    OpenFile = true,
                     ActionCommand = GenerateTemplateCommand
                 },
                 new WorkflowStep {
-                    Title = "[Option1] SAP->Excel E1.2",
-                    Description = "Contrôle et exporte les données (Format SAP). ",
+                    Title = "[Option1] 2. Excel->TXT",
+                    Description = "Contrôle et exporte les données (Format TXT). ",
                     Icon = "\xE762",
-                    ModuleStep = "E1.2",
+                    ModuleStep = "M02-E1.2",
+                    NombreMini = 2,
+                    OpenFile = false,
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep {
-                    Title = "[Option1] SAP->Excel E1.3",
+                    Title = "[Option1] 3. SAP->Excel",
                     Description = "Récupère les données des postes techniques via la transaction SAP 'IH06'.",
                     Icon = "\xE768",
-                    ModuleStep = "E1.3",
+                    ModuleStep = "M02-E1.3",
+                    OpenFile = true,
                     ActionCommand = ExecuteSAPTransactionCommand
                 },
                 new WorkflowStep {
                     Title = "[Option2] Modèle vierge",
                     Description = "Crée un fichier Excel modèle.",
                     Icon = "\xE70F",
-                    ModuleStep = "E2",
+                    ModuleStep = "M02-E2",
                     ActionCommand = GenerateTemplateCommand
                 },
                 new WorkflowStep {
                     Title = "3. Contrôle et export des données",
                     Description = "Contrôle et exporte les données (Format SAP). ",
                     Icon = "\xE762",
-                    ModuleStep = "E3",
+                    ModuleStep = "M02-E3",
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep {
                     Title = "4. Intégration des modifications dans SAP",
                     Description = "Exécute la transaction SAP 'ZSMNBAO16'.",
                     Icon = "\xE768",
-                    ModuleStep = "E4",
+                    ModuleStep = "M02-E4",
                     ActionCommand = ExecuteSAPTransactionCommand
                 }
             };
@@ -122,9 +126,7 @@ namespace SmartSAP.ViewModels.Modules
                 }
 
                 // Exécution de la transaction appropriée en fonction de l'étape :
-                // - IH08 est utilisée pour l'extraction (Lecture seule) E1ter
-                // - ZSMNBAO13 est utilisée pour l'intégration (Écriture/Modification) E3
-                string sapTx = step?.ModuleStep == "E1.3" ? "IH06" : "ZSMNBAO16";
+                string sapTx = step?.ModuleStep == "M02-E1.3" ? "IH06" : "ZSMNBAO16";
                 Logs.Add(new LogEntry("INFO", $"Lancement de la transaction {sapTx}..."));
 
                 string resultFile = string.Empty;
@@ -145,24 +147,24 @@ namespace SmartSAP.ViewModels.Modules
                     if (!string.IsNullOrEmpty(resultFile))
                     {
                         Logs.Add(new LogEntry("SUCCESS", "Fichier Excel créé : ", resultFile));
+                        LastGeneratedSAPExcelPath = resultFile;
 
-                        // 3. Traitement du fichier Excel si étape E1.3
-                        if (step?.ModuleStep == "E1.3")
+                        // 3. Traitement du fichier Excel 
+                        if (step?.ModuleStep == "M02-E1.3")
                         {
-                            Logs.Add(new LogEntry("INFO", "Génération du modèle E2 pour enrichissement..."));
+                            Logs.Add(new LogEntry("INFO", "Génération du modèle M02-E2 pour enrichissement..."));
 
-                            // 1. Qu'un fichier modèle type E2 soit créé
-                            var e2Step = Steps.FirstOrDefault(s => s.ModuleStep == "E2") ?? new WorkflowStep { ModuleStep = "E2" };
+                            // 1. Fichier modèle type M02-E2 créé
+                            var e2Step = Steps.FirstOrDefault(s => s.ModuleStep == "M02-E2") ?? new WorkflowStep { ModuleStep = "M02-E2" };e2Step.OpenFile = false;
                             GenerateExcelTemplate(e2Step);
-                            string templateE2Path = LastGeneratedExcelPath;
 
-                            if (!string.IsNullOrEmpty(templateE2Path) && System.IO.File.Exists(templateE2Path))
+                            if (!string.IsNullOrEmpty(LastGeneratedSAPExcelPath) && System.IO.File.Exists(LastGeneratedSAPExcelPath))
                             {
-                                // 2. Que la fonction EnrichirFromSAPExcelWorkbook soit exécutée
+                                // 2. Exécution de la fonction EnrichirFromSAPExcelWorkbookM02_E_1_3
                                 try
                                 {
                                     var excelService = new SmartSAP.Services.Excel.ExcelManager();
-                                    string enrichResult = excelService.EnrichirFromSAPExcelWorkbook(templateE2Path, resultFile);
+                                    string enrichResult = excelService.EnrichirFromSAPExcelWorkbookM02_E_1_3(LastGeneratedExcelPath, LastGeneratedSAPExcelPath);
                                     Logs.Add(new LogEntry("SUCCESS", $"Enrichissement terminé : {enrichResult}"));
                                 }
                                 catch (System.Exception ex)
@@ -173,7 +175,16 @@ namespace SmartSAP.ViewModels.Modules
                         }
                     }
 
-                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                    if (step != null) 
+                    { 
+                        step.Status = "Terminé"; 
+                        step.ResultState = "Success";
+                        if (step.OpenFile)
+                        {
+                            // Ouverture automatique du fichier
+                            Process.Start(new ProcessStartInfo(LastGeneratedExcelPath) { UseShellExecute = true });
+                        }
+                    }
                 }
                 else if (parts.Length >= 2 && parts[1] == "NOK")
                 {
@@ -198,18 +209,22 @@ namespace SmartSAP.ViewModels.Modules
         // DÉFINITION DES COLONNES DE L'EXCEL MODELE
         protected override void InitializeExcelColumns(WorkflowStep? step = null)
         {
-            ExcelColumns.Clear();
-
             // Chargement des données depuis JSON
             string dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            // Note: En mode Debug/Développement, le chemin peut varier, on essaie aussi le chemin relatif au projet
             if (!Directory.Exists(dataPath))
                 dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data");
+            var divisions = LoadJsonValues(Path.Combine(dataPath, "division.json"), "01-Division Localisation");
+            var langues = LoadJsonValues(Path.Combine(dataPath, "langue.json"), "Langue préférée (division)");
+            var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
+            var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
+            
+
+            ExcelColumns.Clear();
 
             switch (step?.ModuleStep)
             {
-                case "E1.1":
-                case "E1.2":
+                case "M02-E1.1":
+                case "M02-E1.2":
                     // LISTE DES CODES DES POSTES TECHNIQUES À EXPORTER
                     var ExcelModel = new[]
                     {
@@ -234,16 +249,9 @@ namespace SmartSAP.ViewModels.Modules
                         ExcelColumns.Add(col);
                     }
                     break;
-                case "E2":
-                case "E3":
-                    // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
+                case "M02-E2":
+                case "M02-E3":
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
-
-                    var divisions = LoadJsonValues(Path.Combine(dataPath, "division.json"), "01-Division Localisation");
-                    var langues = LoadJsonValues(Path.Combine(dataPath, "langue.json"), "Langue préférée (division)");
-                    var abc = LoadJsonValues(Path.Combine(dataPath, "abc.json"), "abc");
-                    var a_maintenir = LoadJsonValues(Path.Combine(dataPath, "a_maintenir.json"), "a_maintenir");
-
                     var ExcelModelFull = new List<ExcelColumnModel>
                     {
                         // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
@@ -261,6 +269,46 @@ namespace SmartSAP.ViewModels.Modules
                     };
 
                     var columnsToAdd2 = ExcelModelFull.Select(d =>
+                            new Models.ExcelColumnDefinition(
+                                entete: d.entete,
+                                commentaires: d.commentaires,
+                                exemple: d.exemple,
+                                longueurMaxi: d.longueurMaxi,
+                                valeursAutorisées: d.valeursAutorisées?.ToArray(),
+                                forcerMajuscule: d.forcerMajuscule,
+                                forcerVide: d.forcerVide,
+                                forcerDocumentation: d.forcerDocumentation,
+                                règleDeGestion: d.règleDeGestion
+                            )
+                        );
+
+                    foreach (var col in columnsToAdd2)
+                    {
+                        ExcelColumns.Add(col);
+                    }
+
+                    break;
+                case "E3":
+                    // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
+                    // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
+
+                    ExcelModelFull = new List<ExcelColumnModel>
+                    {
+                        // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
+                        new ("Division - 4 car (*)", "Documenter le code suivant les divisions gérées dans SAP", "MC02", 4, divisions, true, false, true, ""),
+                        new ("Langue - 2 car (*)", "Documenter le code correspondant à la langue utilisée dans la Désignation", "FR", 2, langues, true, false, true, ""),
+                        new ("Poste technique - 30 car (*)", "La valeur saisie doit respecter le code structure défini dans SAP SIMON. Si le poste technique existe déjà dans la base Simon, la ligne est traitée en erreur dans le compte rendu BAO", "", 30, null, true, false, true, ""),
+                        new ("Désignation - 40 car (*)", "La désignation saisie sera associée au code langue documenté", "PRESSE TRANSFERT", 40, null, true, false, true, ""),
+                        new ("Localisation - 10 car", "Code de localisation, contrôlé suivant table Localisation SAP SIMON", "150", 10, null, true, false, false, ""),
+                        new ("Centre de coût - 10 car", "Code du centre de coût, contrôlé dans table des Centres de coûts SAP SIMON", "AC004510", 10, null, true, false, false, ""),
+                        new ("Poste - 4 car", "Numéro de poste : Permet dans SAP SIMON de définir un ordre d’affichage du poste technique. Lorsque la donnée est vide, le poste technique sera affiché en 1er dans Simon", "0010", 4, null, true, false, false, "M01.2.G"),
+                        new ("Code ABC - 1 car", "Indicateur de criticité 1, 2 ou 3. Si non documenté, Valeur 3 mise par défaut", "1", 1, abc, true, false, false, ""),
+                        new ("Code projet - 30 car", "Référence projet", "", 30, null, true, false, false, ""),
+                        new ("Code produit - 30 car", "Référence produit", "", 30, null, true, false, false, ""),
+                        new ("A maintenir - 1 car", "Indicateur de maintenance (0=Non, 1=Oui)", "1", 1, a_maintenir, true, false, false, "")
+                    };
+
+                    columnsToAdd2 = ExcelModelFull.Select(d =>
                             new Models.ExcelColumnDefinition(
                                 entete: d.entete,
                                 commentaires: d.commentaires,

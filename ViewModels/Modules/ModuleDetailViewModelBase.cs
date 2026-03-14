@@ -32,6 +32,7 @@ namespace SmartSAP.ViewModels.Modules
 
         protected string? LastGeneratedExcelPath;
         protected string? LastExportedTextPath;
+        protected string? LastGeneratedSAPExcelPath;
         protected readonly SAPManager SAPManager;
 
         protected ModuleDetailViewModelBase(MainViewModel mainViewModel, string title)
@@ -45,7 +46,20 @@ namespace SmartSAP.ViewModels.Modules
 
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
             GenerateTemplateCommand = new RelayCommand(p => GenerateExcelTemplate(p as WorkflowStep));
-            ExportFixedWidthCommand = new RelayCommand(p => ExportLastGeneratedToFixedWidth(p as WorkflowStep));
+            ExportFixedWidthCommand = new RelayCommand(p =>
+            {
+                var step = p as WorkflowStep;
+                if (step != null)
+                {
+                    ExportLastGeneratedToFixedWidth(step, step.NombreMini, step.OpenFile);
+                }
+                else
+                {
+                    // Gérer le cas où le paramètre n'est pas un WorkflowStep (par exemple, passer une valeur par défaut)
+                    Logs.Add(new LogEntry("ERROR", "Le paramètre de la commande ExportFixedWidthCommand n'est pas un WorkflowStep valide."));
+                    ExportLastGeneratedToFixedWidth(null, 0);
+                }
+            }); 
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
             PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
             CheckSAPConnectionCommand = new RelayCommand(async p => await this.CheckSAPConnectionAsync());
@@ -125,10 +139,16 @@ namespace SmartSAP.ViewModels.Modules
                 LastGeneratedExcelPath = fullPath;
                 Logs.Add(new LogEntry("SUCCESS", $"Modèle Excel généré avec succès sur le bureau : ", fullPath));
                 
-                if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                if (step != null) 
+                { 
+                    step.Status = "Terminé"; step.ResultState = "Success";
+                    if (step.OpenFile)
+                    {
+                        // Ouverture automatique du fichier
+                        Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
+                    }
+                }
 
-                // Ouverture automatique du fichier
-                Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
@@ -137,7 +157,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected virtual void ExportLastGeneratedToFixedWidth(WorkflowStep? step = null)
+        protected virtual void ExportLastGeneratedToFixedWidth(WorkflowStep? step = null, int nombreMini = 0, bool OpenFile = true)
         {
             if (step == null)
             {
@@ -173,14 +193,15 @@ namespace SmartSAP.ViewModels.Modules
                     int errorCount = 0;
                     int rowIdx = 1;
 
-                    if (rows.Count() < 2)
+                    if (rows.Count() < nombreMini)
                     {
-                        Logs.Add(new LogEntry("WARNING", "Le nombre de ligne à traiter doit être supérieur ou égal à 2."));
+                        Logs.Add(new LogEntry("WARNING", $"Le nombre de ligne à traiter doit être supérieur ou égal à {nombreMini}."));
                         if (step != null) { step.Status = "Données insuffisantes"; step.ResultState = "Error"; }
                         return;
                     }
 
-                    using (var writer = new StreamWriter(exportPath))
+                    using (var writer = new StreamWriter(exportPath, false, System.Text.Encoding.UTF8))
+
                     {
                         foreach (var row in rows)
                         {
@@ -348,12 +369,19 @@ namespace SmartSAP.ViewModels.Modules
                     else
                     {
                         Logs.Add(new LogEntry("SUCCESS", $"Export format SAP (taille fixe) généré avec succès : ", exportPath));
-                        if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
-                        
+                        if (step != null) 
+                        { 
+                            step.Status = "Terminé"; 
+                            step.ResultState = "Success";
+                            if (OpenFile)
+                            {
+                                // Ouverture automatique de l'export
+                                Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
+                            }
+                        }
+
                         LastExportedTextPath = exportPath;
 
-                        // Ouverture automatique de l'export
-                        Process.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
                     }
                 }
             }
@@ -408,7 +436,7 @@ namespace SmartSAP.ViewModels.Modules
 
             if (string.IsNullOrEmpty(LastExportedTextPath) || !File.Exists(LastExportedTextPath))
             {
-                Logs.Add(new LogEntry("ERROR", "Veuillez d'abord générer l'export format SAP (Étape 2)."));
+                Logs.Add(new LogEntry("ERROR", "Veuillez d'abord générer l'export format SAP."));
                 if (step != null) { step.Status = "Manquant"; step.ResultState = "Error"; }
                 return;
             }

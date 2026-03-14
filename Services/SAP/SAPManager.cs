@@ -130,7 +130,7 @@ namespace SmartSAP.Services.SAP
                 object sapGuiAuto = GetObject("SAPGUI");
                 if (sapGuiAuto == null)
                 {
-                    result.ErrorMessage = "✗ Application SAP non exécutée (Non trouvé dans ROT)";
+                    result.ErrorMessage = "✗ Application SAP non exécutée (Non trouvée dans ROT)";
                     return result;
                 }
 
@@ -434,10 +434,10 @@ namespace SmartSAP.Services.SAP
             }
         }
 
-        // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO15 : CRÉATION EN MASSE DES POSTES TECHNIQUES
+        // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO16 : MODIFICATION EN MASSE DES POSTES TECHNIQUES
         public string ExecuteZSMNBAO16(dynamic session, string filePath, out string resultFilePath)
         {
-            const string sSAPTransaction = "ZSMNBAO15";
+            const string sSAPTransaction = "ZSMNBAO16";
             resultFilePath = string.Empty;
 
             try
@@ -448,7 +448,7 @@ namespace SmartSAP.Services.SAP
 
                 // Écran de sélection
                 SafeFindById(session, "wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
-                // SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
 
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
@@ -468,7 +468,7 @@ namespace SmartSAP.Services.SAP
         }
 
 
-        // EXÉCUTION DE LA TRANSACTION SAP IH06 : Poste Technique / Afficher / Liste
+        // EXÉCUTION DE LA TRANSACTION SAP IH06 : Poste Technique / Afficher / Afficher poste technique
         public string ExecuteIH06(dynamic session, string filePath, out string resultFilePath)
         {
             const string sSAPTransaction = "IH06";
@@ -495,6 +495,12 @@ namespace SmartSAP.Services.SAP
 
                 // Exécuter (F8)
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press();
+
+                // Modifier la mise en forme
+                SafeFindById(session, "wnd[0]/mbar/menu[5]/menu[2]/menu[0]").select(); // Option / Mise en forme / Actuelle
+                SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/cntlCONTAINER1_LAYO/shellcont/shell").selectAll(); // Sélectionner tout
+                SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/btnAPP_WL_SING").press(); // Flèche gauche
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Validation
 
                 // Sauvegarde au format EXCEL
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[16]").press(); // Tableur

@@ -177,6 +177,65 @@ namespace SmartSAP.Services.Excel
             }
         }
 
+        // Module02 
+        public string EnrichirFromSAPExcelWorkbookM02_E_1_3(string templatePath, string sourceDataPath)
+        {
+            try
+            {
+                using (var wExcelToUpdate = new ClosedXML.Excel.XLWorkbook(templatePath))
+                using (var wExcelFrom = new ClosedXML.Excel.XLWorkbook(sourceDataPath))
+                {
+                    var sheetToUpdate = wExcelToUpdate.Worksheet(1); // Le template n'a qu'un seul onglet "Data"
+                    var sheetFrom = wExcelFrom.Worksheet(1);
+
+                    int lRowToUpdate = 2;
+
+                    foreach (var row in sheetFrom.RowsUsed())
+                    {
+                        // On ne traite pas la ligne de titre (ligne 1)
+                        if (row.RowNumber() == 1) continue;
+
+                        var targetRow = sheetToUpdate.Row(lRowToUpdate);
+
+                        targetRow.Cell(1).Value = row.Cell(6).GetString(); // Division
+                        targetRow.Cell(2).Value = row.Cell(91).GetString(); // Langue
+                        targetRow.Cell(3).Value = row.Cell(1).GetString(); // Poste technique
+                        targetRow.Cell(4).Value = row.Cell(2).GetString(); // Désignation
+                        targetRow.Cell(5).Value = row.Cell(9).GetString(); // Localisation
+                        targetRow.Cell(6).Value = row.Cell(3).GetString(); // Centre de coûts
+                        targetRow.Cell(7).Value = row.Cell(4).GetString(); // Poste
+                        targetRow.Cell(8).Value = row.Cell(11).GetString(); // Code ABC
+                        targetRow.Cell(9).Value = string.Empty; ; // Code Projet
+                        targetRow.Cell(10).Value = string.Empty; ; // Code Produit
+                        targetRow.Cell(11).Value = string.Empty; // A maintenir
+
+                        lRowToUpdate++;
+                    }
+
+                    wExcelToUpdate.Save();
+                } // La sortie du bloc using va garantir un Dispose et la libération des pointeurs de fichiers ouverts.
+
+                // Nettoyage : Suppression du fichier temporaire source
+                try
+                {
+                    if (System.IO.File.Exists(sourceDataPath))
+                    {
+                        System.IO.File.Delete(sourceDataPath);
+                    }
+                }
+                catch (Exception exIO)
+                {
+                    Debug.WriteLine($"Warning: Impossible de supprimer le fichier source temporaire '{sourceDataPath}' : {exIO.Message}");
+                }
+
+                return $"Modèle E2 généré et enrichi avec les données extraites !";
+            }
+            catch (Exception ex)
+            {
+                return $"✗ Erreur lors de l'enrichissement du modèle : {ex.Message}";
+            }
+        }
+
         public string EnrichirFromSAPExcelWorkbook(string templatePath, string sourceDataPath)
         {
             try

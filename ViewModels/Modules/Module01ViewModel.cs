@@ -44,6 +44,7 @@ namespace SmartSAP.ViewModels.Modules
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762",
                     ModuleStep = "E2",
+                    NombreMini = 1,
                     ActionCommand = ExportFixedWidthCommand 
                 },
                 new WorkflowStep { 
