@@ -344,7 +344,10 @@ namespace SmartSAP.Services.SAP
         {
             const string sSAPTransaction = "ZSMNBAO12";
             resultFilePath = string.Empty;
-            
+            int NombreDeLignesLues = 0;
+            int NombreDeLignesEnErreur = 0;
+            string MessageErreur = Environment.NewLine;
+
             try
             {
                 SafeFindById(session, "wnd[0]").maximize();
@@ -355,14 +358,48 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/usr/ctxtFIC_FILE").Text = filePath;
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
 
+                // Résultat de l'exécution
+                string MessageLigne1;
+                try
+                {
+                    MessageLigne1 = SafeFindById(session, "wnd[0]/usr/lbl[0,10]").Text;
+                    if (MessageLigne1 == "Nombre de lignes lues :")
+                    {
+                        NombreDeLignesLues = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[29,10]").Text);
+                    }
+                    for (int i = 14; ; i += 2)
+                    {
+                        string elementPath = $"wnd[0]/usr/lbl[0,{i}]";
+                        string valeurRecuperee;
+                        try
+                        {
+                            valeurRecuperee = SafeFindById(session, elementPath).Text;
+                        }
+                        catch (Exception ex)
+                        {
+                            valeurRecuperee = string.Empty;
+                        }
+                        if (string.IsNullOrEmpty(valeurRecuperee))
+                        {
+                            break;
+                        }
+                        MessageErreur += valeurRecuperee + Environment.NewLine; // Ajoute la valeur et un saut de ligne pour la lisibilité
+                        NombreDeLignesEnErreur += 1;
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                string result = $"{sSAPTransaction}|OK|0";
+                string result = $"{sSAPTransaction}|NOK|{NombreDeLignesLues}|{NombreDeLignesEnErreur}|{MessageErreur}";
                 Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
+
             }
             catch (Exception ex)
             {
@@ -377,7 +414,11 @@ namespace SmartSAP.Services.SAP
         {
             const string sSAPTransaction = "ZSMNBAO13";
             resultFilePath = string.Empty;
-            
+            int NombreDeLignesLues = 0;
+            int NombreDeLignesTraitées = 0;
+            int NombreDeLignesIgnorées = 0;
+            string MessageErreur = Environment.NewLine;
+
             try
             {
                 SafeFindById(session, "wnd[0]").maximize();
@@ -388,11 +429,70 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/usr/ctxtFIC_FILE").Text = filePath;
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter
 
+                // Résultat de l'exécution
+                string MessageLigne1;
+                string MessageLigne2;
+                string MessageLigne3;
+                try
+                {
+                    MessageLigne1 = SafeFindById(session, "wnd[0]/usr/lbl[0,10]").Text;
+                    if (MessageLigne1 == "Nombre de lignes lues :")
+                    {
+                        NombreDeLignesLues = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[29,10]").Text);
+                    }
+                    MessageLigne2 = SafeFindById(session, "wnd[0]/usr/lbl[4,12]").Text;
+                    if (MessageLigne2 == "Nombre de lignes ignorées (non traitées) :")
+                    {
+                        NombreDeLignesIgnorées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,12]").Text);
+                        NombreDeLignesTraitées = NombreDeLignesLues - NombreDeLignesIgnorées;
+                    }
+                    else
+                    {
+                        NombreDeLignesIgnorées = 0;
+                        NombreDeLignesTraitées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,12]").Text);
+                    }
+
+                    if (NombreDeLignesIgnorées != 0)
+                    {
+                        for (int i = 15; ; i += 2)
+                        {
+                            string elementPath = $"wnd[0]/usr/lbl[0,{i}]";
+                            string valeurRecuperee;
+                            try
+                            {
+                                valeurRecuperee = SafeFindById(session, elementPath).Text;
+                            }
+                            catch (Exception ex)
+                            {
+                                valeurRecuperee = string.Empty;
+                            }
+                            if (string.IsNullOrEmpty(valeurRecuperee))
+                            {
+                                break;
+                            }
+                            MessageErreur += valeurRecuperee + Environment.NewLine; // Ajoute la valeur et un saut de ligne pour la lisibilité
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
-                string result = $"{sSAPTransaction}|OK|0";
+                // Formatage du résultat compact
+                string result;
+                if (NombreDeLignesIgnorées == 0)
+                {
+                    result = $"{sSAPTransaction}|OK|{NombreDeLignesLues}|{NombreDeLignesIgnorées}";
+                }
+                else
+                {
+                    result = $"{sSAPTransaction}|NOK|{NombreDeLignesLues}|{NombreDeLignesIgnorées}|{MessageErreur}";
+                }
+                Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
             }
             catch (Exception ex)
@@ -406,7 +506,11 @@ namespace SmartSAP.Services.SAP
         {
             const string sSAPTransaction = "ZSMNBAO15";
             resultFilePath = string.Empty;
-            
+            int NombreDeLignesLues=0;
+            int NombreDeLignesTraitées=0;
+            int NombreDeLignesIgnorées = 0;
+            string MessageErreur = Environment.NewLine;
+
             try
             {
                 SafeFindById(session, "wnd[0]").maximize();
@@ -415,14 +519,73 @@ namespace SmartSAP.Services.SAP
 
                 // Écran de sélection
                 SafeFindById(session, "wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
-                // SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter (Commenté par l'utilisateur)
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter
+
+                // Résultat de l'exécution
+                string MessageLigne1;
+                string MessageLigne2;
+                string MessageLigne3;
+                try
+                {
+                    MessageLigne1 = SafeFindById(session, "wnd[0]/usr/lbl[0,10]").Text;
+                    if (MessageLigne1 == "Nombre de lignes lues :")
+                    {
+                        NombreDeLignesLues = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[29,10]").Text);
+                    }
+                    MessageLigne2 = SafeFindById(session, "wnd[0]/usr/lbl[4,12]").Text;
+                    if (MessageLigne2 == "Nombre de lignes ignorées (non traitées) :")
+                    {
+                        NombreDeLignesIgnorées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,12]").Text);
+                        NombreDeLignesTraitées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,14]").Text);
+                    }
+                    else
+                    {
+                        NombreDeLignesIgnorées = 0;
+                        NombreDeLignesTraitées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,12]").Text);
+                    }
+
+                    if (NombreDeLignesIgnorées != 0)
+                    {
+                        for (int i = 17; ; i += 2) 
+                        {
+                            string elementPath = $"wnd[0]/usr/lbl[0,{i}]";
+                            string valeurRecuperee;
+                            try
+                            {
+                                valeurRecuperee = SafeFindById(session, elementPath).Text;
+                            }
+                            catch (Exception ex)
+                            {
+                                valeurRecuperee = string.Empty;
+                            }
+                            if (string.IsNullOrEmpty(valeurRecuperee))
+                            {
+                                break;
+                            }
+                            MessageErreur += valeurRecuperee + Environment.NewLine; // Ajoute la valeur et un saut de ligne pour la lisibilité
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+
+
 
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                string result = $"{sSAPTransaction}|OK||0";
+                string result;
+                if (NombreDeLignesIgnorées == 0)
+                {
+                    result = $"{sSAPTransaction}|OK|{NombreDeLignesLues}|{NombreDeLignesIgnorées}";
+                }
+                else
+                {
+                    result = $"{sSAPTransaction}|NOK|{NombreDeLignesLues}|{NombreDeLignesIgnorées}|{MessageErreur}";
+                }
                 Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
             }
@@ -450,12 +613,52 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/usr/ctxtP_FIC_IN").Text = filePath;
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
 
+                // Résultat de l'exécution
+                int NombreDeLignesLues = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[29,10]").Text);
+                string LibelléRésultat = SafeFindById(session, "wnd[0]/usr/lbl[4,12]").Text;
+                int NombreDeLignesTraitées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,12]").Text);
+                int NombreDeLignesIgnorées = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[46,12]").Text);
+                string MessageErreur = Environment.NewLine;
+                if (LibelléRésultat == "Nombre de lignes traitées :")
+                {
+                    NombreDeLignesIgnorées = 0;
+                }
+                else
+                {
+                    for (int i = 17; ; i += 2) // La condition de fin est gérée à l'intérieur de la boucle
+                    {
+                        string elementPath = $"wnd[0]/usr/lbl[0,{i}]";
+                        string valeurRecuperee;
+                        try
+                        {
+                            valeurRecuperee = SafeFindById(session, elementPath).Text;
+                        }
+                        catch (Exception ex)
+                        {
+                            valeurRecuperee = string.Empty;
+                        }
+                        if (string.IsNullOrEmpty(valeurRecuperee))
+                        {
+                            break;
+                        }
+                        MessageErreur += valeurRecuperee + Environment.NewLine; // Ajoute la valeur et un saut de ligne pour la lisibilité
+                    }
+                }
+
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                string result = $"{sSAPTransaction}|OK||0";
+                string result;
+                if (NombreDeLignesIgnorées==0)
+                {
+                    result = $"{sSAPTransaction}|OK|{NombreDeLignesLues}|{NombreDeLignesIgnorées}";
+                }
+                else
+                {
+                    result = $"{sSAPTransaction}|NOK|{NombreDeLignesLues}|{NombreDeLignesIgnorées}|{MessageErreur}";
+                }
                 Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
             }
@@ -578,7 +781,20 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[8]").press(); // Reprendre (F8)
                 
                 // Exécuter (F8)
-                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); 
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press();
+
+                // Modifier la mise en forme
+                SafeFindById(session, "wnd[0]/mbar/menu[5]/menu[2]/menu[0]").select(); // Option / Mise en forme / Actuelle
+                SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/cntlCONTAINER1_LAYO/shellcont/shell").selectAll(); // Sélectionner tout
+                SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/btnAPP_WL_SING").press(); // Flèche gauche
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Validation
+
+                // Afficher les classifications
+                SafeFindById(session, "wnd[0]/usr/cntlGRID1/shellcont/shell").currentCellColumn = ""; // Sélection de la 1ère ligne
+                SafeFindById(session, "wnd[0]/usr/cntlGRID1/shellcont/shell").selectedRows = "0"; // Sélection de la 1ère ligne
+                SafeFindById(session, "wnd[0]/mbar/menu[5]/menu[13]").select()  ; // Option / Affich/OccultClass.
+                SafeFindById(session, "wnd[1]/usr/chk[1,3]").selected = true; // Option / Affich/OccultClass.
+                SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Validation
 
                 // Sauvegarde au format EXCEL
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[16]").press(); // Tableur

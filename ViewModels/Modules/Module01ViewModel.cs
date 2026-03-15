@@ -36,22 +36,24 @@ namespace SmartSAP.ViewModels.Modules
                     Title = "1. Saisie des données nécessaires à la création des Postes Techniques dans SAP", 
                     Description = "Crée un nouveau fichier Excel modèle.", 
                     Icon = "\xE70F", 
-                    ModuleStep = "E1",
+                    ModuleStep = "M01-E1",
+                    OpenFile = true,
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
                     Title = "2. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762",
-                    ModuleStep = "E2",
+                    ModuleStep = "M01-E2",
                     NombreMini = 1,
+                    OpenFile = false,
                     ActionCommand = ExportFixedWidthCommand 
                 },
                 new WorkflowStep { 
                     Title = "3. Intégration SAP", 
                     Description = "Exécute la transaction SAP 'ZSMNBAO15'.", 
                     Icon = "\xE768", 
-                    ModuleStep = "E3",
+                    ModuleStep = "M01-E3",
                     ActionCommand = ExecuteSAPTransactionCommand 
                 }
             };

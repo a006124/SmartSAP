@@ -39,42 +39,47 @@ namespace SmartSAP.ViewModels.Modules
                     Title = "[Option1] SAP->Excel E1.1", 
                     Description = "Crée un fichier Excel pour saisir le numéros d'équipement à exporter.", 
                     Icon = "\xE70F", 
-                    ModuleStep = "E1.1",
+                    ModuleStep = "M05-E1.1",
+                    OpenFile = true,
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
                     Title = "[Option1] SAP->Excel E1.2", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
-                    ModuleStep = "E1.2",
+                    ModuleStep = "M05-E1.2",
+                    OpenFile = false,
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
                     Title = "[Option1] SAP->Excel E1.3", 
                     Description = "Récupère les données des équipements via la transaction SAP 'IH08'.", 
                     Icon = "\xE768", 
-                    ModuleStep = "E1.3",
+                    ModuleStep = "M05-E1.3",
+                    OpenFile = true,
                     ActionCommand = ExecuteSAPTransactionCommand
                 },
                 new WorkflowStep { 
                     Title = "[Option2] Modèle vierge", 
                     Description = "Crée un fichier Excel modèle.", 
                     Icon = "\xE70F", 
-                    ModuleStep = "E2",
+                    ModuleStep = "M05-E2",
+                    OpenFile = true,
                     ActionCommand = GenerateTemplateCommand 
                 },
                 new WorkflowStep { 
                     Title = "3. Contrôle et export des données", 
                     Description = "Contrôle et exporte les données (Format SAP). ", 
                     Icon = "\xE762", 
-                    ModuleStep = "E3",
+                    ModuleStep = "M05-E3",
+                    OpenFile = false,
                     ActionCommand = ExportFixedWidthCommand
                 },
                 new WorkflowStep { 
                     Title = "4. Intégration des modifications dans SAP", 
                     Description = "Exécute la transaction SAP 'ZSMNBAO13'.", 
                     Icon = "\xE768", 
-                    ModuleStep = "E4",
+                    ModuleStep = "M05-E4",
                     ActionCommand = ExecuteSAPTransactionCommand
                 }
             };
@@ -121,9 +126,7 @@ namespace SmartSAP.ViewModels.Modules
                 }
 
                 // Exécution de la transaction appropriée en fonction de l'étape :
-                // - IH08 est utilisée pour l'extraction (Lecture seule) E1ter
-                // - ZSMNBAO13 est utilisée pour l'intégration (Écriture/Modification) E3
-                string sapTx = step?.ModuleStep == "E1.3" ? "IH08" : "ZSMNBAO13";
+                string sapTx = step?.ModuleStep == "M05-E1.3" ? "IH08" : "ZSMNBAO13";
                 Logs.Add(new LogEntry("INFO", $"Lancement de la transaction {sapTx}..."));
                 
                 string resultFile = string.Empty;
@@ -146,12 +149,12 @@ namespace SmartSAP.ViewModels.Modules
                         Logs.Add(new LogEntry("SUCCESS", "Fichier Excel créé : ", resultFile));
                         
                         // 3. Traitement du fichier Excel si étape E1.3
-                        if (step?.ModuleStep == "E1.3")
+                        if (step?.ModuleStep == "M05-E1.3")
                         {
                             Logs.Add(new LogEntry("INFO", "Génération du modèle E2 pour enrichissement..."));
                             
-                            // 1. Qu'un fichier modèle type E2 soit créé
-                            var e2Step = Steps.FirstOrDefault(s => s.ModuleStep == "E2") ?? new WorkflowStep { ModuleStep = "E2" };
+                            // 1. Fichier modèle type M05-E2 créé
+                            var e2Step = Steps.FirstOrDefault(s => s.ModuleStep == "M05-E2") ?? new WorkflowStep { ModuleStep = "M05-E2" }; ; e2Step.OpenFile = false;
                             GenerateExcelTemplate(e2Step);
                             string templateE2Path = LastGeneratedExcelPath;
 
@@ -161,7 +164,7 @@ namespace SmartSAP.ViewModels.Modules
                                 try
                                 {
                                     var excelService = new SmartSAP.Services.Excel.ExcelManager();
-                                    string enrichResult = excelService.EnrichirFromSAPExcelWorkbook(templateE2Path, resultFile);
+                                    string enrichResult = excelService.EnrichirFromSAPExcelWorkbookM05_E_1_3(templateE2Path, resultFile);
                                     Logs.Add(new LogEntry("SUCCESS", $"Enrichissement terminé : {enrichResult}"));
                                 }
                                 catch (System.Exception ex)
@@ -172,7 +175,16 @@ namespace SmartSAP.ViewModels.Modules
                         }
                     }
                     
-                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                    if (step != null) 
+                    { 
+                        step.Status = "Terminé"; 
+                        step.ResultState = "Success";
+                        if (step.OpenFile)
+                        {
+                            // Ouverture automatique du fichier
+                            Process.Start(new ProcessStartInfo(LastGeneratedExcelPath) { UseShellExecute = true });
+                        }
+                    }
                 }
                 else if (parts.Length >= 2 && parts[1] == "NOK")
                 {
@@ -207,8 +219,8 @@ namespace SmartSAP.ViewModels.Modules
 
             switch (step?.ModuleStep)
             {
-                case "E1.1":
-                case "E1.2":
+                case "M05-E1.1":
+                case "M05-E1.2":
                     // LISTE DE NUMÉROS D'ÉQUIPEMENTS
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
                     var ExcelModel = new[]
@@ -233,8 +245,8 @@ namespace SmartSAP.ViewModels.Modules
                         ExcelColumns.Add(col);
                     }
                     break;
-                case "E2":
-                case "E3":
+                case "M05-E2":
+                case "M05-E3":
                     // DONNÉES COMPLÈTES DES ÉQUIPEMENTS
                     // Header - Commentaire - Données d'exemple - Largeur fixe - Majuscules forcées - Valeurs autorisées
 
