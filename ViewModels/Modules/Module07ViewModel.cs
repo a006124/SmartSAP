@@ -99,28 +99,88 @@ namespace SmartSAP.ViewModels.Modules
                     return;
                 }
 
+
+
                 Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZP13..."));
 
-                string resultFile = string.Empty;
-                string result = await Task.Run(() => SAPManager.ExecuteZP13(session, LastExportedTextPath, out resultFile)); // Transaction SAP
-
-                // Affichage du résultat brut dans les logs
-                Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP : {result}"));
-
-                var parts = result.Split('|');
-                if (parts.Length >= 2 && parts[1] == "OK")
+                if (string.IsNullOrEmpty(LastExportedExcelPath) || !File.Exists(LastExportedExcelPath))
                 {
-                    Logs.Add(new LogEntry("SUCCESS", $"✓ Transaction terminée avec succès. Lignes lues: {parts[2]}."));
+                    Logs.Add(new LogEntry("ERROR", "Le fichier de données Excel est introuvable."));
+                    if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                int succesCount = 0;
+                int errorCount = 0;
+
+                try
+                {
+                    using (var workbook = new XLWorkbook(LastExportedExcelPath))
+                    {
+                        var worksheet = workbook.Worksheets.FirstOrDefault();
+                        if (worksheet == null)
+                        {
+                            Logs.Add(new LogEntry("ERROR", "Le fichier Excel ne contient aucune feuille."));
+                            if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
+                            return;
+                        }
+
+                        // On commence à la ligne 2 pour ignorer l'en-tête
+                        int rowCount = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+                        for (int row = 2; row <= rowCount; row++)
+                        {
+                            // Récupérer la valeur de la colonne 1 (A) et colonne 2 (B)
+                            string division = worksheet.Cell(row, 1).GetString().Trim();
+                            string gamme = worksheet.Cell(row, 2).GetString().Trim();
+
+                            // Si les deux colonnes sont vides, on ignore la ligne
+                            if (string.IsNullOrWhiteSpace(division) && string.IsNullOrWhiteSpace(gamme)) continue;
+
+                            string resultFile = string.Empty;
+                            string result = await Task.Run(() => SAPManager.ExecuteZP13(session, division, gamme, out resultFile)); // Transaction SAP
+
+                            // Affichage du résultat brut dans les logs
+                            Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP pour '{division} {gamme}' : {result}"));
+
+                            var parts = result.Split('|');
+                            if (parts.Length >= 2 && parts[1] == "OK")
+                            {
+                                succesCount++;
+                                Logs.Add(new LogEntry("SUCCESS", $"✓ Ligne traitée avec succès. Lignes lues: {parts[2]}."));
+                            }
+                            else if (parts.Length >= 2 && parts[1] == "NOK")
+                            {
+                                errorCount++;
+                                Logs.Add(new LogEntry("WARNING", $"⚠ Ligne terminée avec {parts[3]} erreur(s)."));
+                            }
+                            else
+                            {
+                                errorCount++;
+                                Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logs.Add(new LogEntry("ERROR", $"Erreur lors de la lecture du fichier Excel : {ex.Message}"));
+                    if (step != null) { step.Status = "Erreur Lecture"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                if (errorCount == 0 && succesCount > 0)
+                {
+                    Logs.Add(new LogEntry("SUCCESS", $"✓ Terminé avec succès. {succesCount} ligne(s) traitée(s)."));
                     if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
                 }
-                else if (parts.Length >= 2 && parts[1] == "NOK")
+                else if (succesCount > 0 && errorCount > 0)
                 {
-                    Logs.Add(new LogEntry("WARNING", $"⚠ Transaction terminée avec {parts[3]} erreur(s)."));
+                    Logs.Add(new LogEntry("WARNING", $"⚠ Terminé avec {errorCount} erreur(s) et {succesCount} succès."));
                     if (step != null) { step.Status = "Succès partiel"; step.ResultState = "Error"; }
                 }
                 else
                 {
-                    Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
+                    Logs.Add(new LogEntry("ERROR", $"✗ Aucune ligne traitée avec succès. {errorCount} erreur(s)."));
                     if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
                 }
             }
