@@ -62,7 +62,7 @@ namespace SmartSAP.ViewModels.Modules
         // EXÉCUTION DE LA TRANSACTION SAP
         protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
-            await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
+            //await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
 
             if (step == null)
             {
@@ -103,7 +103,7 @@ namespace SmartSAP.ViewModels.Modules
 
                 Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZP13..."));
 
-                if (string.IsNullOrEmpty(LastExportedExcelPath) || !File.Exists(LastExportedExcelPath))
+                if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
                 {
                     Logs.Add(new LogEntry("ERROR", "Le fichier de données Excel est introuvable."));
                     if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
@@ -112,10 +112,11 @@ namespace SmartSAP.ViewModels.Modules
 
                 int succesCount = 0;
                 int errorCount = 0;
+                string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
 
                 try
                 {
-                    using (var workbook = new XLWorkbook(LastExportedExcelPath))
+                    using (var workbook = new XLWorkbook(LastGeneratedExcelPath))
                     {
                         var worksheet = workbook.Worksheets.FirstOrDefault();
                         if (worksheet == null)
@@ -137,7 +138,7 @@ namespace SmartSAP.ViewModels.Modules
                             if (string.IsNullOrWhiteSpace(division) && string.IsNullOrWhiteSpace(gamme)) continue;
 
                             string resultFile = string.Empty;
-                            string result = await Task.Run(() => SAPManager.ExecuteZP13(session, division, gamme, out resultFile)); // Transaction SAP
+                            string result = "";//await Task.Run(() => SAPManager.ExecuteZP13(session, division, gamme, docPath, out resultFile)); // Transaction SAP
 
                             // Affichage du résultat brut dans les logs
                             Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP pour '{division} {gamme}' : {result}"));

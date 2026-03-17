@@ -339,7 +339,7 @@ namespace SmartSAP.Services.SAP
         }
 
         // EXÉCUTION DE LA TRANSACTION SAP ZP13 : EXTRACTION D'UNE GAMME
-        public string ExecuteZP13(dynamic session, string division, string gamme, out string resultFilePath)
+        public string ExecuteZP13(dynamic session, string division, string gamme, string filePath, out string resultFilePath)
         {
             const string sSAPTransaction = "ZP13";
             resultFilePath = string.Empty;
