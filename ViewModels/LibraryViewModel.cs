@@ -54,7 +54,7 @@ namespace SmartSAP.ViewModels
                 new ModuleInfo { Number="06", Title = "Suppression Equipements",  Description = "Supprime en masse des équipements dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 
                 //
-                new ModuleInfo { Number="07", Title = "Création d'Equipements", Description = "Crée en masse de nouveaux équipements dans SAP via Excel.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
+                new ModuleInfo { Number="07", Title = "Extraction Gammes", Description = "Extrait en masse de SAP vers Excel des gammes de maintenance.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="08", Title = "Modification d'Equipements", Description = "Modifie en masse les équipements existants dans SAP via Excel.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="09", Title = "Suppression d'Equipements",  Description = "Supprime en masse des équipements dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" }
             };

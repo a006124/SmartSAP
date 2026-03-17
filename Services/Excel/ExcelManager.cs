@@ -295,10 +295,10 @@ namespace SmartSAP.Services.Excel
                         targetRow.Cell(28).Value = row.Cell(4).GetString(); // Repère / Zone de tri
                         targetRow.Cell(29).Value = row.Cell(8).GetString(); // N° License
                         targetRow.Cell(30).Value = row.Cell(13).GetString(); // Code MABEC / Article
-                        targetRow.Cell(31).Value = row.Cell(85).GetString(); // Libellé matériel
+                        targetRow.Cell(31).Value = row.Cell(117).GetString(); // Libellé matériel
 
                         // Niveau
-                        string niveau = row.Cell(119).GetString();
+                        string niveau = row.Cell(118).GetString();
                         switch (niveau)
                         {
                             case "Groupe d'ensemble": targetRow.Cell(32).Value = "GE"; break;
@@ -309,38 +309,39 @@ namespace SmartSAP.Services.Excel
 
                         targetRow.Cell(33).Value = row.Cell(114).GetString(); // Référence fournisseur
                         targetRow.Cell(34).Value = row.Cell(115).GetString(); // Nom Fournisseur
-                        targetRow.Cell(35).Value = row.Cell(116).GetString(); // Référence intégrateur
-                        targetRow.Cell(36).Value = row.Cell(117).GetString(); // Nom intégrateur
-                        targetRow.Cell(37).Value = row.Cell(121).GetString(); // Quantité équipement
-                        targetRow.Cell(38).Value = row.Cell(120).GetString(); // Mnémonique
-                        targetRow.Cell(39).Value = row.Cell(48).GetString(); // Catégorie de l'équipement
+                        targetRow.Cell(35).Value = row.Cell(122).GetString(); // Référence intégrateur
+                        targetRow.Cell(36).Value = row.Cell(109).GetString(); // Nom intégrateur
+                        targetRow.Cell(37).Value = row.Cell(119).GetString(); // Quantité équipement
+                        targetRow.Cell(38).Value = ""; // Mnémonique
+                        targetRow.Cell(39).Value = ""; // Catégorie - Nature de l'équipement
                         targetRow.Cell(40).Value = ""; // Code projet
                         targetRow.Cell(41).Value = ""; // Modèle
-                        targetRow.Cell(42).Value = row.Cell(121).GetString(); // Famille
-                        targetRow.Cell(43).Value = row.Cell(122).GetString(); // Capacité / Alimentation
+                        targetRow.Cell(42).Value = ""; // Famille
+                        targetRow.Cell(43).Value = row.Cell(123).GetString(); // Capacité
+                        targetRow.Cell(44).Value = ""; // Alimentation
 
                         // A maintenir
-                        string aMaintenir = row.Cell(123).GetString();
+                        string aMaintenir = row.Cell(121).GetString();
                         switch (aMaintenir)
                         {
-                            case "Avec Maintenance": targetRow.Cell(44).Value = "1"; break;
-                            case "Sans Maintenance": targetRow.Cell(44).Value = "0"; break;
+                            case "Avec Maintenance": targetRow.Cell(45).Value = "1"; break;
+                            case "Sans Maintenance": targetRow.Cell(45).Value = "0"; break;
                             default: targetRow.Cell(44).Value = ""; break;
                         }
 
-                        targetRow.Cell(45).Value = ""; // UET de fabrication
-                        targetRow.Cell(46).Value = ""; // Dessiné par
-                        targetRow.Cell(47).Value = ""; // Indice inventaire
-                        targetRow.Cell(48).Value = ""; // Date de l'indice
-                        targetRow.Cell(49).Value = ""; // Responsable de l'indice
-                        targetRow.Cell(50).Value = ""; // N° pièce produit
-                        targetRow.Cell(51).Value = ""; // Indice pièce produit
-                        targetRow.Cell(52).Value = ""; // N° pièce produit
-                        targetRow.Cell(53).Value = ""; // Indice pièce produit
-                        targetRow.Cell(54).Value = ""; // N° pièce produit
-                        targetRow.Cell(55).Value = ""; // Indice pièce produit
-                        targetRow.Cell(56).Value = ""; // N° pièce produit
-                        targetRow.Cell(57).Value = ""; // Indice pièce produit
+                        targetRow.Cell(46).Value = ""; // UET de fabrication
+                        targetRow.Cell(47).Value = ""; // Dessiné par
+                        targetRow.Cell(48).Value = ""; // Indice inventaire
+                        targetRow.Cell(49).Value = ""; // Date de l'indice
+                        targetRow.Cell(50).Value = ""; // Responsable de l'indice
+                        targetRow.Cell(51).Value = ""; // N° pièce produit
+                        targetRow.Cell(52).Value = ""; // Indice pièce produit
+                        targetRow.Cell(53).Value = ""; // N° pièce produit
+                        targetRow.Cell(54).Value = ""; // Indice pièce produit
+                        targetRow.Cell(55).Value = ""; // N° pièce produit
+                        targetRow.Cell(56).Value = ""; // Indice pièce produit
+                        targetRow.Cell(57).Value = ""; // N° pièce produit
+                        targetRow.Cell(58).Value = ""; // Indice pièce produit
 
                         lRowToUpdate++;
                     }

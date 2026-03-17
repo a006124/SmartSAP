@@ -78,7 +78,8 @@ namespace SmartSAP.ViewModels
                     CurrentViewModel = new Module06ViewModel(this, "Suppression d'Equipements");
                     break;
                 case "07":
-                    CurrentViewModel = new Module07ViewModel(this, "Création d'Equipements");
+                case "Extraction de Gammes":
+                    CurrentViewModel = new Module07ViewModel(this, "Extraction de Gammes");
                     break;
                 case "08":
                     CurrentViewModel = new Module08ViewModel(this, "Modification d'Equipements");

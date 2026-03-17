@@ -102,7 +102,7 @@ namespace SmartSAP.ViewModels.Modules
                 Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZSMNBAO15..."));
                 
                 string resultFile = string.Empty;
-                string result = await Task.Run(() => SAPManager.ExecuteZSMNBAO15(session, LastExportedTextPath, out resultFile));
+                string result = await Task.Run(() => SAPManager.ExecuteZSMNBAO15(session, LastExportedTextPath, out resultFile)); // Transaction SAP
 
                 // Affichage du résultat brut dans les logs
                 Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP : {result}"));

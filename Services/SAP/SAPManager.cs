@@ -338,6 +338,75 @@ namespace SmartSAP.Services.SAP
             }
         }
 
+        // EXÉCUTION DE LA TRANSACTION SAP ZP13 : EXTRACTION D'UNE GAMME
+        public string ExecuteZP13(dynamic session, string filePath, out string resultFilePath)
+        {
+            const string sSAPTransaction = "ZP13";
+            resultFilePath = string.Empty;
+            int NombreDeLignesLues = 0;
+            int NombreDeLignesEnErreur = 0;
+            string MessageErreur = Environment.NewLine;
+
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                // Écran de sélection
+                SafeFindById(session, "wnd[0]/usr/ctxtFIC_FILE").Text = filePath;
+                SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
+
+                // Résultat de l'exécution
+                string MessageLigne1;
+                try
+                {
+                    MessageLigne1 = SafeFindById(session, "wnd[0]/usr/lbl[0,10]").Text;
+                    if (MessageLigne1 == "Nombre de lignes lues :")
+                    {
+                        NombreDeLignesLues = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[29,10]").Text);
+                    }
+                    for (int i = 14; ; i += 2)
+                    {
+                        string elementPath = $"wnd[0]/usr/lbl[0,{i}]";
+                        string valeurRecuperee;
+                        try
+                        {
+                            valeurRecuperee = SafeFindById(session, elementPath).Text;
+                        }
+                        catch (Exception ex)
+                        {
+                            valeurRecuperee = string.Empty;
+                        }
+                        if (string.IsNullOrEmpty(valeurRecuperee))
+                        {
+                            break;
+                        }
+                        MessageErreur += valeurRecuperee + Environment.NewLine; // Ajoute la valeur et un saut de ligne pour la lisibilité
+                        NombreDeLignesEnErreur += 1;
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+
+                // Retour et Nettoyage
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
+
+                // Formatage du résultat compact
+                string result = $"{sSAPTransaction}|NOK|{NombreDeLignesLues}|{NombreDeLignesEnErreur}|{MessageErreur}";
+                Console.WriteLine($"[SAP] Resultat : {result}");
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                string errorResult = $"{sSAPTransaction}|ERROR|{ex.Message}";
+                Console.WriteLine($"[SAP] Erreur : {errorResult}");
+                return errorResult;
+            }
+        }
 
         // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO12 : CRÉATION EN MASSE DES ÉQUIPEMENTS
         public string ExecuteZSMNBAO12(dynamic session, string filePath, out string resultFilePath)
@@ -845,8 +914,6 @@ namespace SmartSAP.Services.SAP
                 return $"{sSAPTransaction}|ERROR|{ex.Message}";
             }
         }
-
-
 
 
     }
