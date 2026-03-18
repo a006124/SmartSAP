@@ -41,19 +41,10 @@ namespace SmartSAP.ViewModels.Modules
                     ActionCommand = GenerateTemplateCommand
                 },
                 new WorkflowStep {
-                    Title = "2. Contrôle et export des données",
-                    Description = "Contrôle et exporte les données (Format SAP). ",
-                    Icon = "\xE762",
-                    ModuleStep = "M01-E2",
-                    NombreMini = 1,
-                    OpenFile = false,
-                    ActionCommand = ExportFixedWidthCommand
-                },
-                new WorkflowStep {
-                    Title = "3. Intégration SAP",
-                    Description = "Exécute la transaction SAP 'ZSMNBAO15'.",
+                    Title = "2. Extraction de SAP",
+                    Description = "Exécute la transaction SAP 'ZP13'.",
                     Icon = "\xE768",
-                    ModuleStep = "M01-E3",
+                    ModuleStep = "M07-E2",
                     ActionCommand = ExecuteSAPTransactionCommand
                 }
             };
@@ -62,8 +53,6 @@ namespace SmartSAP.ViewModels.Modules
         // EXÉCUTION DE LA TRANSACTION SAP
         protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
-            //await base.ExecuteSAPTransactionAsync(step); // Vérifie la présence du fichier exporté
-
             if (step == null)
             {
                 step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
@@ -113,6 +102,7 @@ namespace SmartSAP.ViewModels.Modules
                 int succesCount = 0;
                 int errorCount = 0;
                 string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string LinesInError = string.Empty;
 
                 try
                 {
@@ -138,26 +128,22 @@ namespace SmartSAP.ViewModels.Modules
                             if (string.IsNullOrWhiteSpace(division) && string.IsNullOrWhiteSpace(gamme)) continue;
 
                             string resultFile = string.Empty;
-                            string result = "";//await Task.Run(() => SAPManager.ExecuteZP13(session, division, gamme, docPath, out resultFile)); // Transaction SAP
-
-                            // Affichage du résultat brut dans les logs
-                            Logs.Add(new LogEntry("DEBUG", $"Réponse brute SAP pour '{division} {gamme}' : {result}"));
+                            string result = await Task.Run(() => SAPManager.ExecuteZP13(session, division, gamme, docPath, out resultFile)); // Transaction SAP
 
                             var parts = result.Split('|');
                             if (parts.Length >= 2 && parts[1] == "OK")
                             {
                                 succesCount++;
-                                Logs.Add(new LogEntry("SUCCESS", $"✓ Ligne traitée avec succès. Lignes lues: {parts[2]}."));
                             }
                             else if (parts.Length >= 2 && parts[1] == "NOK")
                             {
                                 errorCount++;
-                                Logs.Add(new LogEntry("WARNING", $"⚠ Ligne terminée avec {parts[3]} erreur(s)."));
+                                LinesInError+= $"{Environment.NewLine}'{division} {gamme}' : {parts[4]}";
                             }
                             else
                             {
                                 errorCount++;
-                                Logs.Add(new LogEntry("ERROR", $"✗ Erreur lors de l'exécution : {result}"));
+                                LinesInError+= $"{Environment.NewLine}'{division} {gamme}' : {parts[4]}";
                             }
                         }
                     }
@@ -176,7 +162,7 @@ namespace SmartSAP.ViewModels.Modules
                 }
                 else if (succesCount > 0 && errorCount > 0)
                 {
-                    Logs.Add(new LogEntry("WARNING", $"⚠ Terminé avec {errorCount} erreur(s) et {succesCount} succès."));
+                    Logs.Add(new LogEntry("WARNING", $"⚠ Terminé avec {errorCount} erreur(s) et {succesCount} succès.{Environment.NewLine}{LinesInError}"));
                     if (step != null) { step.Status = "Succès partiel"; step.ResultState = "Error"; }
                 }
                 else

@@ -1,31 +1,123 @@
 [
-{"01-Division Localisation":"AL01","02-Désignation Division Localisation":"DIEPPE - ALPINE"},
-{"01-Division Localisation":"AP01","02-Désignation Division Localisation":"RENAULT ALGERIE PRODUCTION"},
-{"01-Division Localisation":"CA01","02-Désignation Division Localisation":"CACIA"},
-{"01-Division Localisation":"CL01","02-Désignation Division Localisation":"Cléon"},
-{"01-Division Localisation":"CORM","02-Désignation Division Localisation":"CORMECANICA"},
-{"01-Division Localisation":"CPHF","02-Désignation Division Localisation":"PFA - PLANTA DE FUNDICION DE ALUMINIO"},
-{"01-Division Localisation":"DA01","02-Désignation Division Localisation":"DACIA"},
-{"01-Division Localisation":"DO01","02-Désignation Division Localisation":"DOUAI"},
-{"01-Division Localisation":"ENVG","02-Désignation Division Localisation":"ENVIGADO - SOFASA"},
-{"01-Division Localisation":"FA02","02-Désignation Division Localisation":"PALENCIA"},
-{"01-Division Localisation":"FA03","02-Désignation Division Localisation":"MONTAJE VALLADOLID"},
-{"01-Division Localisation":"FL01","02-Désignation Division Localisation":"FLINS"},
-{"01-Division Localisation":"FSI1","02-Désignation Division Localisation":"CORDOBA FSI"},
-{"01-Division Localisation":"HE02","02-Désignation Division Localisation":"SEVILLA"},
-{"01-Division Localisation":"HE03","02-Désignation Division Localisation":"FACTORIA MOTORES"},
-{"01-Division Localisation":"HR02","02-Désignation Division Localisation":"DACIA"},
-{"01-Division Localisation":"HT02","02-Désignation Division Localisation":"OYAK RENAULT (BURSA)"},
-{"01-Division Localisation":"MC02","02-Désignation Division Localisation":"MAUBEUGE"},
-{"01-Division Localisation":"OY01","02-Désignation Division Localisation":"OYAK RENAULT (BURSA)"},
-{"01-Division Localisation":"PPHF","02-Désignation Division Localisation":"CURITIBA CMO"},
-{"01-Division Localisation":"RE10","02-Désignation Division Localisation":"CHOISY LE ROI"},
-{"01-Division Localisation":"RTE1","02-Désignation Division Localisation":"TANGER"},
-{"01-Division Localisation":"SA01","02-Désignation Division Localisation":"Sandouville"},
-{"01-Division Localisation":"SL02","02-Désignation Division Localisation":"REVOZ"},
-{"01-Division Localisation":"SO01","02-Désignation Division Localisation":"SOVAB (BATILLY)"},
-{"01-Division Localisation":"SO02","02-Désignation Division Localisation":"SOMACA"},
-{"01-Division Localisation":"ST02","02-Désignation Division Localisation":"STA"},
-{"01-Division Localisation":"VP01","02-Désignation Division Localisation":"CURITIBA CVP"},
-{"01-Division Localisation":"VU01","02-Désignation Division Localisation":"CURITIBA CVU"}
+  {
+    "01-Division Localisation": "AL01",
+    "02-Désignation Division Localisation": "DIEPPE - ALPINE"
+  },
+  {
+    "01-Division Localisation": "AP01",
+    "02-Désignation Division Localisation": "RENAULT ALGERIE PRODUCTION"
+  },
+  {
+    "01-Division Localisation": "CA01",
+    "02-Désignation Division Localisation": "CACIA"
+  },
+  {
+    "01-Division Localisation": "CL01",
+    "02-Désignation Division Localisation": "Cléon"
+  },
+  {
+    "01-Division Localisation": "CORM",
+    "02-Désignation Division Localisation": "CORMECANICA"
+  },
+  {
+    "01-Division Localisation": "CPHF",
+    "02-Désignation Division Localisation": "PFA - PLANTA DE FUNDICION DE ALUMINIO"
+  },
+  {
+    "01-Division Localisation": "DA01",
+    "02-Désignation Division Localisation": "DACIA"
+  },
+  {
+    "01-Division Localisation": "DO01",
+    "02-Désignation Division Localisation": "DOUAI"
+  },
+  {
+    "01-Division Localisation": "ENVG",
+    "02-Désignation Division Localisation": "ENVIGADO - SOFASA"
+  },
+  {
+    "01-Division Localisation": "FA02",
+    "02-Désignation Division Localisation": "PALENCIA"
+  },
+  {
+    "01-Division Localisation": "FA03",
+    "02-Désignation Division Localisation": "MONTAJE VALLADOLID"
+  },
+  {
+    "01-Division Localisation": "FL01",
+    "02-Désignation Division Localisation": "FLINS"
+  },
+  {
+    "01-Division Localisation": "FSI1",
+    "02-Désignation Division Localisation": "CORDOBA FSI"
+  },
+  {
+    "01-Division Localisation": "HE02",
+    "02-Désignation Division Localisation": "SEVILLA"
+  },
+  {
+    "01-Division Localisation": "HE03",
+    "02-Désignation Division Localisation": "FACTORIA MOTORES"
+  },
+  {
+    "01-Division Localisation": "HR02",
+    "02-Désignation Division Localisation": "DACIA"
+  },
+  {
+    "01-Division Localisation": "HT02",
+    "02-Désignation Division Localisation": "OYAK RENAULT (BURSA)"
+  },
+  {
+    "01-Division Localisation": "MC01",
+    "02-Désignation Division Localisation": "MAUBEUGE"
+  },
+  {
+    "01-Division Localisation": "MC02",
+    "02-Désignation Division Localisation": "MAUBEUGE"
+  },
+
+  {
+    "01-Division Localisation": "OY01",
+    "02-Désignation Division Localisation": "OYAK RENAULT (BURSA)"
+  },
+  {
+    "01-Division Localisation": "PPHF",
+    "02-Désignation Division Localisation": "CURITIBA CMO"
+  },
+  {
+    "01-Division Localisation": "RE10",
+    "02-Désignation Division Localisation": "CHOISY LE ROI"
+  },
+  {
+    "01-Division Localisation": "RTE1",
+    "02-Désignation Division Localisation": "TANGER"
+  },
+  {
+    "01-Division Localisation": "SA01",
+    "02-Désignation Division Localisation": "Sandouville"
+  },
+  {
+    "01-Division Localisation": "SL02",
+    "02-Désignation Division Localisation": "REVOZ"
+  },
+  {
+    "01-Division Localisation": "SO01",
+    "02-Désignation Division Localisation": "SOVAB (BATILLY)"
+  },
+  {
+    "01-Division Localisation": "SO02",
+    "02-Désignation Division Localisation": "SOMACA"
+  },
+  {
+    "01-Division Localisation": "ST02",
+    "02-Désignation Division Localisation": "STA"
+  },
+  {
+    "01-Division Localisation": "VP01",
+    "02-Désignation Division Localisation": "CURITIBA CVP"
+  },
+  {
+    "01-Division Localisation": "VU01",
+    "02-Désignation Division Localisation": "CURITIBA CVU"
+  }
 ]

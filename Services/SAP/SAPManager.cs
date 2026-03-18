@@ -342,10 +342,8 @@ namespace SmartSAP.Services.SAP
         public string ExecuteZP13(dynamic session, string division, string gamme, string filePath, out string resultFilePath)
         {
             const string sSAPTransaction = "ZP13";
-            resultFilePath = string.Empty;
-            int NombreDeLignesLues = 0;
-            int NombreDeLignesEnErreur = 0;
-            string MessageErreur = Environment.NewLine;
+            string result = string.Empty;
+            resultFilePath=string.Empty;
 
             try
             {
@@ -354,37 +352,29 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]").sendVKey(0);
 
                 // Écran de sélection
-                SafeFindById(session, "wnd[0]/usr/ctxtFIC_FILE").Text = filePath;
+                SafeFindById(session, "wnd[0]/usr/ctxtP_PLNNR").Text = gamme; // Groupe de gamme
+                SafeFindById(session, "wnd[0]/usr/ctxtP_WERKS").Text = division; // Division
+                SafeFindById(session, "wnd[0]/usr/ctxtP_CHEMIN").Text = filePath + "\\pmp.txt"; // Fichier de sauvegarde
+
+                // Exécuter (F8)
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
 
                 // Résultat de l'exécution
-                string MessageLigne1;
+                string MessageLigne;
                 try
                 {
-                    MessageLigne1 = SafeFindById(session, "wnd[0]/usr/lbl[0,10]").Text;
-                    if (MessageLigne1 == "Nombre de lignes lues :")
+                    MessageLigne = SafeFindById(session, "wnd[0]/usr/lbl[0,13]").Text;
+                    if (MessageLigne.Contains("inexistant dans la division"))
                     {
-                        NombreDeLignesLues = int.Parse(SafeFindById(session, "wnd[0]/usr/lbl[29,10]").Text);
+                        result = $"{sSAPTransaction}|NOK|1|1|{MessageLigne}";
+                        resultFilePath = "pmp" + gamme + "_extraction.txt";
                     }
-                    for (int i = 14; ; i += 2)
+                    else
                     {
-                        string elementPath = $"wnd[0]/usr/lbl[0,{i}]";
-                        string valeurRecuperee;
-                        try
-                        {
-                            valeurRecuperee = SafeFindById(session, elementPath).Text;
-                        }
-                        catch (Exception ex)
-                        {
-                            valeurRecuperee = string.Empty;
-                        }
-                        if (string.IsNullOrEmpty(valeurRecuperee))
-                        {
-                            break;
-                        }
-                        MessageErreur += valeurRecuperee + Environment.NewLine; // Ajoute la valeur et un saut de ligne pour la lisibilité
-                        NombreDeLignesEnErreur += 1;
+                        result = $"{sSAPTransaction}|OK|1|0|";
+                        resultFilePath = "";
                     }
+
                 }
                 catch (Exception ex)
                 {
@@ -395,7 +385,6 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
 
                 // Formatage du résultat compact
-                string result = $"{sSAPTransaction}|NOK|{NombreDeLignesLues}|{NombreDeLignesEnErreur}|{MessageErreur}";
                 Console.WriteLine($"[SAP] Resultat : {result}");
                 return result;
 
@@ -407,6 +396,7 @@ namespace SmartSAP.Services.SAP
                 return errorResult;
             }
         }
+
 
         // EXÉCUTION DE LA TRANSACTION SAP ZSMNBAO12 : CRÉATION EN MASSE DES ÉQUIPEMENTS
         public string ExecuteZSMNBAO12(dynamic session, string filePath, out string resultFilePath)
