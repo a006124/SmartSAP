@@ -4,7 +4,10 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Windows.Input;
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -46,6 +49,13 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE768",
                     ModuleStep = "M07-E2",
                     ActionCommand = ExecuteSAPTransactionCommand
+                },
+                new WorkflowStep {
+                    Title = "3. Reconstruction du fichier Excel PMP",
+                    Description = "Reconstruit le fichier PMP à partir des fichiers TXT extraits de SAP.",
+                    Icon = "\xE768",
+                    ModuleStep = "M07-E3",
+                    ActionCommand = GeneratePMPExcelCommand
                 }
             };
         }
@@ -58,7 +68,7 @@ namespace SmartSAP.ViewModels.Modules
                 step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
             }
 
-            if (step != null && step.ResultState == "Error") return;
+            //if (step != null && step.ResultState == "Error") return;
 
             try
             {

@@ -1,13 +1,16 @@
 using ClosedXML.Excel;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using Microsoft.Win32;
 using SmartSAP.Models;
 using SmartSAP.Services.SAP;
 using SmartSAP.ViewModels;
-using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -24,11 +27,17 @@ namespace SmartSAP.ViewModels.Modules
         public ObservableCollection<ExcelColumnDefinition> ExcelColumns { get; protected set; }
         public ICommand GoBackCommand { get; protected set; }
         public ICommand GenerateTemplateCommand { get; protected set; }
+        public ICommand GeneratePMPExcelCommand { get; protected set; }
         public ICommand ExportFixedWidthCommand { get; protected set; }
         public ICommand ClearLogsCommand { get; protected set; }
         public ICommand PickExcelFileCommand { get; protected set; }
         public ICommand CheckSAPConnectionCommand { get; protected set; }
         public ICommand ExecuteSAPTransactionCommand { get; protected set; }
+
+
+        public ICommand GeneratePDFCommand { get; protected set; }
+        //public ICommand GeneratePMPExcelCommand { get; protected set; }
+
 
         protected string? LastGeneratedExcelPath;
         protected string? LastExportedTextPath;
@@ -46,6 +55,9 @@ namespace SmartSAP.ViewModels.Modules
 
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
             GenerateTemplateCommand = new RelayCommand(p => GenerateExcelTemplate(p as WorkflowStep));
+            GeneratePDFCommand = new RelayCommand(p => GeneratePDF(p as WorkflowStep));
+            GeneratePMPExcelCommand = new RelayCommand(async p => GeneratePMPExcel(p as WorkflowStep));
+
             ExportFixedWidthCommand = new RelayCommand(p =>
             {
                 var step = p as WorkflowStep;
@@ -156,6 +168,208 @@ namespace SmartSAP.ViewModels.Modules
                 if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
             }
         }
+
+        protected virtual void GeneratePDF(WorkflowStep? step = null)
+        {
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GeneratePDFCommand);
+            }
+
+            if (step != null) step.ResultState = "Processing";
+
+            try
+            {
+                // Ouvrir une fenêtre de sélection de fichier
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Title = "Sélectionnez un fichier PDF";
+                openFileDialog.Filter = "Fichiers PDF|*.pdf";
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    string inputPdf = openFileDialog.FileName;
+                    string inputFileName=Path.GetFileNameWithoutExtension(inputPdf);
+                    string outputDir = Path.GetDirectoryName(inputPdf);
+                    int pagesPerFile = 20;
+
+                    // Ouvrir le fichier PDF d'entrée
+                    PdfReader reader = new PdfReader(inputPdf);
+
+                    // Parcourir le PDF par segments de pagesPerFile
+                    for (int i = 0; i < reader.NumberOfPages; i += pagesPerFile)
+                    {
+                        // Créer un nouveau document PDF
+                        Document document = new Document();
+                        string outputFilename = Path.Combine(outputDir, $"{inputFileName}_output_{(i / pagesPerFile + 1).ToString("D3")}.pdf");
+                        PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(outputFilename, FileMode.Create));
+
+                        document.Open();
+
+                        // Ajouter les pages au nouveau fichier PDF
+                        for (int j = i; j < Math.Min(i + pagesPerFile, reader.NumberOfPages); j++)
+                        {
+                            document.NewPage();
+                            PdfImportedPage page = writer.GetImportedPage(reader, j + 1);
+                            writer.DirectContent.AddTemplate(page, 0, 0);
+                        }
+
+                        document.Close();
+                        writer.Close();
+
+                        Console.WriteLine($"Créé: {outputFilename}");
+                    }
+
+                    Logs.Add(new LogEntry("SUCCESS", $"Fichiers PDF créés dans le dossier : ", outputDir));
+                }
+
+                if (step != null)
+                {
+                    step.Status = "Terminé"; step.ResultState = "Success";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création des fichiers PDF : {ex.Message}"));
+                if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+            }
+        }
+
+        protected virtual void GeneratePMPExcel(WorkflowStep? step = null)
+        {
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GeneratePDFCommand);
+            }
+
+            if (step != null) step.ResultState = "Processing";
+
+            try
+            {
+                string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+
+                string sFileName = "PMP_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
+                int iLgLigne = 293;
+                int iDebRechercheLigne = 270;
+                int iLgFinRechercheLigne = 50;
+                int endIndex;
+
+                long rowNumber = 0;
+                long rowTotalNumber;
+
+                // Vérifier si le chemin du dossier n'est pas vide
+                if (string.IsNullOrEmpty(docPath))
+                {
+                    throw new ArgumentException("Le chemin du dossier est invalide.");
+                }
+
+                // Obtenir tous les fichiers TXT dans le dossier spécifié, excluant ceux commençant par "PMP_"
+                string[] fichiersCSV = Directory.GetFiles(docPath, "*.txt")
+                                                .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
+                                                .ToArray();
+
+                // Vérifier si des fichiers TXT ont été trouvés
+                if (fichiersCSV.Length == 0)
+                {
+                    throw new FileNotFoundException("Aucun fichier TXT trouvé dans le dossier spécifié.");
+                }
+                else
+                {
+                    rowTotalNumber = fichiersCSV.Length;
+                }
+
+                // Utiliser un StreamWriter pour écrire dans le fichier de sortie de manière asynchrone
+                using (StreamWriter writer = new StreamWriter(Path.Combine(docPath, sFileName), false)) // Le paramètre 'false' écrase le fichier s'il existe
+                {
+                    StringBuilder accumulatedLine = new StringBuilder();
+                    Regex regex = new Regex(@"[^\w\s/]"); // Expression régulière pour remplacer les caractères non alphanumériques sauf '/'
+
+                    foreach (string fichier in fichiersCSV)
+                    {
+                        rowNumber += 1;
+
+                        // Lire toutes les lignes du fichier
+                        string[] lignesFichier = File.ReadAllLines(fichier);
+
+                        // Parcourir chaque ligne du fichier
+                        foreach (string ligne in lignesFichier)
+                        {
+                            // Remplacer les caractères non alphanumériques
+                            string cleanedLine = regex.Replace(ligne, " ");
+                            // Ajouter la ligne nettoyée à la ligne accumulée
+                            accumulatedLine.Append(cleanedLine);
+                        }
+                    }
+
+                    // Écrire des lignes de 287 caractères de longueur
+                    while (accumulatedLine.Length > iLgLigne)
+                    {
+                        Match match = null;
+                        string pattern = ""; // Initialiser pattern
+                        endIndex = 0;
+
+                        // Calculer la longueur de la sous-chaîne à rechercher, en évitant les erreurs d'index
+                        int searchLength = Math.Min(iLgFinRechercheLigne, accumulatedLine.Length - iDebRechercheLigne);
+
+                        if (searchLength > 0)
+                        {
+                            for (int i = 1; i <= 99; i++)
+                            {
+                                pattern = " " + i.ToString("D2");
+                                match = Regex.Match(accumulatedLine.ToString(iDebRechercheLigne, searchLength), pattern);
+                                if (match.Success)
+                                {
+                                    endIndex = iDebRechercheLigne + match.Index + pattern.Length;
+                                    break; // Sortir de la boucle si un match est trouvé
+                                }
+                            }
+                        }
+
+                        // Si aucun match n'est trouvé ou si l'endIndex est invalide, prendre la longueur maximale de la ligne
+                        if (endIndex == 0 || endIndex > accumulatedLine.Length)
+                        {
+                            endIndex = Math.Min(iLgLigne, accumulatedLine.Length);
+                        }
+
+                        string lineToWrite = accumulatedLine.ToString(0, endIndex);
+
+                        accumulatedLine.Remove(0, endIndex);
+
+                        // Ajouter des espaces avant le nombre de deux chiffres pour atteindre la longueur souhaitée
+                        if (lineToWrite.Length < iLgLigne)
+                        {
+                            int paddingLength = iLgLigne - lineToWrite.Length;
+                            int paddingIndex = lineToWrite.LastIndexOf(" ");
+                            if (paddingIndex > 0)
+                            {
+                                lineToWrite = lineToWrite.Insert(paddingIndex, new string(' ', paddingLength));
+                            }
+                        }
+                        else if (lineToWrite.Length > iLgLigne)
+                        {
+                            // Elle tronque la ligne et ajoute le dernier 'pattern' trouvé ou généré.
+                            lineToWrite = lineToWrite.Substring(0, iLgLigne - 3) + pattern;
+                        }
+
+                        writer.WriteLineAsync(lineToWrite);
+                    }
+                }
+
+                Logs.Add(new LogEntry("SUCCESS", $"Fichiers PDF créés dans le dossier : ", docPath));
+
+                if (step != null)
+                {
+                    step.Status = "Terminé"; step.ResultState = "Success";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : {ex.Message}"));
+                if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+            }
+        }
+
 
         protected virtual void ExportLastGeneratedToFixedWidth(WorkflowStep? step = null, int nombreMini = 0, bool OpenFile = true)
         {

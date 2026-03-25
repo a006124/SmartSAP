@@ -1,8 +1,9 @@
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 using SmartSAP.Services.Excel;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 
 namespace SmartSAP.Services.SAP
 {
@@ -354,7 +355,7 @@ namespace SmartSAP.Services.SAP
                 // Écran de sélection
                 SafeFindById(session, "wnd[0]/usr/ctxtP_PLNNR").Text = gamme; // Groupe de gamme
                 SafeFindById(session, "wnd[0]/usr/ctxtP_WERKS").Text = division; // Division
-                SafeFindById(session, "wnd[0]/usr/ctxtP_CHEMIN").Text = filePath + "\\pmp.txt"; // Fichier de sauvegarde
+                SafeFindById(session, "wnd[0]/usr/ctxtP_CHEMIN").Text = filePath + "\\PMP.txt"; // Fichier de sauvegarde de sortie : pmpGAMME_extraction.txt
 
                 // Exécuter (F8)
                 SafeFindById(session, "wnd[0]/tbar[1]/btn[8]").press(); // Exécuter 
@@ -367,7 +368,7 @@ namespace SmartSAP.Services.SAP
                     if (MessageLigne.Contains("inexistant dans la division"))
                     {
                         result = $"{sSAPTransaction}|NOK|1|1|{MessageLigne}";
-                        resultFilePath = "pmp" + gamme + "_extraction.txt";
+                        resultFilePath = "PMP_" + gamme + "_extraction.txt";
                     }
                     else
                     {
@@ -629,8 +630,6 @@ namespace SmartSAP.Services.SAP
                 {
                 }
 
-
-
                 // Retour et Nettoyage
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour
@@ -845,7 +844,10 @@ namespace SmartSAP.Services.SAP
                 // Modifier la mise en forme
                 SafeFindById(session, "wnd[0]/mbar/menu[5]/menu[2]/menu[0]").select(); // Option / Mise en forme / Actuelle
                 SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/cntlCONTAINER1_LAYO/shellcont/shell").selectAll(); // Sélectionner tout
-                SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/btnAPP_WL_SING").press(); // Flèche gauche
+                if (SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/cntlCONTAINER1_LAYO/shellcont/shell").rowCount > 0)
+                {
+                    SafeFindById(session, "wnd[1]/usr/tabsG_TS_ALV/tabpALV_M_R1/ssubSUB_DYN0510:SAPLSKBH:0620/btnAPP_WL_SING").press(); // Flèche gauche
+                }
                 SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press(); // Validation
 
                 // Afficher les classifications
@@ -905,6 +907,55 @@ namespace SmartSAP.Services.SAP
             }
         }
 
+
+        // EXÉCUTION DE LA TRANSACTION SAP IW32 : Ordre de travail / Modifier / Ordre
+        public string ExecuteIW32(dynamic session, string OT, out string resultFilePath)
+        {
+            const string sSAPTransaction = "IW32";
+            resultFilePath = string.Empty;
+
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                SafeFindById(session, "wnd[0]/usr/ctxtCAUFVD-AUFNR").Text = OT; // Ordre
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[0]").press(); // Suite
+
+                string statutOT = SafeFindById(session, "wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1100/subSUB_KOPF:SAPLCOIH:1102/txtCAUFVD-ASTTX").Text; // Statut de l'OT
+                string result;
+                if (statutOT.Length > 0 && statutOT[0] == '3')
+                {
+                    SafeFindById(session, "wnd[0]/mbar/menu[0]/menu[9]/menu[2]/menu[3]").select(); // Ordre / Fonction / Clôturer / Annuler la clôture commerciale
+                    SafeFindById(session, "wnd[0]/mbar/menu[0]/menu[9]/menu[2]/menu[1]").select(); // Ordre / Fonction / Clôturer / Annuler la clôture technique
+                    SafeFindById(session, "wnd[0]/tbar[0]/btn[11]").press(); // Sauvegarder
+                    string statutBarre = SafeFindById(session, "wnd[0]/sbar").Text;
+                    if (statutBarre.Contains("sauvegardé"))
+                    {
+                        result = $"{sSAPTransaction}|OK|1|0";
+                    }
+                    else
+                    {
+                        result = $"{sSAPTransaction}|NOK|1|1|OT n°{OT} : {statutBarre}";
+                    }
+                }
+                else 
+                {
+                    result = $"{sSAPTransaction}|NOK|1|1|OT n°{OT} : état non soldé";
+                }
+
+                // Retour au menu principal
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return $"{sSAPTransaction}|ERROR|{ex.Message}";
+            }
+        }
 
     }
 }

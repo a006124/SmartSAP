@@ -82,10 +82,10 @@ namespace SmartSAP.ViewModels
                     CurrentViewModel = new Module07ViewModel(this, "Extraction de Gammes");
                     break;
                 case "08":
-                    CurrentViewModel = new Module08ViewModel(this, "Modification d'Equipements");
+                    CurrentViewModel = new Module08ViewModel(this, "Découpage PDF");
                     break;
                 case "09":
-                    CurrentViewModel = new Module09ViewModel(this, "Suppression d'Equipements");
+                    CurrentViewModel = new Module09ViewModel(this, "Modification état OT fermé vers en cours");
                     break;
             }
         }
