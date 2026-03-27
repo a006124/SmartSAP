@@ -353,6 +353,7 @@ namespace SmartSAP.ViewModels.Modules
                     // Écrire des lignes de 293 caractères de longueur
                     // On soustrait 10 secondes pour forcer un premier affichage immédiat
                     DateTime lastLogTime = DateTime.Now.AddSeconds(-10); 
+                    long linesWritten = 0;
                     try
                     {
                         while (accumulatedLine.Length > iLgLigne)
@@ -411,6 +412,7 @@ namespace SmartSAP.ViewModels.Modules
                                 {
                                     await Task.Delay(DelayMs); // Attendre de manière asynchrone pour ne pas bloquer l'UI
                                     await writer.WriteLineAsync(lineToWrite); // Utiliser await pour attendre la fin de l'écriture
+                                    linesWritten++;
                                     break; // Si l'écriture réussit, sortir de la boucle de retry
                                 }
                                 catch (IOException ex)
@@ -434,14 +436,26 @@ namespace SmartSAP.ViewModels.Modules
                             // Log "Traitement en cours ..." toutes les 10 secondes
                             if ((DateTime.Now - lastLogTime).TotalSeconds >= 10)
                             {
-                                AddLog(new LogEntry("INFO", "Traitement en cours ..."), dispatcher, uiSynchronizationContext);
+                                AddLog(new LogEntry("INFO", $"Traitement en cours ... {linesWritten} lignes écrites"), dispatcher, uiSynchronizationContext);
                                 lastLogTime = DateTime.Now; // Réinitialiser le temps du dernier log
                                 
                                 // Rendre la main au thread UI pour que l'affichage puisse se mettre à jour
                                 await Task.Delay(10);
-                            }
                         }
 
+                        // Suppression de tous les fichiers sources traités
+                        foreach (string fichier in fichiersCSV)
+                        {
+                            try 
+                            { 
+                                File.Delete(fichier); 
+                            }
+                            catch (Exception exDelete) 
+                            {
+                                AddLog(new LogEntry("WARNING", $"Impossible de supprimer le fichier {Path.GetFileName(fichier)} : {exDelete.Message}"), dispatcher, uiSynchronizationContext);
+                            }
+                        }
+                        AddLog(new LogEntry("INFO", "Nettoyage terminé : " + fichiersCSV.Length + " fichier(s) source(s) supprimé(s)."), dispatcher, uiSynchronizationContext);
                     }
                     catch (Exception ex)
                     {
