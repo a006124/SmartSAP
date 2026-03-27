@@ -7,13 +7,16 @@ using SmartSAP.Services.SAP;
 using SmartSAP.ViewModels;
 using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Diagnostics; // Pour Process.Start
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading; // Pour SynchronizationContext
 using System.Threading.Tasks;
-using System.Windows.Input;
+using System.Windows; // Pour Application
+using System.Windows.Threading; // Pour Dispatcher
+using System.Windows.Input; // Pour ICommand
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -235,8 +238,41 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected virtual void GeneratePMPExcel(WorkflowStep? step = null)
+        private void AddLog(LogEntry logEntry, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext)
         {
+            if (dispatcher != null)
+            {
+                dispatcher.Invoke(() =>
+                {
+                    Logs.Add(logEntry);
+                    Debug.WriteLine($"Log ajouté via Dispatcher: {logEntry.Type} - {logEntry.Message}");
+                });
+            }
+            else if (uiSynchronizationContext != null)
+            {
+                uiSynchronizationContext.Post(_ =>
+                {
+                    Logs.Add(logEntry);
+                    Debug.WriteLine($"Log ajouté via SynchronizationContext: {logEntry.Type} - {logEntry.Message}");
+                }, null);
+            }
+            else
+            {
+                Logs.Add(logEntry);
+            }
+        }
+
+        protected virtual async Task GeneratePMPExcel(WorkflowStep? step = null)
+        {
+            var uiSynchronizationContext = SynchronizationContext.Current;
+            Dispatcher dispatcher = null;
+            
+            // Vérifiez si Application.Current est disponible (pour les applications WPF)
+            if (Application.Current != null)
+            {
+                dispatcher = Application.Current.Dispatcher;
+            }
+
             if (step == null)
             {
                 step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == GeneratePDFCommand);
@@ -301,57 +337,108 @@ namespace SmartSAP.ViewModels.Modules
                         }
                     }
 
-                    // Écrire des lignes de 287 caractères de longueur
-                    while (accumulatedLine.Length > iLgLigne)
+                    // Écrire des lignes de 293 caractères de longueur
+                    DateTime lastLogTime = DateTime.Now; // Pour le log toutes les 10 secondes
+                    try
                     {
-                        Match match = null;
-                        string pattern = ""; // Initialiser pattern
-                        endIndex = 0;
-
-                        // Calculer la longueur de la sous-chaîne à rechercher, en évitant les erreurs d'index
-                        int searchLength = Math.Min(iLgFinRechercheLigne, accumulatedLine.Length - iDebRechercheLigne);
-
-                        if (searchLength > 0)
+                        while (accumulatedLine.Length > iLgLigne)
                         {
-                            for (int i = 1; i <= 99; i++)
+                            Match match = null;
+                            string pattern = ""; // Initialiser pattern
+                            endIndex = 0;
+
+                            // Calculer la longueur de la sous-chaîne à rechercher, en évitant les erreurs d'index
+                            int searchLength = Math.Min(iLgFinRechercheLigne, accumulatedLine.Length - iDebRechercheLigne);
+                            if (searchLength > 0)
                             {
-                                pattern = " " + i.ToString("D2");
-                                match = Regex.Match(accumulatedLine.ToString(iDebRechercheLigne, searchLength), pattern);
-                                if (match.Success)
+                                for (int i = 1; i <= 99; i++)
                                 {
-                                    endIndex = iDebRechercheLigne + match.Index + pattern.Length;
-                                    break; // Sortir de la boucle si un match est trouvé
+                                    pattern = " " + i.ToString("D2");
+                                    match = Regex.Match(accumulatedLine.ToString(iDebRechercheLigne, searchLength), pattern);
+                                    if (match.Success)
+                                    {
+                                        endIndex = iDebRechercheLigne + match.Index + pattern.Length;
+                                        break; // Sortir de la boucle si un match est trouvé
+                                    }
+                                }
+                            }
+
+                            // Si aucun match n'est trouvé ou si l'endIndex est invalide, prendre la longueur maximale de la ligne
+                            if (endIndex == 0 || endIndex > accumulatedLine.Length)
+                            {
+                                endIndex = Math.Min(iLgLigne, accumulatedLine.Length);
+                            }
+
+                            string lineToWrite = accumulatedLine.ToString(0, endIndex);
+                            accumulatedLine.Remove(0, endIndex);
+
+                            // Ajouter des espaces avant le nombre de deux chiffres pour atteindre la longueur souhaitée
+                            if (lineToWrite.Length < iLgLigne)
+                            {
+                                int paddingLength = iLgLigne - lineToWrite.Length;
+                                int paddingIndex = lineToWrite.LastIndexOf(" ");
+                                if (paddingIndex > 0)
+                                {
+                                    lineToWrite = lineToWrite.Insert(paddingIndex, new string(' ', paddingLength));
+                                }
+                            }
+                            else if (lineToWrite.Length >= iLgLigne)
+                            {
+                                // Elle tronque la ligne et ajoute le dernier 'pattern' trouvé ou généré.
+                                lineToWrite = lineToWrite.Substring(0, iLgLigne - 3) + pattern;
+                            }
+
+                            const int MaxRetries = 5; // Nombre maximal de tentatives
+                            const int DelayMs = 100;  // Délai entre les tentatives en millisecondes
+                            int retry = 0;
+                            for ( retry = 0; retry < MaxRetries; retry++)
+                            {
+                                try
+                                {
+                                    System.Threading.Thread.Sleep(DelayMs); // Attendre avant de réessayer
+                                    writer.WriteLineAsync(lineToWrite); // Utilisez await car c'est une méthode async
+                                    break; // Si l'écriture réussit, sortir de la boucle de retry
+                                }
+                                catch (IOException ex)
+                                {
+                                    // Le HResult -2147024864 correspond à "The process cannot access the file because it is being used by another process."
+                                    // Vous pouvez aussi vérifier d'autres codes d'erreur si nécessaire.
+                                    if (ex.HResult == -2147024864 && retry < MaxRetries - 1)
+                                    {
+                                        // Loguer l'échec temporaire si vous voulez
+                                        Logs.Add(new LogEntry("WARNING", $"Tentative {retry + 1}/{MaxRetries} d'écriture échouée (fichier en cours d'utilisation). Réessai dans {DelayMs}ms. Erreur: {ex.Message}"));
+                                        System.Threading.Thread.Sleep(DelayMs); // Attendre avant de réessayer
+                                    }
+                                    else
+                                    {
+                                        // Si c'est la dernière tentative ou un autre type d'IOException, relancer l'exception
+                                        throw;
+                                    }
+                                } 
+                            }
+
+                            // Log "Traitement en cours ..." toutes les 10 secondes
+                            if ((DateTime.Now - lastLogTime).TotalSeconds >= 10)
+                            {
+                                if (uiSynchronizationContext != null)
+                                {
+                                    AddLog(new LogEntry("INFO", "Traitement en cours ..."), dispatcher, uiSynchronizationContext);
+                                    lastLogTime = DateTime.Now; // Réinitialiser le temps du dernier log
+                                }
+                                else
+                                {
+                                    Logs.Add(new SmartSAP.ViewModels.Modules.LogEntry("INFO", "Traitement en cours ..."));
                                 }
                             }
                         }
 
-                        // Si aucun match n'est trouvé ou si l'endIndex est invalide, prendre la longueur maximale de la ligne
-                        if (endIndex == 0 || endIndex > accumulatedLine.Length)
-                        {
-                            endIndex = Math.Min(iLgLigne, accumulatedLine.Length);
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : {ex.Message}"));
+                        Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : "));
 
-                        string lineToWrite = accumulatedLine.ToString(0, endIndex);
-
-                        accumulatedLine.Remove(0, endIndex);
-
-                        // Ajouter des espaces avant le nombre de deux chiffres pour atteindre la longueur souhaitée
-                        if (lineToWrite.Length < iLgLigne)
-                        {
-                            int paddingLength = iLgLigne - lineToWrite.Length;
-                            int paddingIndex = lineToWrite.LastIndexOf(" ");
-                            if (paddingIndex > 0)
-                            {
-                                lineToWrite = lineToWrite.Insert(paddingIndex, new string(' ', paddingLength));
-                            }
-                        }
-                        else if (lineToWrite.Length > iLgLigne)
-                        {
-                            // Elle tronque la ligne et ajoute le dernier 'pattern' trouvé ou généré.
-                            lineToWrite = lineToWrite.Substring(0, iLgLigne - 3) + pattern;
-                        }
-
-                        writer.WriteLineAsync(lineToWrite);
+                        if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
                     }
                 }
 
