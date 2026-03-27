@@ -59,7 +59,7 @@ namespace SmartSAP.ViewModels.Modules
             GoBackCommand = new RelayCommand(_ => MainViewModel.NavigateToLibrary());
             GenerateTemplateCommand = new RelayCommand(p => GenerateExcelTemplate(p as WorkflowStep));
             GeneratePDFCommand = new RelayCommand(p => GeneratePDF(p as WorkflowStep));
-            GeneratePMPExcelCommand = new RelayCommand(async p => GeneratePMPExcel(p as WorkflowStep));
+            GeneratePMPExcelCommand = new RelayCommand(async p => await GeneratePMPExcel(p as WorkflowStep));
 
             ExportFixedWidthCommand = new RelayCommand(p =>
             {
@@ -240,25 +240,35 @@ namespace SmartSAP.ViewModels.Modules
 
         private void AddLog(LogEntry logEntry, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext)
         {
-            if (dispatcher != null)
+            try
             {
-                dispatcher.Invoke(() =>
+                System.Diagnostics.Trace.WriteLine($"[Trace] AddLog appelé pour : {logEntry.Type} - {logEntry.Message}. Dispatcher present? {dispatcher != null}");
+                
+                if (dispatcher != null)
                 {
-                    Logs.Add(logEntry);
-                    Debug.WriteLine($"Log ajouté via Dispatcher: {logEntry.Type} - {logEntry.Message}");
-                });
-            }
-            else if (uiSynchronizationContext != null)
-            {
-                uiSynchronizationContext.Post(_ =>
+                    dispatcher.Invoke(() =>
+                    {
+                        System.Diagnostics.Trace.WriteLine($"[Trace] Ajout via Dispatcher: {logEntry.Type} - {logEntry.Message}");
+                        Logs.Add(logEntry);
+                    });
+                }
+                else if (uiSynchronizationContext != null)
                 {
+                    uiSynchronizationContext.Post(_ =>
+                    {
+                        System.Diagnostics.Trace.WriteLine($"[Trace] Ajout via SynchronizationContext: {logEntry.Type} - {logEntry.Message}");
+                        Logs.Add(logEntry);
+                    }, null);
+                }
+                else
+                {
+                    System.Diagnostics.Trace.WriteLine($"[Trace] Ajout direct (sans sync context): {logEntry.Type} - {logEntry.Message}");
                     Logs.Add(logEntry);
-                    Debug.WriteLine($"Log ajouté via SynchronizationContext: {logEntry.Type} - {logEntry.Message}");
-                }, null);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logs.Add(logEntry);
+                System.Diagnostics.Trace.WriteLine($"[Trace] ERROR DANS AddLog : {ex.Message}");
             }
         }
 
@@ -279,6 +289,9 @@ namespace SmartSAP.ViewModels.Modules
             }
 
             if (step != null) step.ResultState = "Processing";
+
+            AddLog(new LogEntry("INFO", "Préparation de la génération PMP..."), dispatcher, uiSynchronizationContext);
+            await Task.Delay(10); // Rendre la main à l'UI pour afficher le message initial
 
             try
             {
@@ -338,7 +351,8 @@ namespace SmartSAP.ViewModels.Modules
                     }
 
                     // Écrire des lignes de 293 caractères de longueur
-                    DateTime lastLogTime = DateTime.Now; // Pour le log toutes les 10 secondes
+                    // On soustrait 10 secondes pour forcer un premier affichage immédiat
+                    DateTime lastLogTime = DateTime.Now.AddSeconds(-10); 
                     try
                     {
                         while (accumulatedLine.Length > iLgLigne)
@@ -395,8 +409,8 @@ namespace SmartSAP.ViewModels.Modules
                             {
                                 try
                                 {
-                                    System.Threading.Thread.Sleep(DelayMs); // Attendre avant de réessayer
-                                    writer.WriteLineAsync(lineToWrite); // Utilisez await car c'est une méthode async
+                                    await Task.Delay(DelayMs); // Attendre de manière asynchrone pour ne pas bloquer l'UI
+                                    await writer.WriteLineAsync(lineToWrite); // Utiliser await pour attendre la fin de l'écriture
                                     break; // Si l'écriture réussit, sortir de la boucle de retry
                                 }
                                 catch (IOException ex)
@@ -406,8 +420,8 @@ namespace SmartSAP.ViewModels.Modules
                                     if (ex.HResult == -2147024864 && retry < MaxRetries - 1)
                                     {
                                         // Loguer l'échec temporaire si vous voulez
-                                        Logs.Add(new LogEntry("WARNING", $"Tentative {retry + 1}/{MaxRetries} d'écriture échouée (fichier en cours d'utilisation). Réessai dans {DelayMs}ms. Erreur: {ex.Message}"));
-                                        System.Threading.Thread.Sleep(DelayMs); // Attendre avant de réessayer
+                                        AddLog(new LogEntry("WARNING", $"Tentative {retry + 1}/{MaxRetries} d'écriture échouée (fichier en cours d'utilisation). Réessai dans {DelayMs}ms. Erreur: {ex.Message}"), dispatcher, uiSynchronizationContext);
+                                        await Task.Delay(DelayMs); // Attendre de manière asynchrone
                                     }
                                     else
                                     {
@@ -420,29 +434,23 @@ namespace SmartSAP.ViewModels.Modules
                             // Log "Traitement en cours ..." toutes les 10 secondes
                             if ((DateTime.Now - lastLogTime).TotalSeconds >= 10)
                             {
-                                if (uiSynchronizationContext != null)
-                                {
-                                    AddLog(new LogEntry("INFO", "Traitement en cours ..."), dispatcher, uiSynchronizationContext);
-                                    lastLogTime = DateTime.Now; // Réinitialiser le temps du dernier log
-                                }
-                                else
-                                {
-                                    Logs.Add(new SmartSAP.ViewModels.Modules.LogEntry("INFO", "Traitement en cours ..."));
-                                }
+                                AddLog(new LogEntry("INFO", "Traitement en cours ..."), dispatcher, uiSynchronizationContext);
+                                lastLogTime = DateTime.Now; // Réinitialiser le temps du dernier log
+                                
+                                // Rendre la main au thread UI pour que l'affichage puisse se mettre à jour
+                                await Task.Delay(10);
                             }
                         }
 
                     }
                     catch (Exception ex)
                     {
-                        Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : {ex.Message}"));
-                        Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : "));
-
+                        AddLog(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : {ex.Message}"), dispatcher, uiSynchronizationContext);
                         if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
                     }
                 }
 
-                Logs.Add(new LogEntry("SUCCESS", $"Fichiers PDF créés dans le dossier : ", docPath));
+                AddLog(new LogEntry("SUCCESS", $"Fichiers PMP créés dans le dossier : " + docPath), dispatcher, uiSynchronizationContext);
 
                 if (step != null)
                 {
@@ -452,7 +460,7 @@ namespace SmartSAP.ViewModels.Modules
             }
             catch (Exception ex)
             {
-                Logs.Add(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : {ex.Message}"));
+                AddLog(new LogEntry("ERROR", $"Erreur lors de la création du fichier PMP Excel : {ex.Message}"), dispatcher, uiSynchronizationContext);
                 if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
             }
         }
