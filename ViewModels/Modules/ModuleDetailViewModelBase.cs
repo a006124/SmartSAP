@@ -15,8 +15,8 @@ using System.Text.RegularExpressions;
 using System.Threading; // Pour SynchronizationContext
 using System.Threading.Tasks;
 using System.Windows; // Pour Application
-using System.Windows.Threading; // Pour Dispatcher
 using System.Windows.Input; // Pour ICommand
+using System.Windows.Threading; // Pour Dispatcher
 
 namespace SmartSAP.ViewModels.Modules
 {
@@ -39,8 +39,6 @@ namespace SmartSAP.ViewModels.Modules
 
 
         public ICommand GeneratePDFCommand { get; protected set; }
-        //public ICommand GeneratePMPExcelCommand { get; protected set; }
-
 
         protected string? LastGeneratedExcelPath;
         protected string? LastExportedTextPath;
@@ -272,6 +270,278 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+
+        Public Async Function ImporterFichierCSVExcel(cheminDossier As String, updateProgress As Action(Of Integer), updateStatus As Action(Of String), mainWindow As MainWindow) As Task
+        Const lPMPMaxLigne As Long = 10000
+        Const lPMPLigneDépart As Long = 8
+
+        Dim sPMPExcelFile As String = mainWindow.tbPMPExcel.Text
+        Dim sFullPMPExcelFile As String = cheminDossier & "\" & sPMPExcelFile
+
+        Dim sMessageStatut As String
+
+        Dim bGo As Boolean = True
+        Dim rowTotalNumber As Long
+        Dim rowNumber As Long = 0
+        Dim iPourcentage As Integer
+        Dim lLignePMP As Long = lPMPLigneDépart
+        Dim sPMPExcelSaveAs As String = cheminDossier & "\PMPExcel_" & DateTime.Now.ToString("yyMMddHHmmss")
+
+        Dim fichiersCSV As String() = Directory.GetFiles(cheminDossier, "*.txt").Where(Function(f) Not Path.GetFileName(f).StartsWith("PMP_")).ToArray()  ' Obtenir tous les fichiers TXT dans le dossier spécifié
+        If fichiersCSV.Length = 0 Then ' Vérifier si des fichiers TXT ont été trouvés
+            bGo = False
+        Else
+            rowTotalNumber = fichiersCSV.Length
+        End If
+
+        If bGo Then ' Des fichiers TXT ont été trouvés
+            ' Initialisation du fichier PMP Excel
+            Dim excelApp As New Excel.Application()
+            Dim excelWorkbook As Workbook = excelApp.Workbooks.Open(sPMPExcelFile)
+            Dim excelWorksheet As Worksheet = CType(excelWorkbook.Sheets(1), Worksheet)
+            Dim PMP As Range = excelWorksheet.Range(excelWorksheet.Cells(8, 1), excelWorksheet.Cells(lPMPMaxLigne, 22))
+            With PMP
+                .ClearContents()
+                .Interior.ColorIndex = 2
+                .Font.ColorIndex = 1
+                .ClearComments()
+                .Font.Bold = False
+            End With
+
+            Dim pattern As String = "(?<!<[^<>]*)[^\w\s/](?![^<>]*>)" ' Utiliser une expression régulière pour remplacer les caractères non alphanumériques, sauf ceux qui sont à l'intérieur des balises comme <A>, <B>, etc.
+            Dim regex As New Regex(pattern)
+
+            For Each fichier In fichiersCSV ' On balaie chacun des fichiers TXT
+                SyncLock mainWindow.stopRechercheLock
+                    If mainWindow.stopRecherche Then
+                        Exit For
+                    End If
+                End SyncLock
+
+                rowNumber += 1
+                iPourcentage = CInt(rowNumber / rowTotalNumber * 100) ' Mettre à jour la ProgressBar
+                If rowNumber = 1 Then
+                    sMessageStatut = rowNumber & " / " & rowTotalNumber & " ligne traitée (" & mainWindow.sDuréeTotale & ")" ' Afficher la durée du traitement
+                Else
+                    sMessageStatut = rowNumber & " / " & rowTotalNumber & " lignes traitées (" & mainWindow.sDuréeTotale & ")" ' Afficher la durée du traitement
+                End If
+                If updateProgress IsNot Nothing Then
+                    mainWindow.Invoke(Sub() updateProgress(iPourcentage))
+                End If
+                If updateStatus IsNot Nothing Then
+                    mainWindow.Invoke(Sub() updateStatus(sMessageStatut))
+                End If
+
+                Dim lignesFichier As String() = File.ReadAllLines(fichier) ' Lire toutes les lignes du fichier
+                Dim dataArray(lignesFichier.Length - 1, 23) As String
+                Dim i As Integer = 0
+
+                For Each ligne As String In lignesFichier ' Parcourir chaque ligne du fichier
+                    Dim stringArray(23) As String
+                    ' Sous-Ensemble (20 C. Maxi) / Elément (20 C. Maxi) / Opération à effectuer (40 C. Maxi) / Temps prévu (hh:mm:ss)
+                    ' Périodicité (3 C.) / Etat machine (3 C.) / Valeurs limites (10 C. Maxi) / Outillage (20 C.Maxi) / Gamme (O/N)	
+                    ' Systè./Condi.	/  Quantité et désignation / réf. Four. (40 C.Maxi) / Numéro MABEC (10 C.) / N°gamme (10 C.Maxi)
+                    ' N°intervention (40 C.) / AM (1 C.) / MP (1 C.) / Spécialité (2 C.)
+                    If ligne.Length = 293 Then
+                        Dim cleanedLine As String = regex.Replace(ligne, " ") ' Remplacer les caractères non alphanumériques
+
+                        ' Supprimer les accents et convertir en majuscules
+                        Dim normalizedString As String = cleanedLine.Normalize(NormalizationForm.FormD)
+                        Dim stringBuilder As New StringBuilder()
+                        For Each c As Char In normalizedString
+                            Dim unicodeCategory As UnicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c)
+                            If unicodeCategory <> UnicodeCategory.NonSpacingMark Then
+                                stringBuilder.Append(c)
+                            End If
+                        Next
+                        Dim cleanedAccentLine As String = stringBuilder.ToString().ToUpper()
+
+                        sMessageStatut = "Traitement de la ligne " & i + 1 & " en cours ..."
+                        If updateStatus IsNot Nothing Then
+                            mainWindow.Invoke(Sub() updateStatus(sMessageStatut))
+                        End If
+                        For j = 0 To 23
+                            Select Case j
+                                Case 0
+                                    stringArray(j) = cleanedAccentLine.Substring(0, 39).Trim() ' Intervention
+                                Case 1
+                                    stringArray(j) = cleanedAccentLine.Substring(40, 8).Trim() ' Groupe de gamme
+                                Case 2
+                                    stringArray(j) = cleanedAccentLine.Substring(48, 4).Trim() ' Division
+                                Case 3
+                                    stringArray(j) = cleanedAccentLine.Substring(52, 8).Trim() ' Spécialité (Poste de travail)
+                                Case 4
+                                    stringArray(j) = cleanedAccentLine.Substring(60, 4).Trim() ' Intervention
+                                Case 5
+                                    stringArray(j) = cleanedAccentLine.Substring(64, 20).Trim() ' Sous-ensemble
+                                Case 6
+                                    stringArray(j) = cleanedAccentLine.Substring(84, 20).Trim() ' Elément
+                                Case 7
+                                    Dim sExtract As String = cleanedAccentLine.Substring(104, 1).Trim() ' Etat Machine
+                                    Select Case sExtract
+                                        Case 1
+                                            stringArray(j) = "AHT" ' Arrêt Hors Tension
+                                        Case 2
+                                            stringArray(j) = "AST" ' Arrêt Sous Tension
+                                        Case 3
+                                            stringArray(j) = "MHP" ' Machine Hors Production
+                                        Case 4
+                                            stringArray(j) = "MEP" ' Machine En Production
+                                    End Select
+                                Case 8
+                                    stringArray(j) = cleanedAccentLine.Substring(105, 60).Trim() ' Opération
+                                Case 9
+                                    stringArray(j) = cleanedAccentLine.Substring(165, 3).Trim() ' Capacité
+                                Case 10
+                                    Try
+                                        stringArray(j) = cleanedAccentLine.Substring(168, 5).Trim() ' Temps Prévu
+                                        If stringArray(j) <> vbNullString Then
+                                            stringArray(j) = TimeSpan.FromMinutes(Integer.Parse(stringArray(j).Trim())).ToString("hh\:mm\:ss")
+                                        End If
+
+                                    Catch ex As Exception
+                                        stringArray(j) = vbNullString
+                                    End Try
+                                Case 11
+                                    stringArray(j) = cleanedAccentLine.Substring(173, 3).Trim() ' Unité Temps Prévu
+                                Case 12
+                                    Try
+                                        Dim sExtract As String = cleanedAccentLine.Substring(176, 2).Trim() ' Périodicité (Désignation Cycle Entretien)
+                                        Select Case sExtract
+                                            Case "1"
+                                                stringArray(j) = "7"
+                                            Case "2"
+                                                stringArray(j) = "14"
+                                            Case "4"
+                                                stringArray(j) = "30"
+                                            Case "8"
+                                                stringArray(j) = "60"
+                                            Case "12", "3M"
+                                                stringArray(j) = "90"
+                                            Case "16", "4M"
+                                                stringArray(j) = "120"
+                                            Case "24", "6M"
+                                                stringArray(j) = "180"
+                                            Case "48"
+                                                stringArray(j) = "360"
+                                            Case "A1"
+                                                stringArray(j) = "365"
+                                            Case "A2"
+                                                stringArray(j) = "730"
+                                            Case "A3"
+                                                stringArray(j) = "1095"
+                                            Case "A4"
+                                                stringArray(j) = "1460"
+                                            Case "A5"
+                                                stringArray(j) = "1825"
+                                            Case "A6"
+                                                stringArray(j) = "2190"
+                                            Case "A9"
+                                                stringArray(j) = "3285"
+                                            Case "20J1", "MJ", "1E", "3E"
+                                                stringArray(j) = "1"
+                                        End Select
+                                        'If sExtract.Substring(0, 1) = "A" Then
+                                        'If sExtract.Length = 2 Then
+                                        'sExtract = "A0" & sExtract.Substring(1, 1)
+                                        'End If
+                                        'stringArray(j) = sExtract
+                                        'ElseIf sExtract = "1M" Then
+                                        'stringArray(j) = "S04"
+                                        'Else
+                                        'If sExtract.Length = 1 Then
+                                        'stringArray(j) = "S0" & sExtract
+                                        'Else
+                                        'stringArray(j) = "S" & sExtract
+                                        'End If
+                                        'End If
+                                    Catch ex As Exception
+                                        stringArray(j) = vbNullString
+                                    End Try
+                                Case 13
+                                    stringArray(j) = cleanedAccentLine.Substring(178, 6).Trim() ' Stratégie
+                                Case 14
+                                    stringArray(j) = cleanedAccentLine.Substring(184, 18).Trim() ' MABEC
+                                Case 15
+                                    stringArray(j) = cleanedAccentLine.Substring(202, 13).Trim().Split(" "c)(0) ' Quantité
+                                Case 16
+                                    stringArray(j) = cleanedAccentLine.Substring(215, 40).Trim() ' Outillage
+                                Case 17
+                                    stringArray(j) = cleanedAccentLine.Substring(255, 10).Trim() ' Valeurs limites
+                                Case 18
+                                    stringArray(j) = cleanedAccentLine.Substring(265, 1).Trim() ' AM_MP
+                                Case 19
+                                    If stringArray(j - 1) = "X" Then
+                                        stringArray(j) = vbNullString
+                                    Else
+                                        stringArray(j - 1) = vbNullString
+                                        stringArray(j) = "X"
+                                    End If
+                                Case 20
+                                    stringArray(j) = cleanedAccentLine.Substring(266, 25).Trim() ' N° Gamme (Document)
+                                Case 21
+                                    If stringArray(j - 1) = vbNullString Then
+                                        stringArray(j) = "N"
+                                    Else
+                                        stringArray(j) = "O"
+                                    End If
+                                Case 22
+                                    stringArray(j) = cleanedAccentLine.Substring(291, 2).Trim().PadLeft(2, "0"c) ' Compteur de gamme
+                                Case 23
+                                    stringArray(j) = "S" ' PMP Systématique / Conditionnel
+                            End Select
+                        Next
+                    End If
+
+                    ' Stocker les données dans le tableau 2D
+                    dataArray(i, 0) = stringArray(5) ' Sous-ensemble
+                    dataArray(i, 1) = stringArray(6) ' Element
+                    dataArray(i, 2) = stringArray(8) ' Opération
+                    dataArray(i, 3) = stringArray(10) ' Temps prévu
+                    dataArray(i, 4) = stringArray(12) ' Périodicité (Désignation Cycle Entretien)
+                    dataArray(i, 5) = stringArray(7) ' Etat Machine
+                    dataArray(i, 6) = stringArray(17) ' Valeurs limites
+                    dataArray(i, 7) = stringArray(16) ' Outillage
+                    dataArray(i, 8) = stringArray(21) ' Gamme O/N
+                    dataArray(i, 9) = stringArray(23) ' Systématique / Conditionnel
+                    dataArray(i, 10) = stringArray(15) ' Quantité Désignation Ref Four
+                    dataArray(i, 11) = stringArray(14) ' MABEC
+                    dataArray(i, 12) = stringArray(20) ' N° Gamme (Document)
+                    dataArray(i, 13) = stringArray(1) & "." & stringArray(22) ' N° Intervention
+                    dataArray(i, 14) = stringArray(18) ' AM
+                    dataArray(i, 15) = stringArray(19) ' MP
+                    dataArray(i, 16) = stringArray(3) ' Spécialité (Poste de travail)
+                    i += 1
+                Next
+                ' Écrire le tableau dans la feuille Excel en une seule fois
+                Dim writeRange As Range = excelWorksheet.Range("A" & lLignePMP & ":Q" & (lLignePMP + lignesFichier.Length - 1))
+                writeRange.Value = dataArray
+                lLignePMP = lLignePMP + lignesFichier.Length
+
+            Next
+            ' Fermer le fichier Excel et libérer les ressources
+            excelWorkbook.SaveAs(sPMPExcelSaveAs)
+            excelApp.Quit()
+
+            ReleaseComObject(excelWorksheet)
+            ReleaseComObject(excelWorkbook)
+            ReleaseComObject(excelApp)
+
+            sMessageStatut = "Fichier PMP généré au format Excel ..."
+            If updateStatus IsNot Nothing Then
+                mainWindow.Invoke(Sub() updateStatus(sMessageStatut))
+                Await Task.Delay(2000) ' Affichage du message pendant 2"
+            End If
+
+            ' Ouvrir l'explorateur de fichiers dans le dossier spécifié
+            Process.Start("explorer.exe", cheminDossier)
+        End If
+    End Function
+
+
+
+
+
         protected virtual async Task GeneratePMPExcel(WorkflowStep? step = null)
         {
             var uiSynchronizationContext = SynchronizationContext.Current;
@@ -441,21 +711,8 @@ namespace SmartSAP.ViewModels.Modules
                                 
                                 // Rendre la main au thread UI pour que l'affichage puisse se mettre à jour
                                 await Task.Delay(10);
-                        }
-
-                        // Suppression de tous les fichiers sources traités
-                        foreach (string fichier in fichiersCSV)
-                        {
-                            try 
-                            { 
-                                File.Delete(fichier); 
-                            }
-                            catch (Exception exDelete) 
-                            {
-                                AddLog(new LogEntry("WARNING", $"Impossible de supprimer le fichier {Path.GetFileName(fichier)} : {exDelete.Message}"), dispatcher, uiSynchronizationContext);
                             }
                         }
-                        AddLog(new LogEntry("INFO", "Nettoyage terminé : " + fichiersCSV.Length + " fichier(s) source(s) supprimé(s)."), dispatcher, uiSynchronizationContext);
                     }
                     catch (Exception ex)
                     {
@@ -463,6 +720,20 @@ namespace SmartSAP.ViewModels.Modules
                         if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
                     }
                 }
+
+                // Suppression de tous les fichiers sources traités
+                foreach (string fichier in fichiersCSV)
+                {
+                    try
+                    {
+                        File.Delete(fichier);
+                    }
+                    catch (Exception exDelete)
+                    {
+                        AddLog(new LogEntry("WARNING", $"Impossible de supprimer le fichier {Path.GetFileName(fichier)} : {exDelete.Message}"), dispatcher, uiSynchronizationContext);
+                    }
+                }
+                AddLog(new LogEntry("INFO", "Nettoyage terminé : " + fichiersCSV.Length + " fichier(s) source(s) supprimé(s)."), dispatcher, uiSynchronizationContext);
 
                 AddLog(new LogEntry("SUCCESS", $"Fichiers PMP créés dans le dossier : " + docPath), dispatcher, uiSynchronizationContext);
 
