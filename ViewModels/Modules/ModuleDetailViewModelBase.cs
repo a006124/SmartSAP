@@ -271,272 +271,7 @@ namespace SmartSAP.ViewModels.Modules
         }
 
 
-        Public Async Function ImporterFichierCSVExcel(cheminDossier As String, updateProgress As Action(Of Integer), updateStatus As Action(Of String), mainWindow As MainWindow) As Task
-        Const lPMPMaxLigne As Long = 10000
-        Const lPMPLigneDépart As Long = 8
 
-        Dim sPMPExcelFile As String = mainWindow.tbPMPExcel.Text
-        Dim sFullPMPExcelFile As String = cheminDossier & "\" & sPMPExcelFile
-
-        Dim sMessageStatut As String
-
-        Dim bGo As Boolean = True
-        Dim rowTotalNumber As Long
-        Dim rowNumber As Long = 0
-        Dim iPourcentage As Integer
-        Dim lLignePMP As Long = lPMPLigneDépart
-        Dim sPMPExcelSaveAs As String = cheminDossier & "\PMPExcel_" & DateTime.Now.ToString("yyMMddHHmmss")
-
-        Dim fichiersCSV As String() = Directory.GetFiles(cheminDossier, "*.txt").Where(Function(f) Not Path.GetFileName(f).StartsWith("PMP_")).ToArray()  ' Obtenir tous les fichiers TXT dans le dossier spécifié
-        If fichiersCSV.Length = 0 Then ' Vérifier si des fichiers TXT ont été trouvés
-            bGo = False
-        Else
-            rowTotalNumber = fichiersCSV.Length
-        End If
-
-        If bGo Then ' Des fichiers TXT ont été trouvés
-            ' Initialisation du fichier PMP Excel
-            Dim excelApp As New Excel.Application()
-            Dim excelWorkbook As Workbook = excelApp.Workbooks.Open(sPMPExcelFile)
-            Dim excelWorksheet As Worksheet = CType(excelWorkbook.Sheets(1), Worksheet)
-            Dim PMP As Range = excelWorksheet.Range(excelWorksheet.Cells(8, 1), excelWorksheet.Cells(lPMPMaxLigne, 22))
-            With PMP
-                .ClearContents()
-                .Interior.ColorIndex = 2
-                .Font.ColorIndex = 1
-                .ClearComments()
-                .Font.Bold = False
-            End With
-
-            Dim pattern As String = "(?<!<[^<>]*)[^\w\s/](?![^<>]*>)" ' Utiliser une expression régulière pour remplacer les caractères non alphanumériques, sauf ceux qui sont à l'intérieur des balises comme <A>, <B>, etc.
-            Dim regex As New Regex(pattern)
-
-            For Each fichier In fichiersCSV ' On balaie chacun des fichiers TXT
-                SyncLock mainWindow.stopRechercheLock
-                    If mainWindow.stopRecherche Then
-                        Exit For
-                    End If
-                End SyncLock
-
-                rowNumber += 1
-                iPourcentage = CInt(rowNumber / rowTotalNumber * 100) ' Mettre à jour la ProgressBar
-                If rowNumber = 1 Then
-                    sMessageStatut = rowNumber & " / " & rowTotalNumber & " ligne traitée (" & mainWindow.sDuréeTotale & ")" ' Afficher la durée du traitement
-                Else
-                    sMessageStatut = rowNumber & " / " & rowTotalNumber & " lignes traitées (" & mainWindow.sDuréeTotale & ")" ' Afficher la durée du traitement
-                End If
-                If updateProgress IsNot Nothing Then
-                    mainWindow.Invoke(Sub() updateProgress(iPourcentage))
-                End If
-                If updateStatus IsNot Nothing Then
-                    mainWindow.Invoke(Sub() updateStatus(sMessageStatut))
-                End If
-
-                Dim lignesFichier As String() = File.ReadAllLines(fichier) ' Lire toutes les lignes du fichier
-                Dim dataArray(lignesFichier.Length - 1, 23) As String
-                Dim i As Integer = 0
-
-                For Each ligne As String In lignesFichier ' Parcourir chaque ligne du fichier
-                    Dim stringArray(23) As String
-                    ' Sous-Ensemble (20 C. Maxi) / Elément (20 C. Maxi) / Opération à effectuer (40 C. Maxi) / Temps prévu (hh:mm:ss)
-                    ' Périodicité (3 C.) / Etat machine (3 C.) / Valeurs limites (10 C. Maxi) / Outillage (20 C.Maxi) / Gamme (O/N)	
-                    ' Systè./Condi.	/  Quantité et désignation / réf. Four. (40 C.Maxi) / Numéro MABEC (10 C.) / N°gamme (10 C.Maxi)
-                    ' N°intervention (40 C.) / AM (1 C.) / MP (1 C.) / Spécialité (2 C.)
-                    If ligne.Length = 293 Then
-                        Dim cleanedLine As String = regex.Replace(ligne, " ") ' Remplacer les caractères non alphanumériques
-
-                        ' Supprimer les accents et convertir en majuscules
-                        Dim normalizedString As String = cleanedLine.Normalize(NormalizationForm.FormD)
-                        Dim stringBuilder As New StringBuilder()
-                        For Each c As Char In normalizedString
-                            Dim unicodeCategory As UnicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c)
-                            If unicodeCategory <> UnicodeCategory.NonSpacingMark Then
-                                stringBuilder.Append(c)
-                            End If
-                        Next
-                        Dim cleanedAccentLine As String = stringBuilder.ToString().ToUpper()
-
-                        sMessageStatut = "Traitement de la ligne " & i + 1 & " en cours ..."
-                        If updateStatus IsNot Nothing Then
-                            mainWindow.Invoke(Sub() updateStatus(sMessageStatut))
-                        End If
-                        For j = 0 To 23
-                            Select Case j
-                                Case 0
-                                    stringArray(j) = cleanedAccentLine.Substring(0, 39).Trim() ' Intervention
-                                Case 1
-                                    stringArray(j) = cleanedAccentLine.Substring(40, 8).Trim() ' Groupe de gamme
-                                Case 2
-                                    stringArray(j) = cleanedAccentLine.Substring(48, 4).Trim() ' Division
-                                Case 3
-                                    stringArray(j) = cleanedAccentLine.Substring(52, 8).Trim() ' Spécialité (Poste de travail)
-                                Case 4
-                                    stringArray(j) = cleanedAccentLine.Substring(60, 4).Trim() ' Intervention
-                                Case 5
-                                    stringArray(j) = cleanedAccentLine.Substring(64, 20).Trim() ' Sous-ensemble
-                                Case 6
-                                    stringArray(j) = cleanedAccentLine.Substring(84, 20).Trim() ' Elément
-                                Case 7
-                                    Dim sExtract As String = cleanedAccentLine.Substring(104, 1).Trim() ' Etat Machine
-                                    Select Case sExtract
-                                        Case 1
-                                            stringArray(j) = "AHT" ' Arrêt Hors Tension
-                                        Case 2
-                                            stringArray(j) = "AST" ' Arrêt Sous Tension
-                                        Case 3
-                                            stringArray(j) = "MHP" ' Machine Hors Production
-                                        Case 4
-                                            stringArray(j) = "MEP" ' Machine En Production
-                                    End Select
-                                Case 8
-                                    stringArray(j) = cleanedAccentLine.Substring(105, 60).Trim() ' Opération
-                                Case 9
-                                    stringArray(j) = cleanedAccentLine.Substring(165, 3).Trim() ' Capacité
-                                Case 10
-                                    Try
-                                        stringArray(j) = cleanedAccentLine.Substring(168, 5).Trim() ' Temps Prévu
-                                        If stringArray(j) <> vbNullString Then
-                                            stringArray(j) = TimeSpan.FromMinutes(Integer.Parse(stringArray(j).Trim())).ToString("hh\:mm\:ss")
-                                        End If
-
-                                    Catch ex As Exception
-                                        stringArray(j) = vbNullString
-                                    End Try
-                                Case 11
-                                    stringArray(j) = cleanedAccentLine.Substring(173, 3).Trim() ' Unité Temps Prévu
-                                Case 12
-                                    Try
-                                        Dim sExtract As String = cleanedAccentLine.Substring(176, 2).Trim() ' Périodicité (Désignation Cycle Entretien)
-                                        Select Case sExtract
-                                            Case "1"
-                                                stringArray(j) = "7"
-                                            Case "2"
-                                                stringArray(j) = "14"
-                                            Case "4"
-                                                stringArray(j) = "30"
-                                            Case "8"
-                                                stringArray(j) = "60"
-                                            Case "12", "3M"
-                                                stringArray(j) = "90"
-                                            Case "16", "4M"
-                                                stringArray(j) = "120"
-                                            Case "24", "6M"
-                                                stringArray(j) = "180"
-                                            Case "48"
-                                                stringArray(j) = "360"
-                                            Case "A1"
-                                                stringArray(j) = "365"
-                                            Case "A2"
-                                                stringArray(j) = "730"
-                                            Case "A3"
-                                                stringArray(j) = "1095"
-                                            Case "A4"
-                                                stringArray(j) = "1460"
-                                            Case "A5"
-                                                stringArray(j) = "1825"
-                                            Case "A6"
-                                                stringArray(j) = "2190"
-                                            Case "A9"
-                                                stringArray(j) = "3285"
-                                            Case "20J1", "MJ", "1E", "3E"
-                                                stringArray(j) = "1"
-                                        End Select
-                                        'If sExtract.Substring(0, 1) = "A" Then
-                                        'If sExtract.Length = 2 Then
-                                        'sExtract = "A0" & sExtract.Substring(1, 1)
-                                        'End If
-                                        'stringArray(j) = sExtract
-                                        'ElseIf sExtract = "1M" Then
-                                        'stringArray(j) = "S04"
-                                        'Else
-                                        'If sExtract.Length = 1 Then
-                                        'stringArray(j) = "S0" & sExtract
-                                        'Else
-                                        'stringArray(j) = "S" & sExtract
-                                        'End If
-                                        'End If
-                                    Catch ex As Exception
-                                        stringArray(j) = vbNullString
-                                    End Try
-                                Case 13
-                                    stringArray(j) = cleanedAccentLine.Substring(178, 6).Trim() ' Stratégie
-                                Case 14
-                                    stringArray(j) = cleanedAccentLine.Substring(184, 18).Trim() ' MABEC
-                                Case 15
-                                    stringArray(j) = cleanedAccentLine.Substring(202, 13).Trim().Split(" "c)(0) ' Quantité
-                                Case 16
-                                    stringArray(j) = cleanedAccentLine.Substring(215, 40).Trim() ' Outillage
-                                Case 17
-                                    stringArray(j) = cleanedAccentLine.Substring(255, 10).Trim() ' Valeurs limites
-                                Case 18
-                                    stringArray(j) = cleanedAccentLine.Substring(265, 1).Trim() ' AM_MP
-                                Case 19
-                                    If stringArray(j - 1) = "X" Then
-                                        stringArray(j) = vbNullString
-                                    Else
-                                        stringArray(j - 1) = vbNullString
-                                        stringArray(j) = "X"
-                                    End If
-                                Case 20
-                                    stringArray(j) = cleanedAccentLine.Substring(266, 25).Trim() ' N° Gamme (Document)
-                                Case 21
-                                    If stringArray(j - 1) = vbNullString Then
-                                        stringArray(j) = "N"
-                                    Else
-                                        stringArray(j) = "O"
-                                    End If
-                                Case 22
-                                    stringArray(j) = cleanedAccentLine.Substring(291, 2).Trim().PadLeft(2, "0"c) ' Compteur de gamme
-                                Case 23
-                                    stringArray(j) = "S" ' PMP Systématique / Conditionnel
-                            End Select
-                        Next
-                    End If
-
-                    ' Stocker les données dans le tableau 2D
-                    dataArray(i, 0) = stringArray(5) ' Sous-ensemble
-                    dataArray(i, 1) = stringArray(6) ' Element
-                    dataArray(i, 2) = stringArray(8) ' Opération
-                    dataArray(i, 3) = stringArray(10) ' Temps prévu
-                    dataArray(i, 4) = stringArray(12) ' Périodicité (Désignation Cycle Entretien)
-                    dataArray(i, 5) = stringArray(7) ' Etat Machine
-                    dataArray(i, 6) = stringArray(17) ' Valeurs limites
-                    dataArray(i, 7) = stringArray(16) ' Outillage
-                    dataArray(i, 8) = stringArray(21) ' Gamme O/N
-                    dataArray(i, 9) = stringArray(23) ' Systématique / Conditionnel
-                    dataArray(i, 10) = stringArray(15) ' Quantité Désignation Ref Four
-                    dataArray(i, 11) = stringArray(14) ' MABEC
-                    dataArray(i, 12) = stringArray(20) ' N° Gamme (Document)
-                    dataArray(i, 13) = stringArray(1) & "." & stringArray(22) ' N° Intervention
-                    dataArray(i, 14) = stringArray(18) ' AM
-                    dataArray(i, 15) = stringArray(19) ' MP
-                    dataArray(i, 16) = stringArray(3) ' Spécialité (Poste de travail)
-                    i += 1
-                Next
-                ' Écrire le tableau dans la feuille Excel en une seule fois
-                Dim writeRange As Range = excelWorksheet.Range("A" & lLignePMP & ":Q" & (lLignePMP + lignesFichier.Length - 1))
-                writeRange.Value = dataArray
-                lLignePMP = lLignePMP + lignesFichier.Length
-
-            Next
-            ' Fermer le fichier Excel et libérer les ressources
-            excelWorkbook.SaveAs(sPMPExcelSaveAs)
-            excelApp.Quit()
-
-            ReleaseComObject(excelWorksheet)
-            ReleaseComObject(excelWorkbook)
-            ReleaseComObject(excelApp)
-
-            sMessageStatut = "Fichier PMP généré au format Excel ..."
-            If updateStatus IsNot Nothing Then
-                mainWindow.Invoke(Sub() updateStatus(sMessageStatut))
-                Await Task.Delay(2000) ' Affichage du message pendant 2"
-            End If
-
-            ' Ouvrir l'explorateur de fichiers dans le dossier spécifié
-            Process.Start("explorer.exe", cheminDossier)
-        End If
-    End Function
 
 
 
@@ -736,6 +471,163 @@ namespace SmartSAP.ViewModels.Modules
                 AddLog(new LogEntry("INFO", "Nettoyage terminé : " + fichiersCSV.Length + " fichier(s) source(s) supprimé(s)."), dispatcher, uiSynchronizationContext);
 
                 AddLog(new LogEntry("SUCCESS", $"Fichiers PMP créés dans le dossier : " + docPath), dispatcher, uiSynchronizationContext);
+
+                // --- INTEGRATION TEMPLATE EXCEL ---
+                string sPMPExcelSaveAs = Path.Combine(docPath, $"PMPExcel_{DateTime.Now:yyMMddHHmmss}.xlsx");
+                string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "PMP Template.xlsx");
+                
+                string pmpTxtFile = Path.Combine(docPath, sFileName);
+                if (File.Exists(pmpTxtFile) && File.Exists(templatePath))
+                {
+                    AddLog(new LogEntry("INFO", "Génération du modèle Excel à partir du fichier TXT..."), dispatcher, uiSynchronizationContext);
+                    await Task.Run(() => 
+                    {
+                        try 
+                        {
+                            using (var workbook = new XLWorkbook(templatePath))
+                            {
+                                var worksheet = workbook.Worksheet(1);
+                                var pmpRange = worksheet.Range(8, 1, 10000, 22);
+                                pmpRange.Clear();
+                                pmpRange.Style.Fill.SetBackgroundColor(XLColor.White);
+                                pmpRange.Style.Font.SetFontColor(XLColor.Black);
+                                pmpRange.Style.Font.SetBold(false);
+                                
+                                string pattern = @"(?<!<[^<>]*)[^\w\s/](?![^<>]*>)";
+                                Regex regexExcel = new Regex(pattern);
+                                
+                                string[] generatedLines = File.ReadAllLines(pmpTxtFile);
+                                var dataList = new System.Collections.Generic.List<object[]>();
+                                
+                                foreach (string ligne in generatedLines)
+                                {
+                                    if (ligne.Length >= 293)
+                                    {
+                                        string cleanedLine = regexExcel.Replace(ligne, " ");
+                                        string normalizedString = cleanedLine.Normalize(System.Text.NormalizationForm.FormD);
+                                        StringBuilder sb = new StringBuilder();
+                                        foreach (char c in normalizedString)
+                                        {
+                                            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+                                                sb.Append(c);
+                                        }
+                                        string cleanedAccentLine = sb.ToString().ToUpper();
+                                        
+                                        string[] stringArray = new string[24];
+                                        
+                                        stringArray[0] = cleanedAccentLine.Substring(0, 39).Trim();
+                                        stringArray[1] = cleanedAccentLine.Substring(40, 8).Trim();
+                                        stringArray[2] = cleanedAccentLine.Substring(48, 4).Trim();
+                                        stringArray[3] = cleanedAccentLine.Substring(52, 8).Trim();
+                                        stringArray[4] = cleanedAccentLine.Substring(60, 4).Trim();
+                                        stringArray[5] = cleanedAccentLine.Substring(64, 20).Trim();
+                                        stringArray[6] = cleanedAccentLine.Substring(84, 20).Trim();
+                                        
+                                        string sExtract = cleanedAccentLine.Substring(104, 1).Trim();
+                                        switch (sExtract) {
+                                            case "1": stringArray[7] = "AHT"; break;
+                                            case "2": stringArray[7] = "AST"; break;
+                                            case "3": stringArray[7] = "MHP"; break;
+                                            case "4": stringArray[7] = "MEP"; break;
+                                            default: stringArray[7] = ""; break;
+                                        }
+                                        
+                                        stringArray[8] = cleanedAccentLine.Substring(105, 60).Trim();
+                                        stringArray[9] = cleanedAccentLine.Substring(165, 3).Trim();
+                                        
+                                        try {
+                                            string t = cleanedAccentLine.Substring(168, 5).Trim();
+                                            if (!string.IsNullOrEmpty(t)) stringArray[10] = TimeSpan.FromMinutes(int.Parse(t)).ToString(@"hh\:mm\:ss");
+                                            else stringArray[10] = "";
+                                        } catch { stringArray[10] = ""; }
+                                        
+                                        stringArray[11] = cleanedAccentLine.Substring(173, 3).Trim();
+                                        
+                                        try {
+                                            string sExt = cleanedAccentLine.Substring(176, 2).Trim();
+                                            switch(sExt) {
+                                                case "1": stringArray[12] = "7"; break;
+                                                case "2": stringArray[12] = "14"; break;
+                                                case "4": stringArray[12] = "30"; break;
+                                                case "8": stringArray[12] = "60"; break;
+                                                case "12": case "3M": stringArray[12] = "90"; break;
+                                                case "16": case "4M": stringArray[12] = "120"; break;
+                                                case "24": case "6M": stringArray[12] = "180"; break;
+                                                case "48": stringArray[12] = "360"; break;
+                                                case "A1": stringArray[12] = "365"; break;
+                                                case "A2": stringArray[12] = "730"; break;
+                                                case "A3": stringArray[12] = "1095"; break;
+                                                case "A4": stringArray[12] = "1460"; break;
+                                                case "A5": stringArray[12] = "1825"; break;
+                                                case "A6": stringArray[12] = "2190"; break;
+                                                case "A9": stringArray[12] = "3285"; break;
+                                                case "20J1": case "MJ": case "1E": case "3E": stringArray[12] = "1"; break;
+                                                default: stringArray[12] = ""; break;
+                                            }
+                                        } catch { stringArray[12] = ""; }
+                                        
+                                        stringArray[13] = cleanedAccentLine.Substring(178, 6).Trim();
+                                        stringArray[14] = cleanedAccentLine.Substring(184, 18).Trim();
+                                        stringArray[15] = cleanedAccentLine.Substring(202, 13).Trim().Split(' ')[0];
+                                        stringArray[16] = cleanedAccentLine.Substring(215, 40).Trim();
+                                        stringArray[17] = cleanedAccentLine.Substring(255, 10).Trim();
+                                        stringArray[18] = cleanedAccentLine.Substring(265, 1).Trim();
+                                        
+                                        if (stringArray[18] == "X") stringArray[19] = "";
+                                        else { stringArray[18] = ""; stringArray[19] = "X"; }
+                                        
+                                        stringArray[20] = cleanedAccentLine.Substring(266, 25).Trim();
+                                        stringArray[21] = string.IsNullOrEmpty(stringArray[20]) ? "N" : "O";
+                                        stringArray[22] = cleanedAccentLine.Substring(291, 2).Trim().PadLeft(2, '0');
+                                        stringArray[23] = "S";
+                                        
+                                        object[] rowData = new object[17];
+                                        rowData[0] = stringArray[5];
+                                        rowData[1] = stringArray[6];
+                                        rowData[2] = stringArray[8];
+                                        rowData[3] = stringArray[10];
+                                        rowData[4] = stringArray[12];
+                                        rowData[5] = stringArray[7];
+                                        rowData[6] = stringArray[17];
+                                        rowData[7] = stringArray[16];
+                                        rowData[8] = stringArray[21];
+                                        rowData[9] = stringArray[23];
+                                        rowData[10] = stringArray[15];
+                                        rowData[11] = stringArray[14];
+                                        rowData[12] = stringArray[20];
+                                        rowData[13] = $"{stringArray[1]}.{stringArray[22]}";
+                                        rowData[14] = stringArray[18];
+                                        rowData[15] = stringArray[19];
+                                        rowData[16] = stringArray[3];
+                                        
+                                        dataList.Add(rowData);
+                                    }
+                                }
+                                
+                                if (dataList.Count > 0)
+                                {
+                                    worksheet.Cell(8, 1).InsertData(dataList);
+                                }
+                                workbook.SaveAs(sPMPExcelSaveAs);
+                            }
+                            
+                            AddLog(new LogEntry("SUCCESS", $"Fichier Excel PMP généré : {Path.GetFileName(sPMPExcelSaveAs)}"), dispatcher, uiSynchronizationContext);
+                            try {
+                                Process.Start(new ProcessStartInfo(sPMPExcelSaveAs) { UseShellExecute = true });
+                            } catch { }
+
+                        }
+                        catch (Exception innerEx)
+                        {
+                            AddLog(new LogEntry("ERROR", $"Erreur lors de la génération Excel PMP: {innerEx.Message}"), dispatcher, uiSynchronizationContext);
+                        }
+                    });
+                }
+                else if (!File.Exists(templatePath))
+                {
+                    AddLog(new LogEntry("WARNING", $"Template Excel non trouvé dans : {templatePath}"), dispatcher, uiSynchronizationContext);
+                }
+                // --- FIN DE L'INTEGRATION ---
 
                 if (step != null)
                 {
