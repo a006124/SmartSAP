@@ -236,7 +236,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        private void AddLog(LogEntry logEntry, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext)
+        protected void AddLog(LogEntry logEntry, Dispatcher dispatcher = null, SynchronizationContext uiSynchronizationContext = null)
         {
             try
             {

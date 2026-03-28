@@ -144,16 +144,21 @@ namespace SmartSAP.ViewModels.Modules
                             if (parts.Length >= 2 && parts[1] == "OK")
                             {
                                 succesCount++;
+                                AddLog(new LogEntry("INFO", $"Ligne {row - 1}/{rowCount - 1} - Extraction réussie pour {division}/{gamme}."), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
                             }
                             else if (parts.Length >= 2 && parts[1] == "NOK")
                             {
                                 errorCount++;
-                                LinesInError+= $"{Environment.NewLine}'{division} {gamme}' : {parts[4]}";
+                                string errMsg = parts.Length > 4 ? parts[4] : "Non précisée";
+                                LinesInError+= $"{Environment.NewLine}'{division} {gamme}' : {errMsg}";
+                                AddLog(new LogEntry("WARNING", $"Ligne {row - 1}/{rowCount - 1} - Extraction NOK pour {division}/{gamme}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
                             }
                             else
                             {
                                 errorCount++;
-                                LinesInError+= $"{Environment.NewLine}'{division} {gamme}' : {parts[4]}";
+                                string errMsg = parts.Length > 4 ? parts[4] : result;
+                                LinesInError+= $"{Environment.NewLine}'{division} {gamme}' : {errMsg}";
+                                AddLog(new LogEntry("ERROR", $"Ligne {row - 1}/{rowCount - 1} - Erreur pour {division}/{gamme}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
                             }
                         }
                     }
