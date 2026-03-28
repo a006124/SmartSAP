@@ -312,6 +312,25 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        private string RemoveDiacritics(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder(capacity: normalizedString.Length);
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        }
+
         private async Task<bool> GeneratePMPTextFile(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step = null)
         {
             AddLog(new LogEntry("INFO", "Préparation de la génération PMP..."), dispatcher, uiSynchronizationContext);
@@ -364,8 +383,12 @@ namespace SmartSAP.ViewModels.Modules
                         // Parcourir chaque ligne du fichier
                         foreach (string ligne in lignesFichier)
                         {
-                            // Remplacer les caractères non alphanumériques
-                            string cleanedLine = regex.Replace(ligne, " ");
+                            // 1. Remplacer les caractères accentués par des caractères non accentués
+                            string noAccentLine = RemoveDiacritics(ligne);
+
+                            // 2. Remplacer les caractères non alphanumériques sauf '/' par des espaces
+                            string cleanedLine = regex.Replace(noAccentLine, " ");
+                            
                             // Ajouter la ligne nettoyée à la ligne accumulée
                             accumulatedLine.Append(cleanedLine);
                         }
@@ -673,10 +696,23 @@ namespace SmartSAP.ViewModels.Modules
                             workbook.SaveAs(sPMPExcelSaveAs);
                         }
                         
-                        AddLog(new LogEntry("SUCCESS", $"Fichier Excel PMP généré : {Path.GetFileName(sPMPExcelSaveAs)}"), dispatcher, uiSynchronizationContext);
+                        AddLog(new LogEntry("SUCCESS", "Fichier Excel PMP généré : ", sPMPExcelSaveAs), dispatcher, uiSynchronizationContext);
                         try {
                             Process.Start(new ProcessStartInfo(sPMPExcelSaveAs) { UseShellExecute = true });
                         } catch { }
+
+                        // Nettoyage: suppression du fichier PMP texte consolidé une fois l'Excel généré
+                        try
+                        {
+                            if (File.Exists(pmpTxtFile))
+                            {
+                                File.Delete(pmpTxtFile);
+                            }
+                        }
+                        catch (Exception exDelete)
+                        {
+                            AddLog(new LogEntry("WARNING", $"Impossible de supprimer le fichier texte consolidé : {exDelete.Message}"), dispatcher, uiSynchronizationContext);
+                        }
 
                     }
                     catch (Exception innerEx)
