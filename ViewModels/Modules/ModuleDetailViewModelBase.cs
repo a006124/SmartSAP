@@ -94,6 +94,7 @@ namespace SmartSAP.ViewModels.Modules
             // A surcharger dans les classes enfants pour définir les colonnes Excel
         }
 
+        // Génération du fichier Excel modèle à partir des données saisies dans le fichier ModulexxViewModel
         protected virtual void GenerateExcelTemplate(WorkflowStep? step = null)
         {
             if (step == null)
@@ -170,6 +171,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Découpe le fichier PDF sélectionné en fichiers PDF de 20 pages
         protected virtual void GeneratePDF(WorkflowStep? step = null)
         {
             if (step == null)
@@ -236,6 +238,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Ajout d'un log
         protected void AddLog(LogEntry logEntry, Dispatcher dispatcher = null, SynchronizationContext uiSynchronizationContext = null)
         {
             try
@@ -312,6 +315,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Remplacement des caractères accentués par des caractères non accentués
         private string RemoveDiacritics(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return text;
@@ -331,7 +335,7 @@ namespace SmartSAP.ViewModels.Modules
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        private async Task<bool> GeneratePMPTextFile(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step = null)
+        protected virtual async Task<bool> GeneratePMPTextFile(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step = null, IEnumerable<string>? overrideFiles = null)
         {
             AddLog(new LogEntry("INFO", "Préparation de la génération PMP..."), dispatcher, uiSynchronizationContext);
             await Task.Delay(10); // Rendre la main à l'UI pour afficher le message initial
@@ -353,9 +357,10 @@ namespace SmartSAP.ViewModels.Modules
                 }
 
                 // Obtenir tous les fichiers TXT dans le dossier spécifié, excluant ceux commençant par "PMP_"
-                string[] fichiersCSV = Directory.GetFiles(docPath, "*.txt")
-                                                .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
-                                                .ToArray();
+                string[] fichiersCSV = (overrideFiles?.ToArray()) 
+                    ?? Directory.GetFiles(docPath, "*.txt")
+                                .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
+                                .ToArray();
 
                 // Vérifier si des fichiers TXT ont été trouvés
                 if (fichiersCSV.Length == 0)
@@ -523,7 +528,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        private async Task GeneratePMPExcelFromTemplate(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step)
+        protected virtual async Task GeneratePMPExcelFromTemplate(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step)
         {
             // --- INTEGRATION TEMPLATE EXCEL ---
             string sPMPExcelSaveAs = Path.Combine(docPath, $"PMPExcel_{DateTime.Now:yyMMddHHmmss}.xlsx");
@@ -971,6 +976,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Vérification de la connexion SAP
         protected virtual async Task CheckSAPConnectionAsync()
         {
             var step = Steps.FirstOrDefault((WorkflowStep s) => s.ActionCommand == CheckSAPConnectionCommand);
@@ -1004,6 +1010,7 @@ namespace SmartSAP.ViewModels.Modules
             });
         }
 
+        // Exécution de la transaction SAP
         protected virtual async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
             if (step == null)
@@ -1025,6 +1032,7 @@ namespace SmartSAP.ViewModels.Modules
             await Task.CompletedTask; 
         }
 
+        // Sélection du fichier Excel
         protected virtual void PickExcelFile()
         {
             var openFileDialog = new OpenFileDialog
@@ -1046,6 +1054,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Finalisation de l'initialisation
         protected void CompleteInitialization()
         {
             if (Steps.Count > 0)
@@ -1055,6 +1064,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Gestion du fichier déposé
         public virtual void HandleDroppedFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath)) return;
@@ -1081,6 +1091,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
+        // Gestion du fichier Excel déposé
         public virtual void HandleDroppedExcelFile(string filePath)
         {
             LastGeneratedExcelPath = filePath;
@@ -1095,6 +1106,7 @@ namespace SmartSAP.ViewModels.Modules
             });
         }
 
+        // Gestion du fichier texte/CSV déposé
         public virtual void HandleDroppedTexteFile(string filePath)
         {
             LastExportedTextPath = filePath;

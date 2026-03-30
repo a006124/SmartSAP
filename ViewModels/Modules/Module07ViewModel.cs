@@ -48,11 +48,6 @@ namespace SmartSAP.ViewModels.Modules
                     Description = "Exécute la transaction SAP 'ZP13'.",
                     Icon = "\xE768",
                     ModuleStep = "M07-E2",
-                    Parameters = {
-                        new StepParameter("Forcer l'écrasement", ParameterType.Boolean, true),
-                        new StepParameter("Commentaire d'extraction", ParameterType.Text, "Extraction automatique"),
-                        new StepParameter("Mode", ParameterType.Choice, "Normal", new string[] { "Normal", "Rapide", "Détaillé" })
-                    },
                     ActionCommand = ExecuteSAPTransactionCommand
                 },
                 new WorkflowStep {
@@ -60,12 +55,117 @@ namespace SmartSAP.ViewModels.Modules
                     Description = "Reconstruit le fichier PMP à partir des fichiers TXT extraits de SAP.",
                     Icon = "\xE768",
                     ModuleStep = "M07-E3",
+                    Parameters = {
+                        new StepParameter("Générer un PMP Excel par gamme", ParameterType.Boolean, false)
+                        //new StepParameter("Commentaire d'extraction", ParameterType.Text, "Extraction automatique"),
+                        //new StepParameter("Mode", ParameterType.Choice, "Normal", new string[] { "Normal", "Rapide", "Détaillé" })
+                    },
                     ActionCommand = GeneratePMPExcelCommand
                 }
             };
         }
 
-        // EXÉCUTION DE LA TRANSACTION SAP
+        // GÉNÉRATION DU PMP EXCEL
+        protected override async Task GeneratePMPExcel(WorkflowStep? step = null)
+        {
+            var uiSynchronizationContext = SynchronizationContext.Current;
+            System.Windows.Threading.Dispatcher dispatcher = null;
+            if (System.Windows.Application.Current != null)
+                dispatcher = System.Windows.Application.Current.Dispatcher;
+
+            if (step == null)
+                step = Steps.FirstOrDefault(s => s.ActionCommand == GeneratePMPExcelCommand);
+
+            if (step != null) step.ResultState = "Processing";
+
+            // Lecture du paramètre 1 : "Générer un PMP Excel par gamme"
+            var step3 = Steps.FirstOrDefault(s => s.ModuleStep == "M07-E3");
+            bool parGamme = step3?.Parameters.Count > 0 && step3.Parameters[0].Value is true;
+
+            string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+
+            try
+            {
+                if (parGamme)
+                {
+                    // ── MODE CONSOLIDÉ (comportement de base) ──────────────────
+                    // Un seul PMP Excel pour tous les fichiers TXT du dossier
+                    string sFileName = "PMP_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
+                    bool txtSuccess = await GeneratePMPTextFile(docPath, sFileName, dispatcher, uiSynchronizationContext, step);
+                    if (txtSuccess)
+                    {
+                        await GeneratePMPExcelFromTemplate(docPath, sFileName, dispatcher, uiSynchronizationContext, step);
+                    }
+                }
+                else
+                {
+                    // ── MODE « UN EXCEL PAR GAMME » ────────────────────────────
+                    // Récupérer tous les fichiers TXT sources (hors PMP_)
+                    string[] sourceFiles = Directory.GetFiles(docPath, "*.txt")
+                        .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
+                        .ToArray();
+
+                    if (sourceFiles.Length == 0)
+                    {
+                        AddLog(new LogEntry("WARNING", "Aucun fichier TXT source trouvé dans le dossier."), dispatcher, uiSynchronizationContext);
+                        if (step != null) { step.Status = "Absent"; step.ResultState = "Error"; }
+                        return;
+                    }
+
+                    int success = 0;
+                    int errors = 0;
+
+                    foreach (string sourceFile in sourceFiles)
+                    {
+                        // Nom de fichier PMP temporaire propre à cette gamme
+                        string gamme = Path.GetFileNameWithoutExtension(sourceFile);
+                        string tempName = $"PMP_{gamme}_{DateTime.Now:yyMMddHHmmss}.txt";
+
+                        AddLog(new LogEntry("INFO", $"Traitement de la gamme : {gamme}..."), dispatcher, uiSynchronizationContext);
+
+                        // Générer le TXT consolidé pour CE fichier uniquement
+                        bool txtOk = await GeneratePMPTextFile(
+                            docPath, tempName, dispatcher, uiSynchronizationContext, step,
+                            overrideFiles: new[] { sourceFile });
+
+                        if (txtOk)
+                        {
+                            // Générer l'Excel à partir du TXT temporaire
+                            await GeneratePMPExcelFromTemplate(docPath, tempName, dispatcher, uiSynchronizationContext, step);
+                            success++;
+                        }
+                        else
+                        {
+                            errors++;
+                        }
+                    }
+
+                    // Bilan final
+                    if (errors == 0 && success > 0)
+                    {
+                        AddLog(new LogEntry("SUCCESS", $"✓ {success} fichier(s) PMP Excel générés avec succès."), dispatcher, uiSynchronizationContext);
+                        if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                    }
+                    else if (success > 0)
+                    {
+                        AddLog(new LogEntry("WARNING", $"⚠ {success} succès / {errors} erreur(s)."), dispatcher, uiSynchronizationContext);
+                        if (step != null) { step.Status = "Partiel"; step.ResultState = "Error"; }
+                    }
+                    else
+                    {
+                        AddLog(new LogEntry("ERROR", $"✗ Aucun PMP Excel généré. {errors} erreur(s)."), dispatcher, uiSynchronizationContext);
+                        if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog(new LogEntry("ERROR", $"Erreur globale PMP : {ex.Message}"), dispatcher, uiSynchronizationContext);
+                if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+            }
+        }
+
+
         protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
         {
             if (step == null)
