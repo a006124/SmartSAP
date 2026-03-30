@@ -51,13 +51,51 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
-                                        <Border Grid.Row="0" Width="40" Height="40" CornerRadius="8"
-                                                Background="{StaticResource BluePastelBrush}"
-                                                HorizontalAlignment="Left" Margin="0,0,0,15">
-                                            <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
-                                                       VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                       FontSize="18" Foreground="{StaticResource AccentBlueBrush}"/>
-                                        </Border>
+                                        <Grid Grid.Row="0" Margin="0,0,0,15">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8"
+                                                    Background="{StaticResource BluePastelBrush}"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                           FontSize="18" Foreground="{StaticResource AccentBlueBrush}"/>
+                                            </Border>
+
+                                            <!-- Bouton de paramètres -->
+                                            <Button x:Name="SettingsBtn" Grid.Column="2" 
+                                                    Command="{Binding ToggleSettingsCommand}"
+                                                    Visibility="{Binding HasSettings, Converter={StaticResource BoolToVis}}"
+                                                    Width="30" Height="30" 
+                                                    Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                    VerticalAlignment="Top" HorizontalAlignment="Right">
+                                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                           FontSize="16" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            </Button>
+
+                                            <!-- Popup de paramètres -->
+                                            <Popup IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}" StaysOpen="False" 
+                                                   Placement="Bottom" PlacementTarget="{Binding ElementName=SettingsBtn}" 
+                                                   AllowsTransparency="True" PopupAnimation="Fade">
+                                                <Border Background="{StaticResource WindowBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="15" Margin="0,5,0,0">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect Color="Black" Opacity="0.2" BlurRadius="10" Direction="270" ShadowDepth="2" />
+                                                    </Border.Effect>
+                                                    <StackPanel Width="200">
+                                                        <TextBlock Text="Paramètres de l'étape" FontWeight="Bold" Margin="0,0,0,10" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <CheckBox Content="Option 1" Margin="0,5" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <CheckBox Content="Option 2" Margin="0,5" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="Valeur :" Margin="0,10,0,2" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                        <TextBox Text="" Width="180" HorizontalAlignment="Left"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Popup>
+                                        </Grid>
 
                                         <StackPanel Grid.Row="1">
                                             <TextBlock Text="{Binding Title}" FontWeight="Bold"

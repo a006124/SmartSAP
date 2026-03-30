@@ -41,6 +41,7 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE70F",
                     ModuleStep = "M07-E1",
                     OpenFile = true,
+                    HasSettings = true,
                     ActionCommand = GenerateTemplateCommand
                 },
                 new WorkflowStep {

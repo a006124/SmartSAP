@@ -37,5 +37,26 @@ namespace SmartSAP.ViewModels.Modules
         }
 
         public ICommand? ActionCommand { get; set; }
+
+        private bool _hasSettings;
+        public bool HasSettings
+        {
+            get => _hasSettings;
+            set => SetProperty(ref _hasSettings, value);
+        }
+
+        private bool _isSettingsOpen;
+        public bool IsSettingsOpen
+        {
+            get => _isSettingsOpen;
+            set => SetProperty(ref _isSettingsOpen, value);
+        }
+
+        public ICommand ToggleSettingsCommand { get; }
+
+        public WorkflowStep()
+        {
+            ToggleSettingsCommand = new RelayCommand(o => IsSettingsOpen = !IsSettingsOpen);
+        }
     }
 }
