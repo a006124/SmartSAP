@@ -119,45 +119,40 @@ namespace SmartSAP.ViewModels.Modules
                 string moduleStepPart = !string.IsNullOrEmpty(step?.ModuleStep) ? $"{step.ModuleStep}" : "";
                 string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}_{moduleStepPart}.xlsx";
 
-                // Demander à l'utilisateur où sauvegarder le fichier
-                string fullPath = string.Empty;
+                // Demander à l'utilisateur où créer les dossiers (Emplacement racine)
+                string selectedDir = string.Empty;
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var saveDialog = new Microsoft.Win32.SaveFileDialog
+                    var folderDialog = new Microsoft.Win32.OpenFolderDialog
                     {
-                        Title = "Enregistrer le modèle Excel",
-                        FileName = fileName,
-                        DefaultExt = ".xlsx",
-                        Filter = "Fichiers Excel (*.xlsx)|*.xlsx|Tous les fichiers (*.*)|*.*",
+                        Title = "Sélectionner le dossier racine du projet (où créer les dossiers)",
                         InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
                     };
-                    if (saveDialog.ShowDialog() == true)
-                        fullPath = saveDialog.FileName;
+
+                    if (folderDialog.ShowDialog() == true)
+                    {
+                        selectedDir = folderDialog.FolderName;
+                    }
                 });
 
-                if (string.IsNullOrEmpty(fullPath))
+                if (string.IsNullOrEmpty(selectedDir))
                 {
-                    Logs.Add(new LogEntry("WARNING", "Sauvegarde annulée par l'utilisateur."));
+                    Logs.Add(new LogEntry("WARNING", "Opération annulée par l'utilisateur."));
                     if (step != null) { step.Status = "Annulé"; step.ResultState = "Warning"; }
                     return;
                 }
 
                 // Créer les sous-dossiers dans le répertoire sélectionné
-                string selectedDir = Path.GetDirectoryName(fullPath) ?? string.Empty;
-                string tempDir = string.Empty;
-                if (!string.IsNullOrEmpty(selectedDir))
-                {
-                    Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers Source"));
-                    Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers PMP"));
-                    tempDir = Path.Combine(selectedDir, "Fichiers Temporaires");
-                    Directory.CreateDirectory(tempDir);
-                    
-                    // On modifie le chemin final pour que le fichier guide aille dans "Fichiers Temporaires"
-                    string fileNameOnly = Path.GetFileName(fullPath);
-                    fullPath = Path.Combine(tempDir, fileNameOnly);
-                    
-                    Logs.Add(new LogEntry("INFO", $"Dossiers créés dans : {selectedDir}"));
-                }
+                Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers Source"));
+                Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers PMP"));
+                string tempDir = Path.Combine(selectedDir, "Fichiers Temporaires");
+                Directory.CreateDirectory(tempDir);
+                
+                // Chemin final automatique pour le fichier guide
+                string fullPath = Path.Combine(tempDir, fileName);
+                
+                Logs.Add(new LogEntry("INFO", $"Structure du projet créée dans : {selectedDir}"));
+                Logs.Add(new LogEntry("INFO", $"Fichier guide généré : {fileName}"));
 
                 string sheetName = "Data";
                 

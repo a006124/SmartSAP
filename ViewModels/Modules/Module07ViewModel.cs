@@ -82,7 +82,12 @@ namespace SmartSAP.ViewModels.Modules
             var step3 = Steps.FirstOrDefault(s => s.ModuleStep == "M07-E3");
             bool genererExcelGlobal = step3?.Parameters.Count > 0 && step3.Parameters[0].Value is true;
 
-            string baseDir = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            // Le fichier est maintenant dans "Fichiers Temporaires", donc le dossier racine est le parent
+            string currentParent = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            string baseDir = Path.GetFileName(currentParent) == "Fichiers Temporaires" 
+                ? Path.GetDirectoryName(currentParent) 
+                : currentParent;
+
             string sourceDir = Path.Combine(baseDir, "Fichiers Source");
             string pmpDir = Path.Combine(baseDir, "Fichiers PMP");
 
@@ -255,7 +260,12 @@ namespace SmartSAP.ViewModels.Modules
 
                 int succesCount = 0;
                 int errorCount = 0;
-                string baseDir = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                // Le fichier est maintenant dans "Fichiers Temporaires", donc le dossier racine est le parent
+                string currentParent = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string baseDir = Path.GetFileName(currentParent) == "Fichiers Temporaires" 
+                    ? Path.GetDirectoryName(currentParent) 
+                    : currentParent;
+                
                 string docPath = Path.Combine(baseDir, "Fichiers Source");
                 
                 // S'assurer que le dossier existe au cas où
