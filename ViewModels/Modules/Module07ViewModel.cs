@@ -82,18 +82,23 @@ namespace SmartSAP.ViewModels.Modules
             var step3 = Steps.FirstOrDefault(s => s.ModuleStep == "M07-E3");
             bool genererExcelGlobal = step3?.Parameters.Count > 0 && step3.Parameters[0].Value is true;
 
-            string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            string baseDir = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            string sourceDir = Path.Combine(baseDir, "Fichiers Source");
+            string pmpDir = Path.Combine(baseDir, "Fichiers PMP");
 
             try
             {
-                // ── ÉTAPE 1 : Récupérer tous les fichiers TXT sources (hors PMP_*) ──
-                string[] sourceFiles = Directory.GetFiles(docPath, "*.txt")
+                // ── ÉTAPE 1 : Récupérer tous les fichiers TXT sources (depuis Fichiers Source) ──
+                if (!Directory.Exists(sourceDir)) Directory.CreateDirectory(sourceDir);
+                if (!Directory.Exists(pmpDir)) Directory.CreateDirectory(pmpDir);
+
+                string[] sourceFiles = Directory.GetFiles(sourceDir, "*.txt")
                     .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
                     .ToArray();
 
                 if (sourceFiles.Length == 0)
                 {
-                    AddLog(new LogEntry("WARNING", "Aucun fichier TXT source trouvé dans le dossier."), dispatcher, uiSynchronizationContext);
+                    AddLog(new LogEntry("WARNING", "Aucun fichier TXT source trouvé dans 'Fichiers Source'."), dispatcher, uiSynchronizationContext);
                     if (step != null) { step.Status = "Absent"; step.ResultState = "Error"; }
                     return;
                 }
@@ -134,12 +139,12 @@ namespace SmartSAP.ViewModels.Modules
                     AddLog(new LogEntry("INFO", $"Traitement de la gamme : {gamme}..."), dispatcher, uiSynchronizationContext);
 
                     bool txtOk = await GeneratePMPTextFile(
-                        sourceFile, docPath, tempName, dispatcher, uiSynchronizationContext, step);
+                        sourceFile, pmpDir, tempName, dispatcher, uiSynchronizationContext, step);
 
                     if (txtOk)
                     {
-                        string tempTxtPath = Path.Combine(docPath, tempName);
-                        await GeneratePMPExcelFromTemplate(docPath, tempName, dispatcher, uiSynchronizationContext, step,
+                        string tempTxtPath = Path.Combine(pmpDir, tempName);
+                        await GeneratePMPExcelFromTemplate(pmpDir, tempName, dispatcher, uiSynchronizationContext, step,
                             deleteTxtAfter: !genererExcelGlobal,
                             templatePath: pmpTemplatePath,
                             outputBaseName: gamme);
@@ -157,7 +162,7 @@ namespace SmartSAP.ViewModels.Modules
                 {
                     AddLog(new LogEntry("INFO", "Génération du PMP Excel global consolidé..."), dispatcher, uiSynchronizationContext);
                     string sFileNameGlobal = "PMP_GLOBAL_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
-                    string globalTxtPath = Path.Combine(docPath, sFileNameGlobal);
+                    string globalTxtPath = Path.Combine(pmpDir, sFileNameGlobal);
 
                     using (var writer = new StreamWriter(globalTxtPath, false))
                     {
@@ -170,7 +175,7 @@ namespace SmartSAP.ViewModels.Modules
                             }
                         }
                     }
-                    await GeneratePMPExcelFromTemplate(docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step,
+                    await GeneratePMPExcelFromTemplate(pmpDir, sFileNameGlobal, dispatcher, uiSynchronizationContext, step,
                         templatePath: pmpTemplatePath,
                         outputBaseName: "GLOBAL");
                 }
@@ -250,7 +255,11 @@ namespace SmartSAP.ViewModels.Modules
 
                 int succesCount = 0;
                 int errorCount = 0;
-                string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string baseDir = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string docPath = Path.Combine(baseDir, "Fichiers Source");
+                
+                // S'assurer que le dossier existe au cas où
+                if (!Directory.Exists(docPath)) Directory.CreateDirectory(docPath);
                 string LinesInError = string.Empty;
 
                 try

@@ -118,7 +118,39 @@ namespace SmartSAP.ViewModels.Modules
                 string dateExecution = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 string moduleStepPart = !string.IsNullOrEmpty(step?.ModuleStep) ? $"{step.ModuleStep}" : "";
                 string fileName = $"{dateExecution}_{ModuleTitle.Replace(" ", "_")}_{moduleStepPart}.xlsx";
-                string fullPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
+
+                // Demander à l'utilisateur où sauvegarder le fichier
+                string fullPath = string.Empty;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var saveDialog = new Microsoft.Win32.SaveFileDialog
+                    {
+                        Title = "Enregistrer le modèle Excel",
+                        FileName = fileName,
+                        DefaultExt = ".xlsx",
+                        Filter = "Fichiers Excel (*.xlsx)|*.xlsx|Tous les fichiers (*.*)|*.*",
+                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+                    };
+                    if (saveDialog.ShowDialog() == true)
+                        fullPath = saveDialog.FileName;
+                });
+
+                if (string.IsNullOrEmpty(fullPath))
+                {
+                    Logs.Add(new LogEntry("WARNING", "Sauvegarde annulée par l'utilisateur."));
+                    if (step != null) { step.Status = "Annulé"; step.ResultState = "Warning"; }
+                    return;
+                }
+
+                // Créer les sous-dossiers dans le répertoire sélectionné
+                string selectedDir = Path.GetDirectoryName(fullPath) ?? string.Empty;
+                if (!string.IsNullOrEmpty(selectedDir))
+                {
+                    Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers Source"));
+                    Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers PMP"));
+                    Logs.Add(new LogEntry("INFO", $"Dossiers créés dans : {selectedDir}"));
+                }
+
                 string sheetName = "Data";
                 
                 using (var workbook = new XLWorkbook())
