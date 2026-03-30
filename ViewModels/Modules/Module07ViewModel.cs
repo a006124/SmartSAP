@@ -111,8 +111,7 @@ namespace SmartSAP.ViewModels.Modules
                     AddLog(new LogEntry("INFO", $"Traitement de la gamme : {gamme}..."), dispatcher, uiSynchronizationContext);
 
                     bool txtOk = await GeneratePMPTextFile(
-                        docPath, tempName, dispatcher, uiSynchronizationContext, step,
-                        overrideFiles: new[] { sourceFile });
+                        sourceFile, docPath, tempName, dispatcher, uiSynchronizationContext, step);
 
                     if (txtOk)
                     {
@@ -134,14 +133,21 @@ namespace SmartSAP.ViewModels.Modules
                 {
                     AddLog(new LogEntry("INFO", "Génération du PMP Excel global consolidé..."), dispatcher, uiSynchronizationContext);
                     string sFileNameGlobal = "PMP_GLOBAL_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
+                    string globalTxtPath = Path.Combine(docPath, sFileNameGlobal);
 
-                    // Consolider les PMP TXT intermédiaires (encore présents car deleteTxtAfter=false)
-                    bool globalOk = await GeneratePMPTextFile(
-                        docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step,
-                        overrideFiles: tempPmpFiles); // GeneratePMPTextFile supprimera ces TXT intermédiaires
-
-                    if (globalOk)
-                        await GeneratePMPExcelFromTemplate(docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step);
+                    // Concaténer les TXT déjà formatés (293-car.) de chaque gamme en un seul fichier
+                    using (var writer = new StreamWriter(globalTxtPath, false))
+                    {
+                        foreach (string pmpTxt in tempPmpFiles)
+                        {
+                            if (File.Exists(pmpTxt))
+                            {
+                                await writer.WriteAsync(await File.ReadAllTextAsync(pmpTxt));
+                                File.Delete(pmpTxt); // suppression du TXT temporaire
+                            }
+                        }
+                    }
+                    await GeneratePMPExcelFromTemplate(docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step);
                 }
 
                 // ── Bilan final ─────────────────────────────────────────────────────

@@ -302,7 +302,15 @@ namespace SmartSAP.ViewModels.Modules
                 string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
                 string sFileName = "PMP_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
 
-                bool txtSuccess = await GeneratePMPTextFile(docPath, sFileName, dispatcher, uiSynchronizationContext, step);
+                // Vérifier que le fichier source est disponible
+                if (string.IsNullOrEmpty(LastExportedTextPath) || !File.Exists(LastExportedTextPath))
+                {
+                    AddLog(new LogEntry("ERROR", "Aucun fichier TXT source disponible pour la génération PMP."), dispatcher, uiSynchronizationContext);
+                    if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                bool txtSuccess = await GeneratePMPTextFile(LastExportedTextPath, docPath, sFileName, dispatcher, uiSynchronizationContext, step);
                 if (txtSuccess)
                 {
                     await GeneratePMPExcelFromTemplate(docPath, sFileName, dispatcher, uiSynchronizationContext, step);
@@ -335,7 +343,7 @@ namespace SmartSAP.ViewModels.Modules
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        protected virtual async Task<bool> GeneratePMPTextFile(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step = null, IEnumerable<string>? overrideFiles = null)
+        protected virtual async Task<bool> GeneratePMPTextFile(string sourceFilePath, string docPath, string outputFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step = null)
         {
             AddLog(new LogEntry("INFO", "Préparation de la génération PMP..."), dispatcher, uiSynchronizationContext);
             await Task.Delay(10); // Rendre la main à l'UI pour afficher le message initial
@@ -350,30 +358,17 @@ namespace SmartSAP.ViewModels.Modules
                 long rowNumber = 0;
                 long rowTotalNumber;
 
-                // Vérifier si le chemin du dossier n'est pas vide
-                if (string.IsNullOrEmpty(docPath))
+                // Vérifier que le fichier source existe
+                if (!File.Exists(sourceFilePath))
                 {
-                    throw new ArgumentException("Le chemin du dossier est invalide.");
+                    throw new FileNotFoundException($"Le fichier source est introuvable : {sourceFilePath}");
                 }
 
-                // Obtenir tous les fichiers TXT dans le dossier spécifié, excluant ceux commençant par "PMP_"
-                string[] fichiersCSV = (overrideFiles?.ToArray()) 
-                    ?? Directory.GetFiles(docPath, "*.txt")
-                                .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
-                                .ToArray();
+                string[] fichiersCSV = new[] { sourceFilePath };
+                rowTotalNumber = 1;
 
-                // Vérifier si des fichiers TXT ont été trouvés
-                if (fichiersCSV.Length == 0)
-                {
-                    throw new FileNotFoundException("Aucun fichier TXT trouvé dans le dossier spécifié.");
-                }
-                else
-                {
-                    rowTotalNumber = fichiersCSV.Length;
-                }
-
-                // Utiliser un StreamWriter pour écrire dans le fichier de sortie de manière asynchrone
-                using (StreamWriter writer = new StreamWriter(Path.Combine(docPath, sFileName), false)) // Le paramètre 'false' écrase le fichier s'il existe
+                // Écriture dans le fichier de sortie
+                using (StreamWriter writer = new StreamWriter(Path.Combine(docPath, outputFileName), false))
                 {
                     StringBuilder accumulatedLine = new StringBuilder();
                     Regex regex = new Regex(@"[^\w\s/]"); // Expression régulière pour remplacer les caractères non alphanumériques sauf '/'
