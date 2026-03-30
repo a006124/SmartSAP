@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
@@ -55,10 +56,39 @@ namespace SmartSAP.ViewModels.Modules
         }
 
         public ICommand ToggleSettingsCommand { get; }
+        public ICommand ConfirmSettingsCommand { get; }
+        public ICommand CancelSettingsCommand { get; }
+
+        // Snapshot des valeurs pour restauration en cas d'annulation
+        private Dictionary<StepParameter, object?> _parameterSnapshot = new();
 
         public WorkflowStep()
         {
-            ToggleSettingsCommand = new RelayCommand(o => IsSettingsOpen = !IsSettingsOpen);
+            ToggleSettingsCommand = new RelayCommand(o =>
+            {
+                if (!IsSettingsOpen)
+                {
+                    // Sauvegarde des valeurs courantes avant ouverture
+                    _parameterSnapshot = Parameters.ToDictionary(p => p, p => p.Value);
+                }
+                IsSettingsOpen = !IsSettingsOpen;
+            });
+
+            ConfirmSettingsCommand = new RelayCommand(o =>
+            {
+                _parameterSnapshot.Clear();
+                IsSettingsOpen = false;
+            });
+
+            CancelSettingsCommand = new RelayCommand(o =>
+            {
+                // Restauration des valeurs d'origine
+                foreach (var (param, originalValue) in _parameterSnapshot)
+                    param.Value = originalValue;
+                _parameterSnapshot.Clear();
+                IsSettingsOpen = false;
+            });
+
             Parameters.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasSettings));
         }
     }

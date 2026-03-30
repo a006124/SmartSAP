@@ -108,7 +108,7 @@
                                                                             <TextBox Text="{Binding Value, Mode=TwoWay}" Width="190" HorizontalAlignment="Left" Padding="2"/>
                                                                         </StackPanel>
 
-                                                                        <!-- Paramètre Booléen / Cas à cocher -->
+                                                                        <!-- Paramètre Booléen / Case à cocher -->
                                                                         <CheckBox Content="{Binding Name}" IsChecked="{Binding Value, Mode=TwoWay}" Foreground="{StaticResource TextPrimaryBrush}">
                                                                             <CheckBox.Style>
                                                                                 <Style TargetType="CheckBox">
@@ -141,6 +141,28 @@
                                                                 </DataTemplate>
                                                             </ItemsControl.ItemTemplate>
                                                         </ItemsControl>
+
+                                                        <!-- Séparateur + boutons OK / Annuler -->
+                                                        <Separator Margin="0,12,0,10" Background="{StaticResource BorderBrush}"/>
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                            <Button Content="Annuler"
+                                                                    Command="{Binding CancelSettingsCommand}"
+                                                                    Width="70" Height="26" Margin="0,0,8,0"
+                                                                    FontSize="11"
+                                                                    Background="Transparent"
+                                                                    BorderBrush="{StaticResource BorderBrush}"
+                                                                    BorderThickness="1"
+                                                                    Foreground="{StaticResource TextSecondaryBrush}"
+                                                                    Cursor="Hand"/>
+                                                            <Button Content="OK"
+                                                                    Command="{Binding ConfirmSettingsCommand}"
+                                                                    Width="55" Height="26"
+                                                                    FontSize="11"
+                                                                    Background="{StaticResource AccentBlueBrush}"
+                                                                    BorderThickness="0"
+                                                                    Foreground="White"
+                                                                    Cursor="Hand"/>
+                                                        </StackPanel>
                                                     </StackPanel>
                                                 </Border>
                                             </Popup>
