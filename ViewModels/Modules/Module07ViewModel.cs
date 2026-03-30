@@ -100,7 +100,27 @@ namespace SmartSAP.ViewModels.Modules
 
                 int success = 0;
                 int errors = 0;
-                var tempPmpFiles = new System.Collections.Generic.List<string>(); // TXT intermédiaires conservés pour le global
+                var tempPmpFiles = new System.Collections.Generic.List<string>();
+
+                // ── Sélection du template Excel (une seule fois) ────────────────────
+                string pmpTemplatePath = string.Empty;
+                dispatcher?.Invoke(() =>
+                {
+                    var dlg = new Microsoft.Win32.OpenFileDialog
+                    {
+                        Title = "Sélectionner le modèle Excel PMP",
+                        Filter = "Fichiers Excel (*.xlsx;*.xlsm)|*.xlsx;*.xlsm|Tous les fichiers (*.*)|*.*",
+                        InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data")
+                    };
+                    if (dlg.ShowDialog() == true) pmpTemplatePath = dlg.FileName;
+                });
+
+                if (string.IsNullOrEmpty(pmpTemplatePath))
+                {
+                    AddLog(new LogEntry("WARNING", "Génération annulée : aucun modèle PMP sélectionné."), dispatcher, uiSynchronizationContext);
+                    if (step != null) { step.Status = "Annulé"; step.ResultState = "Warning"; }
+                    return;
+                }
 
                 // ── ÉTAPE 2 : Un PMP Excel par fichier TXT ──────────────────────────
                 foreach (string sourceFile in sourceFiles)
@@ -119,9 +139,10 @@ namespace SmartSAP.ViewModels.Modules
                     if (txtOk)
                     {
                         string tempTxtPath = Path.Combine(docPath, tempName);
-                        // Si global activé, on NE supprime PAS le TXT intermédiaire
                         await GeneratePMPExcelFromTemplate(docPath, tempName, dispatcher, uiSynchronizationContext, step,
-                            deleteTxtAfter: !genererExcelGlobal);
+                            deleteTxtAfter: !genererExcelGlobal,
+                            templatePath: pmpTemplatePath,
+                            outputBaseName: gamme);
                         if (genererExcelGlobal) tempPmpFiles.Add(tempTxtPath);
                         success++;
                     }
@@ -138,7 +159,6 @@ namespace SmartSAP.ViewModels.Modules
                     string sFileNameGlobal = "PMP_GLOBAL_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
                     string globalTxtPath = Path.Combine(docPath, sFileNameGlobal);
 
-                    // Concaténer les TXT déjà formatés (293-car.) de chaque gamme en un seul fichier
                     using (var writer = new StreamWriter(globalTxtPath, false))
                     {
                         foreach (string pmpTxt in tempPmpFiles)
@@ -146,11 +166,13 @@ namespace SmartSAP.ViewModels.Modules
                             if (File.Exists(pmpTxt))
                             {
                                 await writer.WriteAsync(await File.ReadAllTextAsync(pmpTxt));
-                                File.Delete(pmpTxt); // suppression du TXT temporaire
+                                File.Delete(pmpTxt);
                             }
                         }
                     }
-                    await GeneratePMPExcelFromTemplate(docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step);
+                    await GeneratePMPExcelFromTemplate(docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step,
+                        templatePath: pmpTemplatePath,
+                        outputBaseName: "GLOBAL");
                 }
 
                 // ── Bilan final ─────────────────────────────────────────────────────

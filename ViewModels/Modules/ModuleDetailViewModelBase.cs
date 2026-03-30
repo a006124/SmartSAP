@@ -523,14 +523,16 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected virtual async Task GeneratePMPExcelFromTemplate(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step, bool deleteTxtAfter = true)
+        protected virtual async Task GeneratePMPExcelFromTemplate(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step, bool deleteTxtAfter = true, string? templatePath = null, string? outputBaseName = null)
         {
             // --- INTEGRATION TEMPLATE EXCEL ---
-            string sPMPExcelSaveAs = Path.Combine(docPath, $"PMPExcel_{DateTime.Now:yyMMddHHmmss}.xlsx");
+            // Nom du fichier de sortie : PMPExcel_<gamme>.xlsx ou PMPExcel_<timestamp>.xlsx
+            string suffix = !string.IsNullOrEmpty(outputBaseName) ? outputBaseName : DateTime.Now.ToString("yyMMddHHmmss");
+            string sPMPExcelSaveAs = Path.Combine(docPath, $"PMPExcel_{suffix}.xlsx");
             string pmpTxtFile = Path.Combine(docPath, sFileName);
-            string templatePath = string.Empty;
 
-            if (dispatcher != null)
+            // Demander le template si non fourni
+            if (string.IsNullOrEmpty(templatePath) && dispatcher != null)
             {
                 dispatcher.Invoke(() =>
                 {
