@@ -56,7 +56,7 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE768",
                     ModuleStep = "M07-E3",
                     Parameters = {
-                        new StepParameter("Générer un PMP Excel par gamme", ParameterType.Boolean, false)
+                        new StepParameter("Générer un PMP Excel global", ParameterType.Boolean, false)
                         //new StepParameter("Commentaire d'extraction", ParameterType.Text, "Extraction automatique"),
                         //new StepParameter("Mode", ParameterType.Choice, "Normal", new string[] { "Normal", "Rapide", "Détaillé" })
                     },
@@ -78,84 +78,87 @@ namespace SmartSAP.ViewModels.Modules
 
             if (step != null) step.ResultState = "Processing";
 
-            // Lecture du paramètre 1 : "Générer un PMP Excel par gamme"
+            // Lecture du paramètre 1 : "Générer un PMP Excel global"
             var step3 = Steps.FirstOrDefault(s => s.ModuleStep == "M07-E3");
-            bool parGamme = step3?.Parameters.Count > 0 && step3.Parameters[0].Value is true;
+            bool genererExcelGlobal = step3?.Parameters.Count > 0 && step3.Parameters[0].Value is true;
 
             string docPath = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
 
             try
             {
-                if (parGamme)
+                // ── ÉTAPE 1 : Récupérer tous les fichiers TXT sources (hors PMP_*) ──
+                string[] sourceFiles = Directory.GetFiles(docPath, "*.txt")
+                    .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
+                    .ToArray();
+
+                if (sourceFiles.Length == 0)
                 {
-                    // ── MODE CONSOLIDÉ (comportement de base) ──────────────────
-                    // Un seul PMP Excel pour tous les fichiers TXT du dossier
-                    string sFileName = "PMP_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
-                    bool txtSuccess = await GeneratePMPTextFile(docPath, sFileName, dispatcher, uiSynchronizationContext, step);
-                    if (txtSuccess)
-                    {
-                        await GeneratePMPExcelFromTemplate(docPath, sFileName, dispatcher, uiSynchronizationContext, step);
-                    }
+                    AddLog(new LogEntry("WARNING", "Aucun fichier TXT source trouvé dans le dossier."), dispatcher, uiSynchronizationContext);
+                    if (step != null) { step.Status = "Absent"; step.ResultState = "Error"; }
+                    return;
                 }
-                else
+
+                int success = 0;
+                int errors = 0;
+                var tempPmpFiles = new System.Collections.Generic.List<string>(); // TXT intermédiaires conservés pour le global
+
+                // ── ÉTAPE 2 : Un PMP Excel par fichier TXT ──────────────────────────
+                foreach (string sourceFile in sourceFiles)
                 {
-                    // ── MODE « UN EXCEL PAR GAMME » ────────────────────────────
-                    // Récupérer tous les fichiers TXT sources (hors PMP_)
-                    string[] sourceFiles = Directory.GetFiles(docPath, "*.txt")
-                        .Where(f => !Path.GetFileName(f).StartsWith("PMP_"))
-                        .ToArray();
+                    string gamme = Path.GetFileNameWithoutExtension(sourceFile);
+                    string tempName = $"PMP_{gamme}_{DateTime.Now:yyMMddHHmmss}.txt";
 
-                    if (sourceFiles.Length == 0)
+                    AddLog(new LogEntry("INFO", $"Traitement de la gamme : {gamme}..."), dispatcher, uiSynchronizationContext);
+
+                    bool txtOk = await GeneratePMPTextFile(
+                        docPath, tempName, dispatcher, uiSynchronizationContext, step,
+                        overrideFiles: new[] { sourceFile });
+
+                    if (txtOk)
                     {
-                        AddLog(new LogEntry("WARNING", "Aucun fichier TXT source trouvé dans le dossier."), dispatcher, uiSynchronizationContext);
-                        if (step != null) { step.Status = "Absent"; step.ResultState = "Error"; }
-                        return;
-                    }
-
-                    int success = 0;
-                    int errors = 0;
-
-                    foreach (string sourceFile in sourceFiles)
-                    {
-                        // Nom de fichier PMP temporaire propre à cette gamme
-                        string gamme = Path.GetFileNameWithoutExtension(sourceFile);
-                        string tempName = $"PMP_{gamme}_{DateTime.Now:yyMMddHHmmss}.txt";
-
-                        AddLog(new LogEntry("INFO", $"Traitement de la gamme : {gamme}..."), dispatcher, uiSynchronizationContext);
-
-                        // Générer le TXT consolidé pour CE fichier uniquement
-                        bool txtOk = await GeneratePMPTextFile(
-                            docPath, tempName, dispatcher, uiSynchronizationContext, step,
-                            overrideFiles: new[] { sourceFile });
-
-                        if (txtOk)
-                        {
-                            // Générer l'Excel à partir du TXT temporaire
-                            await GeneratePMPExcelFromTemplate(docPath, tempName, dispatcher, uiSynchronizationContext, step);
-                            success++;
-                        }
-                        else
-                        {
-                            errors++;
-                        }
-                    }
-
-                    // Bilan final
-                    if (errors == 0 && success > 0)
-                    {
-                        AddLog(new LogEntry("SUCCESS", $"✓ {success} fichier(s) PMP Excel générés avec succès."), dispatcher, uiSynchronizationContext);
-                        if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
-                    }
-                    else if (success > 0)
-                    {
-                        AddLog(new LogEntry("WARNING", $"⚠ {success} succès / {errors} erreur(s)."), dispatcher, uiSynchronizationContext);
-                        if (step != null) { step.Status = "Partiel"; step.ResultState = "Error"; }
+                        string tempTxtPath = Path.Combine(docPath, tempName);
+                        // Si global activé, on NE supprime PAS le TXT intermédiaire
+                        await GeneratePMPExcelFromTemplate(docPath, tempName, dispatcher, uiSynchronizationContext, step,
+                            deleteTxtAfter: !genererExcelGlobal);
+                        if (genererExcelGlobal) tempPmpFiles.Add(tempTxtPath);
+                        success++;
                     }
                     else
                     {
-                        AddLog(new LogEntry("ERROR", $"✗ Aucun PMP Excel généré. {errors} erreur(s)."), dispatcher, uiSynchronizationContext);
-                        if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
+                        errors++;
                     }
+                }
+
+                // ── ÉTAPE 3 (optionnelle) : Excel global consolidé si paramètre activé ──
+                if (genererExcelGlobal && tempPmpFiles.Count > 0)
+                {
+                    AddLog(new LogEntry("INFO", "Génération du PMP Excel global consolidé..."), dispatcher, uiSynchronizationContext);
+                    string sFileNameGlobal = "PMP_GLOBAL_" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
+
+                    // Consolider les PMP TXT intermédiaires (encore présents car deleteTxtAfter=false)
+                    bool globalOk = await GeneratePMPTextFile(
+                        docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step,
+                        overrideFiles: tempPmpFiles); // GeneratePMPTextFile supprimera ces TXT intermédiaires
+
+                    if (globalOk)
+                        await GeneratePMPExcelFromTemplate(docPath, sFileNameGlobal, dispatcher, uiSynchronizationContext, step);
+                }
+
+                // ── Bilan final ─────────────────────────────────────────────────────
+                if (errors == 0 && success > 0)
+                {
+                    AddLog(new LogEntry("SUCCESS", $"✓ {success} PMP Excel générés avec succès."), dispatcher, uiSynchronizationContext);
+                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                }
+                else if (success > 0)
+                {
+                    AddLog(new LogEntry("WARNING", $"⚠ {success} succès / {errors} erreur(s)."), dispatcher, uiSynchronizationContext);
+                    if (step != null) { step.Status = "Partiel"; step.ResultState = "Error"; }
+                }
+                else
+                {
+                    AddLog(new LogEntry("ERROR", $"✗ Aucun PMP Excel généré. {errors} erreur(s)."), dispatcher, uiSynchronizationContext);
+                    if (step != null) { step.Status = "Erreur"; step.ResultState = "Error"; }
                 }
             }
             catch (Exception ex)

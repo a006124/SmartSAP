@@ -528,7 +528,7 @@ namespace SmartSAP.ViewModels.Modules
             }
         }
 
-        protected virtual async Task GeneratePMPExcelFromTemplate(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step)
+        protected virtual async Task GeneratePMPExcelFromTemplate(string docPath, string sFileName, Dispatcher dispatcher, SynchronizationContext uiSynchronizationContext, WorkflowStep? step, bool deleteTxtAfter = true)
         {
             // --- INTEGRATION TEMPLATE EXCEL ---
             string sPMPExcelSaveAs = Path.Combine(docPath, $"PMPExcel_{DateTime.Now:yyMMddHHmmss}.xlsx");
@@ -707,16 +707,17 @@ namespace SmartSAP.ViewModels.Modules
                         } catch { }
 
                         // Nettoyage: suppression du fichier PMP texte consolidé une fois l'Excel généré
-                        try
+                        if (deleteTxtAfter)
                         {
-                            if (File.Exists(pmpTxtFile))
+                            try
                             {
-                                File.Delete(pmpTxtFile);
+                                if (File.Exists(pmpTxtFile))
+                                    File.Delete(pmpTxtFile);
                             }
-                        }
-                        catch (Exception exDelete)
-                        {
-                            AddLog(new LogEntry("WARNING", $"Impossible de supprimer le fichier texte consolidé : {exDelete.Message}"), dispatcher, uiSynchronizationContext);
+                            catch (Exception exDelete)
+                            {
+                                AddLog(new LogEntry("WARNING", $"Impossible de supprimer le fichier texte consolidé : {exDelete.Message}"), dispatcher, uiSynchronizationContext);
+                            }
                         }
 
                     }
