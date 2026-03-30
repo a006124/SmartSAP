@@ -144,10 +144,18 @@ namespace SmartSAP.ViewModels.Modules
 
                 // Créer les sous-dossiers dans le répertoire sélectionné
                 string selectedDir = Path.GetDirectoryName(fullPath) ?? string.Empty;
+                string tempDir = string.Empty;
                 if (!string.IsNullOrEmpty(selectedDir))
                 {
                     Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers Source"));
                     Directory.CreateDirectory(Path.Combine(selectedDir, "Fichiers PMP"));
+                    tempDir = Path.Combine(selectedDir, "Fichiers Temporaires");
+                    Directory.CreateDirectory(tempDir);
+                    
+                    // On modifie le chemin final pour que le fichier guide aille dans "Fichiers Temporaires"
+                    string fileNameOnly = Path.GetFileName(fullPath);
+                    fullPath = Path.Combine(tempDir, fileNameOnly);
+                    
                     Logs.Add(new LogEntry("INFO", $"Dossiers créés dans : {selectedDir}"));
                 }
 
