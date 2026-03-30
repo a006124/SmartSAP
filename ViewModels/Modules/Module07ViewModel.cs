@@ -41,7 +41,6 @@ namespace SmartSAP.ViewModels.Modules
                     Icon = "\xE70F",
                     ModuleStep = "M07-E1",
                     OpenFile = true,
-                    HasSettings = true,
                     ActionCommand = GenerateTemplateCommand
                 },
                 new WorkflowStep {
@@ -49,6 +48,11 @@ namespace SmartSAP.ViewModels.Modules
                     Description = "Exécute la transaction SAP 'ZP13'.",
                     Icon = "\xE768",
                     ModuleStep = "M07-E2",
+                    Parameters = {
+                        new StepParameter("Forcer l'écrasement", ParameterType.Boolean, true),
+                        new StepParameter("Commentaire d'extraction", ParameterType.Text, "Extraction automatique"),
+                        new StepParameter("Mode", ParameterType.Choice, "Normal", new string[] { "Normal", "Rapide", "Détaillé" })
+                    },
                     ActionCommand = ExecuteSAPTransactionCommand
                 },
                 new WorkflowStep {

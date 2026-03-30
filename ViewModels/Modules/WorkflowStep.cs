@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using SmartSAP.ViewModels;
 
@@ -38,11 +40,11 @@ namespace SmartSAP.ViewModels.Modules
 
         public ICommand? ActionCommand { get; set; }
 
-        private bool _hasSettings;
+        public ObservableCollection<StepParameter> Parameters { get; } = new ObservableCollection<StepParameter>();
+
         public bool HasSettings
         {
-            get => _hasSettings;
-            set => SetProperty(ref _hasSettings, value);
+            get => Parameters.Any();
         }
 
         private bool _isSettingsOpen;
@@ -57,6 +59,7 @@ namespace SmartSAP.ViewModels.Modules
         public WorkflowStep()
         {
             ToggleSettingsCommand = new RelayCommand(o => IsSettingsOpen = !IsSettingsOpen);
+            Parameters.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasSettings));
         }
     }
 }
