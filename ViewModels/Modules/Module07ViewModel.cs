@@ -105,7 +105,10 @@ namespace SmartSAP.ViewModels.Modules
                 // ── ÉTAPE 2 : Un PMP Excel par fichier TXT ──────────────────────────
                 foreach (string sourceFile in sourceFiles)
                 {
-                    string gamme = Path.GetFileNameWithoutExtension(sourceFile);
+                    string fileNameNoExt = Path.GetFileNameWithoutExtension(sourceFile);
+                    string from4 = fileNameNoExt.Length > 3 ? fileNameNoExt.Substring(3) : fileNameNoExt;
+                    int sep = from4.IndexOf('_');
+                    string gamme = sep >= 0 ? from4.Substring(0, sep) : from4;
                     string tempName = $"PMP_{gamme}_{DateTime.Now:yyMMddHHmmss}.txt";
 
                     AddLog(new LogEntry("INFO", $"Traitement de la gamme : {gamme}..."), dispatcher, uiSynchronizationContext);
