@@ -1,3 +1,4 @@
+using NPOI.SS.UserModel;
 using SmartSAP.Services.Excel;
 using System;
 using System.Diagnostics;
@@ -907,6 +908,64 @@ namespace SmartSAP.Services.SAP
             }
         }
 
+
+        // EXÉCUTION DE LA TRANSACTION SAP IP05 : Modification Poste d'entretien
+        public string ExecuteIP05(dynamic session, string posteEntretien, out string resultFilePath)
+        {
+            const string sSAPTransaction = "IP05";
+            resultFilePath = string.Empty;
+
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                SafeFindById(session, "wnd[0]/usr/ctxtRMIPM-WAPOS").Text = posteEntretien; // Poste d'Entretien
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[0]").press(); // Suite
+
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_1:SAPLIWO1:0100/ctxtRIWO1-BAUTL").Text = string.Empty; // Sous-ensemble
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_1:SAPLIWO1:0100/ctxtRIWO1-EQUNR").Text=string.Empty; // Equipement
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_1:SAPLIWO1:0100/ctxtRIWO1-TPLNR").Text = string.Empty; // Poste technique
+
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_2:SAPLIWP3:0500/ctxtRMIPM-WPGRP").Text = string.Empty; // Grpe de gest. PM
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_2:SAPLIWP3:0500/btnARBEITSPLAN_D").press(); // Annuler affect. (suppression gamme)
+
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12").press(); // Onglet Liste d'objets, poste
+                dynamic table = (GuiTable)session.FindById("wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/tblSAPLIWOLOBJK_400");
+                if (table != null)
+                {
+                    int rowCount = table.RowCount;
+                    for (int i = 0; i < rowCount; i ++)
+                    {
+                        SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/tblSAPLIWOLOBJK_400").getAbsoluteRow(0).selected = true; // Ligne 1 sélectionnée
+                        SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/btnBTN_DELE").press(); // Supprimer ligne
+                    }
+                }
+
+                string result;
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[11]").press(); // Sauvegarder
+                string statutBarre = SafeFindById(session, "wnd[0]/sbar").Text;
+                if (statutBarre.Contains("modifié"))
+                {
+                    result = $"{sSAPTransaction}|OK|1|0";
+                }
+                else
+                {
+                    result = $"{sSAPTransaction}|NOK|1|1|Poste d'entretien n°{posteEntretien} : {statutBarre}";
+                }
+
+                // Retour au menu principal
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return $"{sSAPTransaction}|ERROR|{ex.Message}";
+            }
+        }
 
         // EXÉCUTION DE LA TRANSACTION SAP IW32 : Ordre de travail / Modifier / Ordre
         public string ExecuteIW32(dynamic session, string OT, out string resultFilePath)
