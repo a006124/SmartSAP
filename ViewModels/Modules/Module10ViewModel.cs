@@ -44,7 +44,7 @@ namespace SmartSAP.ViewModels.Modules
                     ActionCommand = GenerateTemplateCommand
                 },
                 new WorkflowStep {
-                    Title = "2. Extraction de SAP",
+                    Title = "2. Exécution de la transaction SAP",
                     Description = "Exécute la transaction SAP 'IP05'.",
                     Icon = "\xE768",
                     ModuleStep = "M10-E2",                  
@@ -93,7 +93,7 @@ namespace SmartSAP.ViewModels.Modules
 
 
 
-                Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZP13..."));
+                Logs.Add(new LogEntry("INFO", "Lancement de la transaction IP05..."));
 
                 if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
                 {
@@ -139,27 +139,27 @@ namespace SmartSAP.ViewModels.Modules
                             if (string.IsNullOrWhiteSpace(posteEntretien)) continue;
 
                             string resultFile = string.Empty;
-                            string result = await Task.Run(() => SAPManager.ExecuteZP13(session, posteEntretien, posteEntretien, docPath, out resultFile)); // Transaction SAP
+                            string result = await Task.Run(() => SAPManager.ExecuteIP05(session, posteEntretien, out resultFile)); // Transaction SAP
 
                             var parts = result.Split('|');
                             if (parts.Length >= 2 && parts[1] == "OK")
                             {
                                 succesCount++;
-                                AddLog(new LogEntry("INFO", $"Ligne {row - 1}/{rowCount - 1} - Suppression réussie pour {posteEntretien}."), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
+                                AddLog(new LogEntry("INFO", $"Ligne {row - 1}/{rowCount - 1} - Suppression réussie pour le poste d'entretien n°{posteEntretien}."), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
                             }
                             else if (parts.Length >= 2 && parts[1] == "NOK")
                             {
                                 errorCount++;
                                 string errMsg = parts.Length > 4 ? parts[4] : "Non précisée";
                                 LinesInError+= $"{Environment.NewLine}'{posteEntretien}' : {errMsg}";
-                                AddLog(new LogEntry("WARNING", $"Ligne {row - 1}/{rowCount - 1} - Suppression NOK pour {posteEntretien}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
+                                AddLog(new LogEntry("WARNING", $"Ligne {row - 1}/{rowCount - 1} - Suppression NOK pour le poste d'entretien n°{posteEntretien}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
                             }
                             else
                             {
                                 errorCount++;
                                 string errMsg = parts.Length > 4 ? parts[4] : result;
                                 LinesInError+= $"{Environment.NewLine}'{posteEntretien}' : {errMsg}";
-                                AddLog(new LogEntry("ERROR", $"Ligne {row - 1}/{rowCount - 1} - Erreur pour {posteEntretien}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
+                                AddLog(new LogEntry("ERROR", $"Ligne {row - 1}/{rowCount - 1} - Erreur pour le poste d'entretien n°{posteEntretien}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
                             }
                         }
                     }

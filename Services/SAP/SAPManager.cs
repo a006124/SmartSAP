@@ -914,6 +914,7 @@ namespace SmartSAP.Services.SAP
         {
             const string sSAPTransaction = "IP05";
             resultFilePath = string.Empty;
+            string statutBarre=string.Empty;
 
             try
             {
@@ -931,7 +932,7 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_2:SAPLIWP3:0500/ctxtRMIPM-WPGRP").Text = string.Empty; // Grpe de gest. PM
                 SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_2:SAPLIWP3:0500/btnARBEITSPLAN_D").press(); // Annuler affect. (suppression gamme)
 
-                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12").press(); // Onglet Liste d'objets, poste
+                SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12").select(); // Onglet Liste d'objets, poste
                 dynamic table = SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/tblSAPLIWOLOBJK_400");
                 if (table != null)
                 {
@@ -940,12 +941,18 @@ namespace SmartSAP.Services.SAP
                     {
                         table.getAbsoluteRow(0).selected = true; // Sélection de la première ligne à chaque fois avant suppression
                         SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/btnBTN_DELE").press(); // Supprimer ligne
+                        statutBarre = SafeFindById(session, "wnd[0]/sbar").Text;
+                        if (statutBarre.Contains("Aucun autre enregistrement marqué"))
+                        {
+                            break;
+                        }
+
                     }
                 }
 
                 string result;
                 SafeFindById(session, "wnd[0]/tbar[0]/btn[11]").press(); // Sauvegarder
-                string statutBarre = SafeFindById(session, "wnd[0]/sbar").Text;
+                statutBarre = SafeFindById(session, "wnd[0]/sbar").Text;
                 if (statutBarre.Contains("modifié"))
                 {
                     result = $"{sSAPTransaction}|OK|1|0";
