@@ -20,7 +20,7 @@
             </Button>
             <StackPanel>
                 <TextBlock Text="{Binding ModuleTitle}" Style="{StaticResource Header1}"/>
-                <TextBlock Text="Exécutez les étapes ci-dessous pour lancer la création des équipements dans SAP." Style="{StaticResource SubHeader}"/>
+                <TextBlock Text="Exécutez les étapes ci-dessous pour lancer la suppression des postes d'entretien dans SAP." Style="{StaticResource SubHeader}"/>
             </StackPanel>
         </DockPanel>
 

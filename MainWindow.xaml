@@ -45,6 +45,9 @@
         <DataTemplate DataType="{x:Type vmmodules:Module09ViewModel}">
             <vmodules:Module09View/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module10ViewModel}">
+            <vmodules:Module10View/>
+        </DataTemplate>
 
         <!-- Style bouton navigation sidebar -->
         <Style x:Key="NavButton" TargetType="Button">
