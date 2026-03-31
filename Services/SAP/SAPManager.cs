@@ -932,13 +932,13 @@ namespace SmartSAP.Services.SAP
                 SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\11/ssubSUBSCREEN_BODY2:SAPLIWP3:8022/subSUBSCREEN_ITEM_2:SAPLIWP3:0500/btnARBEITSPLAN_D").press(); // Annuler affect. (suppression gamme)
 
                 SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12").press(); // Onglet Liste d'objets, poste
-                dynamic table = (GuiTable)session.FindById("wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/tblSAPLIWOLOBJK_400");
+                dynamic table = SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/tblSAPLIWOLOBJK_400");
                 if (table != null)
                 {
-                    int rowCount = table.RowCount;
-                    for (int i = 0; i < rowCount; i ++)
+                    int rowCountTotal = table.rowCount;
+                    for (int i = 0; i < rowCountTotal; i++)
                     {
-                        SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/tblSAPLIWOLOBJK_400").getAbsoluteRow(0).selected = true; // Ligne 1 sélectionnée
+                        table.getAbsoluteRow(0).selected = true; // Sélection de la première ligne à chaque fois avant suppression
                         SafeFindById(session, "wnd[0]/usr/subSUBSCREEN_MITEM:SAPLIWP3:8002/tabsTABSTRIP_ITEM/tabpT\\12/ssubSUBSCREEN_BODY2:SAPLIWP3:8023/subOBJECT:SAPLIWOL:0400/btnBTN_DELE").press(); // Supprimer ligne
                     }
                 }
