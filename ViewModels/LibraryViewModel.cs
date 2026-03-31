@@ -56,7 +56,8 @@ namespace SmartSAP.ViewModels
                 //
                 new ModuleInfo { Number="07", Title = "Extraction Gammes", Description = "Extrait en masse de SAP vers Excel des gammes de maintenance.", IconKind = "\xE710", Color = "#3B82F6", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
                 new ModuleInfo { Number="08", Title = "Découpage PDF", Description = "Découpe un fichier PDF en x petits fichiers.", IconKind = "\xE70F", Color = "#10B981", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
-                new ModuleInfo { Number="09", Title = "Modification état OT",  Description = "Passe les OT de l'état fermé à en cours dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" }
+                new ModuleInfo { Number="09", Title = "Modification état OT",  Description = "Passe les OT de l'état fermé à en cours dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" },
+                new ModuleInfo { Number="10", Title = "Suppression Postes d'Entretien",  Description = "Supprime toutes les données de postes d'entretien dans SAP via Excel.", IconKind = "\xE74D", Color = "#EF4444", Version = "v1.0.0", HealthStatus = "Optimal", Status="UPDATING", StatusForegroundColor="#10B981", StatusBackgroundColor="#FEF3C7" }
             };
             
             _filteredModules = new ObservableCollection<ModuleInfo>(Modules);

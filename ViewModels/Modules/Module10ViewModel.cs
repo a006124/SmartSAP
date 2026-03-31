@@ -1,0 +1,236 @@
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Windows.Input;
+
+namespace SmartSAP.ViewModels.Modules
+{
+    // Postes d'Entretien : Suppression des données
+    public class Module10ViewModel : ModuleDetailViewModelBase
+    {
+        public Module10ViewModel(MainViewModel mainViewModel, string title)
+            : base(mainViewModel, title)
+        {
+        }
+
+        public record ExcelColumnModel(
+            string entete,
+            string commentaires,
+            string exemple,
+            int longueurMaxi,
+            IEnumerable<string>? valeursAutorisées,
+            bool forcerMajuscule,
+            bool forcerVide,
+            bool forcerDocumentation,
+            string règleDeGestion
+        );
+
+        protected override void InitializeSteps()
+        {
+            Steps = new ObservableCollection<WorkflowStep>
+            {
+                new WorkflowStep {
+                    Title = "1. Saisie de la liste des plans d'entretien à supprimer dans SAP",
+                    Description = "Crée un nouveau fichier Excel modèle.",
+                    Icon = "\xE70F",
+                    ModuleStep = "M10-E1",
+                    OpenFile = true,
+                    ActionCommand = GenerateTemplateCommand
+                },
+                new WorkflowStep {
+                    Title = "2. Extraction de SAP",
+                    Description = "Exécute la transaction SAP 'IP05'.",
+                    Icon = "\xE768",
+                    ModuleStep = "M10-E2",                  
+                    ActionCommand = ExecuteSAPTransactionCommand
+                }
+            };
+        }
+
+
+        protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
+        {
+            if (step == null)
+            {
+                step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+            }
+
+            //if (step != null && step.ResultState == "Error") return;
+
+            try
+            {
+                // 1. Contrôle de la connexion SAP (Fusionné ici)
+                Logs.Add(new LogEntry("INFO", "Contrôle de la connexion SAP..."));
+                var connResult = await Task.Run(() => SAPManager.IsConnectedToSAP());
+
+                // Mise à jour de la barre d'état globale
+                MainViewModel.IsSAPConnected = connResult.IsSuccess;
+                MainViewModel.SAPInstanceInfo = connResult.IsSuccess ? $"Instance : {connResult.InstanceInfo}" : "Non connecté";
+
+                if (!connResult.IsSuccess)
+                {
+                    Logs.Add(new LogEntry("ERROR", connResult.ErrorMessage));
+                    if (step != null) { step.Status = "Erreur Connexion"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                Logs.Add(new LogEntry("SUCCESS", $"✓ Connexion SAP OK : {connResult.InstanceInfo}"));
+
+                // 2. Récupération de la session
+                dynamic session = SAPManager.GetActiveSession();
+                if (session == null)
+                {
+                    Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active."));
+                    if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
+                    return;
+                }
+
+
+
+                Logs.Add(new LogEntry("INFO", "Lancement de la transaction ZP13..."));
+
+                if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
+                {
+                    Logs.Add(new LogEntry("ERROR", "Le fichier de données Excel est introuvable."));
+                    if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                int succesCount = 0;
+                int errorCount = 0;
+                // Le fichier est maintenant dans "Fichiers Temporaires", donc le dossier racine est le parent
+                string currentParent = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string baseDir = Path.GetFileName(currentParent) == "Fichiers Temporaires" 
+                    ? Path.GetDirectoryName(currentParent) 
+                    : currentParent;
+                
+                string docPath = Path.Combine(baseDir, "Fichiers Source");
+                
+                // S'assurer que le dossier existe au cas où
+                if (!Directory.Exists(docPath)) Directory.CreateDirectory(docPath);
+                string LinesInError = string.Empty;
+
+                try
+                {
+                    using (var workbook = new XLWorkbook(LastGeneratedExcelPath))
+                    {
+                        var worksheet = workbook.Worksheets.FirstOrDefault();
+                        if (worksheet == null)
+                        {
+                            Logs.Add(new LogEntry("ERROR", "Le fichier Excel ne contient aucune feuille."));
+                            if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
+                            return;
+                        }
+
+                        // On commence à la ligne 2 pour ignorer l'en-tête
+                        int rowCount = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+                        for (int row = 2; row <= rowCount; row++)
+                        {
+                            // Récupérer la valeur de la colonne 1 (A) et colonne 2 (B)
+                            string posteEntretien = worksheet.Cell(row, 1).GetString().Trim();
+
+                            // Si les deux colonnes sont vides, on ignore la ligne
+                            if (string.IsNullOrWhiteSpace(posteEntretien)) continue;
+
+                            string resultFile = string.Empty;
+                            string result = await Task.Run(() => SAPManager.ExecuteZP13(session, posteEntretien, posteEntretien, docPath, out resultFile)); // Transaction SAP
+
+                            var parts = result.Split('|');
+                            if (parts.Length >= 2 && parts[1] == "OK")
+                            {
+                                succesCount++;
+                                AddLog(new LogEntry("INFO", $"Ligne {row - 1}/{rowCount - 1} - Suppression réussie pour {posteEntretien}."), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
+                            }
+                            else if (parts.Length >= 2 && parts[1] == "NOK")
+                            {
+                                errorCount++;
+                                string errMsg = parts.Length > 4 ? parts[4] : "Non précisée";
+                                LinesInError+= $"{Environment.NewLine}'{posteEntretien}' : {errMsg}";
+                                AddLog(new LogEntry("WARNING", $"Ligne {row - 1}/{rowCount - 1} - Suppression NOK pour {posteEntretien}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
+                            }
+                            else
+                            {
+                                errorCount++;
+                                string errMsg = parts.Length > 4 ? parts[4] : result;
+                                LinesInError+= $"{Environment.NewLine}'{posteEntretien}' : {errMsg}";
+                                AddLog(new LogEntry("ERROR", $"Ligne {row - 1}/{rowCount - 1} - Erreur pour {posteEntretien}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logs.Add(new LogEntry("ERROR", $"Erreur lors de la lecture du fichier Excel : {ex.Message}"));
+                    if (step != null) { step.Status = "Erreur Lecture"; step.ResultState = "Error"; }
+                    return;
+                }
+
+                if (errorCount == 0 && succesCount > 0)
+                {
+                    Logs.Add(new LogEntry("SUCCESS", $"✓ Terminé avec succès. {succesCount} ligne(s) traitée(s)."));
+                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                }
+                else if (succesCount > 0 && errorCount > 0)
+                {
+                    Logs.Add(new LogEntry("WARNING", $"⚠ Terminé avec {errorCount} erreur(s) et {succesCount} succès.{Environment.NewLine}{LinesInError}"));
+                    if (step != null) { step.Status = "Succès partiel"; step.ResultState = "Error"; }
+                }
+                else
+                {
+                    Logs.Add(new LogEntry("ERROR", $"✗ Aucune ligne traitée avec succès. {errorCount} erreur(s)."));
+                    if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur fatale lors de l'intégration SAP : {ex.Message}"));
+                if (step != null) { step.Status = "Crash"; step.ResultState = "Error"; }
+            }
+        }
+
+        // DÉFINITION DES COLONNES DE L'EXCEL MODELE
+        protected override void InitializeExcelColumns(WorkflowStep? step = null)
+        {
+            ExcelColumns.Clear();
+
+            // Chargement des données depuis JSON
+            string dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            if (!Directory.Exists(dataPath))
+                dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data");
+
+            var ExcelModel = new List<ExcelColumnModel>
+            {
+                // Entete - Commentaires - Données d'exemple - Longueur maxi - Valeurs autorisées - Majuscules forcées - Vide forcé - Documentation forcée - Règle de gestion
+                new ("Postes d'entretien (*)", "Documenter le numéro du poste d'entretien", "69624", 20, null, true, false, true, "")
+            };
+
+            var columnsToAdd = ExcelModel.Select(d =>
+                new Models.ExcelColumnDefinition(
+                    entete: d.entete,
+                    commentaires: d.commentaires,
+                    exemple: d.exemple,
+                    longueurMaxi: d.longueurMaxi,
+                    valeursAutorisées: d.valeursAutorisées?.ToArray(),
+                    forcerMajuscule: d.forcerMajuscule,
+                    forcerVide: d.forcerVide,
+                    forcerDocumentation: d.forcerDocumentation,
+                    règleDeGestion: d.règleDeGestion
+                )
+            );
+
+            foreach (var col in columnsToAdd)
+            {
+                ExcelColumns.Add(col);
+            }
+
+
+        }
+
+    }
+}
