@@ -53,8 +53,10 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vmmodules:Module12ViewModel}">
             <vmodules:Module12View/>
-        </DataTemplate>        
-        
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmmodules:Module13ViewModel}">
+            <vmodules:Module13View/>
+        </DataTemplate>
         <!-- Style bouton navigation sidebar -->
         <Style x:Key="NavButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
