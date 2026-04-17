@@ -120,6 +120,8 @@
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="iTextSharp" Version="5.5.13.5" />
     <PackageReference Include="NPOI" Version="2.7.6" />
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.8.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.67.0" />
   </ItemGroup>
 
 </Project>

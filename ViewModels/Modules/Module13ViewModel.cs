@@ -14,9 +14,12 @@ namespace SmartSAP.ViewModels.Modules
     // Test GCP
     public class Module13ViewModel : ModuleDetailViewModelBase
     {
+        public ICommand ExecuteGCPTransactionCommand { get; protected set; }
+
         public Module13ViewModel(MainViewModel mainViewModel, string title)
             : base(mainViewModel, title)
         {
+            ExecuteGCPTransactionCommand = new RelayCommand(async p => await ExecuteGCPTransactionAsync(p as WorkflowStep));
         }
 
         public record ExcelColumnModel(
@@ -45,175 +48,114 @@ namespace SmartSAP.ViewModels.Modules
                 },
                 new WorkflowStep {
                     Title = "2. Exécution de la transaction GCP",
-                    Description = "Exécute la transaction GCP.",
+                    Description = "Exécute la requête SQL GCP et remplit l'Excel.",
                     Icon = "\xE768",
                     ModuleStep = "M13-E2",                  
-                    ActionCommand = ExecuteSAPTransactionCommand
+                    ActionCommand = ExecuteGCPTransactionCommand
                 }
             };
         }
 
 
-        protected override async Task ExecuteSAPTransactionAsync(WorkflowStep? step = null)
+        protected async Task ExecuteGCPTransactionAsync(WorkflowStep? step = null)
         {
             if (step == null)
             {
-                step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteSAPTransactionCommand);
+                step = Steps.FirstOrDefault(s => s.ActionCommand == ExecuteGCPTransactionCommand);
             }
-
-            //if (step != null && step.ResultState == "Error") return;
 
             try
             {
-                // 1. Contrôle de la connexion SAP (Fusionné ici)
-                Logs.Add(new LogEntry("INFO", "Contrôle de la connexion SAP..."));
-                var connResult = await Task.Run(() => SAPManager.IsConnectedToSAP());
-
-                // Mise à jour de la barre d'état globale
-                MainViewModel.IsSAPConnected = connResult.IsSuccess;
-                MainViewModel.SAPInstanceInfo = connResult.IsSuccess ? $"Instance : {connResult.InstanceInfo}" : "Non connecté";
-
-                if (!connResult.IsSuccess)
-                {
-                    Logs.Add(new LogEntry("ERROR", connResult.ErrorMessage));
-                    if (step != null) { step.Status = "Erreur Connexion"; step.ResultState = "Error"; }
-                    return;
-                }
-
-                Logs.Add(new LogEntry("SUCCESS", $"✓ Connexion SAP OK : {connResult.InstanceInfo}"));
-
-                // 2. Récupération de la session
-                dynamic session = SAPManager.GetActiveSession();
-                if (session == null)
-                {
-                    Logs.Add(new LogEntry("ERROR", "Impossible de récupérer une session SAP active."));
-                    if (step != null) { step.Status = "Erreur session"; step.ResultState = "Error"; }
-                    return;
-                }
-
-
-
-                Logs.Add(new LogEntry("INFO", "Lancement de la transaction CV03N..."));
+                Logs.Add(new LogEntry("INFO", "Vérification du fichier modèle..."));
 
                 if (string.IsNullOrEmpty(LastGeneratedExcelPath) || !File.Exists(LastGeneratedExcelPath))
                 {
-                    Logs.Add(new LogEntry("ERROR", "Le fichier de données Excel est introuvable."));
+                    Logs.Add(new LogEntry("ERROR", "Le fichier de données Excel modèle est introuvable. Veuillez d'abord exécuter l'étape 1."));
                     if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
                     return;
                 }
 
-                int succesCount = 0;
-                int errorCount = 0;
-                // Le fichier est maintenant dans "Fichiers Temporaires", donc le dossier racine est le parent
-                string currentParent = Path.GetDirectoryName(LastGeneratedExcelPath) ?? AppDomain.CurrentDomain.BaseDirectory;
-                string baseDir = Path.GetFileName(currentParent) == "Fichiers Temporaires" 
-                    ? Path.GetDirectoryName(currentParent) 
-                    : currentParent;
-                
-                string docPath = Path.Combine(baseDir, "Fichiers Source");
-                
-                // S'assurer que le dossier existe au cas où
-                if (!Directory.Exists(docPath)) Directory.CreateDirectory(docPath);
-                string LinesInError = string.Empty;
+                Logs.Add(new LogEntry("INFO", "Exécution de la requête SQL sur GCP BigQuery..."));
 
-                try
+                // Paramètres du projet GCP (À adapter par l'utilisateur)
+                string projectId = "votre_projet_id"; 
+                string location = "eu"; 
+                string query = @"
+                    -- Remplacer par votre requête SQL:
+                    -- Il est conseillé de renommer vos colonnes (AS `Nom de la colonne`)
+                    -- pour qu'elles correspondent exactement aux en-têtes définis dans InitializedExcelColumns
+                    SELECT 
+                        'S123456' AS `Nom AVEC LE S DEVANT *`,
+                        'ZDOC' AS `Type *`,
+                        '00' AS `Version`,
+                        'Test depuis GCP' AS `Description`,
+                        'Validé' AS `Statut`
+                ";
+
+                // Exécution
+                var results = await SmartSAP.Services.GCP.GCPManager.ExecuteQueryAsync(projectId, location, query);
+
+                if (results.Count == 0)
                 {
-                    using (var workbook = new XLWorkbook(LastGeneratedExcelPath))
-                    {
-                        var worksheet = workbook.Worksheets.FirstOrDefault();
-                        if (worksheet == null)
-                        {
-                            Logs.Add(new LogEntry("ERROR", "Le fichier Excel ne contient aucune feuille."));
-                            if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
-                            return;
-                        }
-
-                        // On commence à la ligne 2 pour ignorer l'en-tête
-                        int rowCount = worksheet.LastRowUsed()?.RowNumber() ?? 0;
-                        List<string> tabResult = new List<string>();
-                        for (int row = 2; row <= rowCount; row++)
-                        {
-                            // Récupérer la valeur de la colonne 1 (A) et colonne 2 (B)
-                            string fidCode = "S" + worksheet.Cell(row, 4).GetString().Trim();
-                            string fidType = worksheet.Cell(row, 3).GetString().Trim();
-                            string fidLibellé = worksheet.Cell(row, 7).GetString().Trim();
-                            string fidStatut = worksheet.Cell(row, 17).GetString().Trim();
-
-                            // Si les deux colonnes sont vides, on ignore la ligne
-                            if (string.IsNullOrWhiteSpace(fidCode)) continue;
-
-                            string resultFile = string.Empty;
-                            string result = await Task.Run(() => SAPManager.ExecuteCV03NTDI(session, fidCode, fidType, fidLibellé, fidStatut, out resultFile)); // Transaction SAP
-
-                            var parts = result.Split('|');
-                            if (parts.Length >= 2 && parts[1] == "OK")
-                            {
-                                succesCount++;
-                                AddLog(new LogEntry("INFO", $"Ligne {row - 1}/{rowCount - 1} - Contrôle OK de la FID n°{fidCode + "_" + fidType}."), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
-                                tabResult.Add(result);
-                            }
-                            else if (parts.Length >= 2 && parts[1] == "NOK")
-                            {
-                                errorCount++;
-                                string errMsg = parts.Length > 4 ? parts[4] : "Non précisée";
-                                LinesInError+= $"{Environment.NewLine}'{fidCode + "_" + fidType}' : {errMsg}";
-                                AddLog(new LogEntry("WARNING", $"Ligne {row - 1}/{rowCount - 1} - Contrôle NOK de la FID n°{fidCode + "_" + fidType}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
-                                tabResult.Add(result);
-                            }
-                            else
-                            {
-                                errorCount++;
-                                string errMsg = parts.Length > 4 ? parts[4] : result;
-                                LinesInError+= $"{Environment.NewLine}'{fidCode + "_" + fidType}' : {errMsg}";
-                                AddLog(new LogEntry("ERROR", $"Ligne {row - 1}/{rowCount - 1} - Erreur sur la FID n°{fidCode + "_" + fidType}: {errMsg}"), System.Windows.Application.Current?.Dispatcher, SynchronizationContext.Current);
-                                tabResult.Add(string.Empty);
-                            }
-                        }
-
-
-                        // Traitement du fichier Excel 
-//                        if (!string.IsNullOrEmpty(LastGeneratedSAPExcelPath) && System.IO.File.Exists(LastGeneratedSAPExcelPath))
-//                        {
-                            // Exécution de la fonction EnrichirFromSAPExcelWorkbookM11_E_2
-                            try
-                            {
-                                var excelService = new SmartSAP.Services.Excel.ExcelManager();
-                                string enrichResult = excelService.EnrichirFromSAPExcelWorkbookM11_E_2(LastGeneratedExcelPath, tabResult);
-                                Logs.Add(new LogEntry("SUCCESS", $"Enrichissement terminé : {enrichResult}"));
-                            }
-                            catch (System.Exception ex)
-                            {
-                                Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'enrichissement : {ex.Message}"));
-                            }
-//                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logs.Add(new LogEntry("ERROR", $"Erreur lors de la lecture du fichier Excel : {ex.Message}"));
-                    if (step != null) { step.Status = "Erreur Lecture"; step.ResultState = "Error"; }
+                    Logs.Add(new LogEntry("WARNING", "La requête s'est exécutée avec succès mais n'a retourné aucun résultat."));
+                    if (step != null) { step.Status = "Succès - 0 ligne"; step.ResultState = "Success"; }
                     return;
                 }
 
-                if (errorCount == 0 && succesCount > 0)
+                Logs.Add(new LogEntry("INFO", $"{results.Count} ligne(s) récupérée(s) depuis GCP. Écriture dans le fichier Excel modèle..."));
+
+                using (var workbook = new XLWorkbook(LastGeneratedExcelPath))
                 {
-                    Logs.Add(new LogEntry("SUCCESS", $"✓ Terminé avec succès. {succesCount} ligne(s) traitée(s)."));
-                    if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
+                    var worksheet = workbook.Worksheets.FirstOrDefault();
+                    if (worksheet == null)
+                    {
+                        Logs.Add(new LogEntry("ERROR", "Le fichier Excel ne contient aucune feuille."));
+                        if (step != null) { step.Status = "Erreur Fichier"; step.ResultState = "Error"; }
+                        return;
+                    }
+
+                    // On efface les données existantes (hors en-tête ligne 1) s'il y en a
+                    int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+                    if (lastRow > 1)
+                    {
+                        worksheet.Range(2, 1, lastRow, ExcelColumns.Count).Clear();
+                    }
+
+                    // Transformation des résultats pour l'insertion
+                    var dataList = new List<object[]>();
+                    foreach (var rowDict in results)
+                    {
+                        var rowArray = new object[ExcelColumns.Count];
+                        for (int i = 0; i < ExcelColumns.Count; i++)
+                        {
+                            var headerTitle = ExcelColumns[i].Entete;
+                            if (rowDict.ContainsKey(headerTitle))
+                            {
+                                rowArray[i] = rowDict[headerTitle]?.ToString() ?? "";
+                            }
+                            else
+                            {
+                                rowArray[i] = "";
+                            }
+                        }
+                        dataList.Add(rowArray);
+                    }
+
+                    // Insertion dans ClosedXML (Ligne 2, Colonne 1)
+                    if (dataList.Count > 0)
+                    {
+                        worksheet.Cell(2, 1).InsertData(dataList);
+                    }
+
+                    workbook.Save();
                 }
-                else if (succesCount > 0 && errorCount > 0)
-                {
-                    Logs.Add(new LogEntry("WARNING", $"⚠ Terminé avec {errorCount} erreur(s) et {succesCount} succès.{Environment.NewLine}{LinesInError}"));
-                    if (step != null) { step.Status = "Succès partiel"; step.ResultState = "Error"; }
-                }
-                else
-                {
-                    Logs.Add(new LogEntry("ERROR", $"✗ Aucune ligne traitée avec succès. {errorCount} erreur(s)."));
-                    if (step != null) { step.Status = "Erreur SAP"; step.ResultState = "Error"; }
-                }
+
+                Logs.Add(new LogEntry("SUCCESS", $"✓ Terminé avec succès. {results.Count} ligne(s) écrite(s) dans le fichier Excel."));
+                if (step != null) { step.Status = "Terminé"; step.ResultState = "Success"; }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                Logs.Add(new LogEntry("ERROR", $"Erreur fatale lors de l'intégration SAP : {ex.Message}"));
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'intégration GCP : {ex.Message}"));
                 if (step != null) { step.Status = "Crash"; step.ResultState = "Error"; }
             }
         }
