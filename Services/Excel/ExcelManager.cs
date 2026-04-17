@@ -1,9 +1,12 @@
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
+using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Linq;
-using DocumentFormat.OpenXml.Spreadsheet;
+using System.Runtime.InteropServices;
 
 namespace SmartSAP.Services.Excel
 {
@@ -198,14 +201,14 @@ namespace SmartSAP.Services.Excel
 
                         var targetRow = sheetToUpdate.Row(lRowToUpdate);
 
-                        targetRow.Cell(1).Value = row.Cell(6).GetString(); // Division
-                        targetRow.Cell(2).Value = row.Cell(91).GetString(); // Langue
-                        targetRow.Cell(3).Value = row.Cell(1).GetString(); // Poste technique
-                        targetRow.Cell(4).Value = row.Cell(2).GetString(); // Désignation
-                        targetRow.Cell(5).Value = row.Cell(9).GetString(); // Localisation
-                        targetRow.Cell(6).Value = row.Cell(3).GetString(); // Centre de coûts
-                        targetRow.Cell(7).Value = row.Cell(4).GetString(); // Poste
-                        targetRow.Cell(8).Value = row.Cell(11).GetString(); // Code ABC
+                        targetRow.Cell(1).Value = string.Empty; // Division
+                        targetRow.Cell(2).Value = string.Empty; // Langue
+                        targetRow.Cell(3).Value = string.Empty; // Poste technique
+                        targetRow.Cell(4).Value = string.Empty; // Désignation
+                        targetRow.Cell(5).Value = string.Empty; // Localisation
+                        targetRow.Cell(6).Value = string.Empty; // Centre de coûts
+                        targetRow.Cell(7).Value = string.Empty; // Poste
+                        targetRow.Cell(8).Value = string.Empty; // Code ABC
                         targetRow.Cell(9).Value = string.Empty; ; // Code Projet
                         targetRow.Cell(10).Value = string.Empty; ; // Code Produit
                         targetRow.Cell(11).Value = string.Empty; // A maintenir
@@ -391,6 +394,89 @@ namespace SmartSAP.Services.Excel
                 {
                     Debug.WriteLine($"Warning: Impossible de supprimer le fichier source temporaire '{sourceDataPath}' : {exIO.Message}");
                 }
+
+                return $"Modèle E2 généré et enrichi avec les données extraites !";
+            }
+            catch (Exception ex)
+            {
+                return $"✗ Erreur lors de l'enrichissement du modèle : {ex.Message}";
+            }
+        }
+
+        public string EnrichirFromSAPExcelWorkbookM11_E_2(string sourceDataPath, List<string> tabResult)
+        {
+            try
+            {
+                using (var wExcelToUpdate = new ClosedXML.Excel.XLWorkbook(sourceDataPath))
+                {
+                    var sheetToUpdate = wExcelToUpdate.Worksheet(1); // Le template n'a qu'un seul onglet "Data"
+                    var sheetFrom = wExcelToUpdate.Worksheet(1);
+
+                    int lRowToUpdate = 2;
+                    var targetRow = sheetToUpdate.Row(lRowToUpdate);
+                    foreach (string result in tabResult)
+                    {
+                        var parts = result.Split('|');
+                        if (parts.Length >= 2 && parts[1] == "OK")
+                        {
+                            targetRow.Cell(20).Value = "Oui"; // FID existante ?
+                            targetRow.Cell(21).Value = parts[5]; // Version
+                            targetRow.Cell(22).Value = parts[6]; // Descritpion
+                            targetRow.Cell(23).Value = parts[7]; // Statut initial
+                            targetRow.Cell(24).Value = parts[8]; // Liaison Article (Code)
+                            targetRow.Cell(25).Value = parts[9]; // Liaison Article (Désignation)
+                            targetRow.Cell(26).Value = parts[10]; // Liaison Equipement (Code)
+                            targetRow.Cell(27).Value = parts[11]; // Liaison Equipement (Désignation)
+                            targetRow.Cell(28).Value = parts[12]; // Liaison Poste Technique (Code)
+                            targetRow.Cell(29).Value = parts[13]; // Liaison Poste Technique (Désignation)
+                            targetRow.Cell(30).Value = parts[14]; // Originaux (Nombre)
+                            targetRow.Cell(31).Value = parts[15]; // Originaux (Fichier)
+                            string nomFichierAvecExtensionSource = Path.GetFileName(targetRow.Cell(15).Value.ToString());
+                            string nomFichierAvecExtensionChargé = Path.GetFileName(targetRow.Cell(31).Value.ToString());
+                            if (nomFichierAvecExtensionSource == nomFichierAvecExtensionChargé)
+                            {
+                                targetRow.Cell(32).Value = "Oui"; // Originaux cohérent ?
+                            }
+                            else
+                            {
+                                targetRow.Cell(32).Value = "Non"; // Originaux cohérent ?
+                            }
+                        }
+                        else
+                        {
+                            targetRow.Cell(20).Value = "Non"; // FID existante ?
+                            targetRow.Cell(21).Value = string.Empty; // Version
+                            targetRow.Cell(22).Value = string.Empty; // Descritpion
+                            targetRow.Cell(23).Value = string.Empty; // Statut initial
+                            targetRow.Cell(24).Value = string.Empty; // Liaison Article (Code)
+                            targetRow.Cell(25).Value = string.Empty; // Liaison Article (Désignation)
+                            targetRow.Cell(26).Value = string.Empty; // Liaison Equipement (Code)
+                            targetRow.Cell(27).Value = string.Empty; // Liaison Equipement (Désignation)
+                            targetRow.Cell(28).Value = string.Empty; // Liaison Poste Technique (Code)
+                            targetRow.Cell(29).Value = string.Empty; // Liaison Poste Technique (Désignation)
+                            targetRow.Cell(30).Value = string.Empty; // Originaux (Nombre)
+                            targetRow.Cell(31).Value = string.Empty; // Originaux (Fichier)
+                            targetRow.Cell(31).Value = string.Empty; // Originaux (Cohérent ?)
+                        }
+                        lRowToUpdate++;
+                        targetRow = sheetToUpdate.Row(lRowToUpdate);
+
+                    }
+                    wExcelToUpdate.Save();
+                } // La sortie du bloc using va garantir un Dispose et la libération des pointeurs de fichiers ouverts.
+
+                // Nettoyage : Suppression du fichier temporaire source
+                //                try
+                //                {
+                //                    if (System.IO.File.Exists(sourceDataPath))
+                //                    {
+                //System.IO.File.Delete(sourceDataPath);
+                //    }
+                //}
+                //catch (Exception exIO)
+                //{
+                //Debug.WriteLine($"Warning: Impossible de supprimer le fichier source temporaire '{sourceDataPath}' : {exIO.Message}");
+                //}
 
                 return $"Modèle E2 généré et enrichi avec les données extraites !";
             }

@@ -1,10 +1,17 @@
+using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Spreadsheet;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using SmartSAP.Services.Excel;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
+using SAPFEWSELib;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace SmartSAP.Services.SAP
 {
@@ -726,6 +733,177 @@ namespace SmartSAP.Services.SAP
                 string errorResult = $"{sSAPTransaction}|ERROR|{ex.Message}";
                 Console.WriteLine($"[SAP] Erreur : {errorResult}");
                 return errorResult;
+            }
+        }
+
+
+        // EXÉCUTION DE LA TRANSACTION SAP CV03N : Contrôle d'une FID depuis le fichier TDI
+        public string ExecuteCV03NTDI(dynamic session, string fidCode, string fidType, string fidLibellé, string fidStatut, out string resultDatas)
+        {
+            const string sSAPTransaction = "CV03N";
+            string statutBarre = string.Empty;
+            string fidDatas = string.Empty;
+            resultDatas = string.Empty;
+
+            try
+            {
+                SafeFindById(session, "wnd[0]").maximize();
+                SafeFindById(session, "wnd[0]/tbar[0]/okcd").Text = sSAPTransaction;
+                SafeFindById(session, "wnd[0]").sendVKey(0);
+
+                // Modifier document : écran initial
+                SafeFindById(session, "wnd[0]/usr/ctxtDRAW-DOKNR").Text = fidCode; // Document
+                SafeFindById(session, "wnd[0]/usr/ctxtDRAW-DOKAR").Text = fidType; // Type de document
+                SafeFindById(session, "wnd[0]/usr/ctxtDRAW-DOKTL").Text = ""; // Document partiel
+                SafeFindById(session, "wnd[0]/usr/ctxtDRAW-DOKVR").Text = ""; // Version
+                SafeFindById(session, "wnd[0]").sendVKey(0); // Entrée
+
+                // Contrôle que la FID existe 
+                statutBarre = SafeFindById(session, "wnd[0]/sbar").Text;
+                if (statutBarre.Contains($"{fidType}/{fidCode}"))
+                {
+                    resultDatas = $"{sSAPTransaction}|NOK|1|1|FID n°{fidCode}_{fidType} : {statutBarre}\";";
+                    return resultDatas;
+                }
+
+                // La FID existe, on continue le processus d'extraction
+                // Données doc.
+                fidDatas = "Oui"; // FID existante
+                fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/ctxtDRAW-DOKVR").Text; // Récupération de la version de la FID
+                fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSMAIN/ssubSCR_MAIN:SAPLCV110:0102/txtDRAT-DKTXT").Text; // Récupération de la description de la FID
+                fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSMAIN/ssubSCR_MAIN:SAPLCV110:0102/ctxtTDWST-STABK").Text; // Récupération du statut de la FID
+
+                // Liaison d'objets
+                try
+                {
+                    SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS").Select(); // Liaison d'objets
+                                                                                           // Liaison Article
+                    try
+                    {
+                        dynamic table = SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB01/ssubSUBSCRN_OBJLINK:SAPLCV130:1201/tblSAPLCV130TAB_X");
+                        if (table != null)
+                        {
+                            int i = 0;
+                            table.getAbsoluteRow(i).selected = true; // Sélection de la première ligne à chaque fois avant suppression
+                            fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB01/ssubSUBSCRN_OBJLINK:SAPLCV130:1201/tblSAPLCV130TAB_X/ctxtMARA-MATNR[0,0]").Text; // Article
+                            fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB01/ssubSUBSCRN_OBJLINK:SAPLCV130:1201/tblSAPLCV130TAB_X/txtMCDOK-DKTXT[1,0]").Text; // Désignation
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        fidDatas = fidDatas + "|";
+                        fidDatas = fidDatas + "|";
+                    }
+                    // Liaison Equipement
+                    try
+                    {
+                        dynamic table = SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB02/ssubSUBSCRN_OBJLINK:SAPLCV130:1204/tblSAPLCV130TAB_X");
+                        if (table != null)
+                        {
+                            int i = 0;
+                            table.getAbsoluteRow(i).selected = true; // Sélection de la première ligne à chaque fois avant suppression
+                            fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB02/ssubSUBSCRN_OBJLINK:SAPLCV130:1204/tblSAPLCV130TAB_X/ctxtEQUI-EQUNR[0,0]").Text; // Equipement
+                            fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB02/ssubSUBSCRN_OBJLINK:SAPLCV130:1204/tblSAPLCV130TAB_X/txtMCDOK-DKTXT[1,0]").Text; // Désignation
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        fidDatas = fidDatas + "|";
+                        fidDatas = fidDatas + "|";
+                    }
+                    // Liaison Poste Technique
+                    try
+                    {
+                        dynamic table = SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB02/ssubSUBSCRN_OBJLINK:SAPLCV130:1204/tblSAPLCV130TAB_X");
+                        if (table != null)
+                        {
+                            int i = 0;
+                            table.getAbsoluteRow(i).selected = true; // Sélection de la première ligne à chaque fois avant suppression
+                            fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB02/ssubSUBSCRN_OBJLINK:SAPLCV130:1204/tblSAPLCV130TAB_X/ctxtEQUI-EQUNR[0,0]").Text; // Equipement
+                            fidDatas = fidDatas + "|" + SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSLINKS/ssubSCR_MAIN:SAPLCV130:0404/tabsSELECT_OBJLINKSTRIP_400/tabpOBJTB02/ssubSUBSCRN_OBJLINK:SAPLCV130:1204/tblSAPLCV130TAB_X/txtMCDOK-DKTXT[1,0]").Text; // Désignation
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        fidDatas = fidDatas + "|";
+                        fidDatas = fidDatas + "|";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    fidDatas = fidDatas + "|";
+                    fidDatas = fidDatas + "|";
+                    fidDatas = fidDatas + "|";
+                    fidDatas = fidDatas + "|";
+                    fidDatas = fidDatas + "|";
+                    fidDatas = fidDatas + "|";
+                }
+
+
+                // Originaux
+                SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSFILES").Select(); // Originaux                                                              
+                // Liaison Poste Technique
+                try
+                {
+
+                    GuiShell shell = SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSFILES/ssubSCR_MAIN:SAPLCV110:0103/cntlCTL_FILES2/shellcont/shellcont/shell/shellcont[0]/shell/shellcont[1]/shell");
+                    int totalRows = Convert.ToInt32(
+                shell.GetType().InvokeMember("RowCount", BindingFlags.GetProperty, null, shell, null)
+            );
+                    dynamic tree = shell; 
+                        string[] nodekeys = tree.GetNodeKeys();
+
+
+                    string subType = (string)shell.GetType().InvokeMember(
+                        "SubType",
+                        System.Reflection.BindingFlags.GetProperty,
+                        null,
+                        shell,
+                        null);
+                    string typpe = shell.GetType().Name;
+                    string subtyppe = shell.SubType;
+
+
+
+                    foreach (GuiComponent child in shell.Children) 
+                    {
+                        if (child is GuiShell childShell)
+                        {
+                            if (childShell.SubType == "GridView")
+                            {
+                                GuiGridView grid = (GuiGridView)childShell;
+                            }
+                            else if (childShell.SubType == "TableControl")
+                            {
+                                GuiTableControl table = (GuiTableControl)childShell;
+                            }
+                        }
+                    }
+
+
+                    //fidDatas = fidDatas + "|" + rowCount; // Nombre total d'originaux liés
+
+                        //shell.selectNode("          1"); // Sélectiond de la première ligne
+                        SafeFindById(session, "wnd[0]/usr/tabsTAB_MAIN/tabpTSFILES/ssubSCR_MAIN:SAPLCV110:0103/btnPB_FILE_ATTR").press(); // Clic sur le bouton "Attributs"
+                        string originalPath = SafeFindById(session, "wnd[1]/usr/ctxtDRAW-FILEP1").Text; // Récupération du chemin de l'original
+                        fidDatas = fidDatas + "|" + originalPath; // Chemin
+                        SafeFindById(session, "wnd[1]/tbar[0]/btn[0]").press();
+                }
+                catch (Exception ex)
+                {
+                    fidDatas = fidDatas + "|";
+                }
+
+                // Retour au menu principal
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour écran CV03N
+                SafeFindById(session, "wnd[0]/tbar[0]/btn[3]").press(); // Retour menu principal
+
+                string result = $"{sSAPTransaction}|OK|1|1|{fidDatas}";
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return $"{sSAPTransaction}|ERROR|{ex.Message}";
             }
         }
 

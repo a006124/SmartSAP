@@ -92,6 +92,14 @@ namespace SmartSAP.ViewModels
                 case "Suppression Postes d'Entretien":
                     CurrentViewModel = new Module10ViewModel(this, "Suppression Postes d'Entretien");
                     break;
+                case "11":
+                case "Modification de FID":
+                    CurrentViewModel = new Module11ViewModel(this, "Modification de FID");
+                    break;
+                case "12":
+                case "Création de gammes de maintenance":
+                    CurrentViewModel = new Module12ViewModel(this, "Création de gammes de maintenance");
+                    break;
             }
         }
     }

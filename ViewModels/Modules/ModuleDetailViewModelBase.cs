@@ -734,9 +734,9 @@ namespace SmartSAP.ViewModels.Modules
                         }
                         
                         AddLog(new LogEntry("SUCCESS", "Fichier Excel PMP généré : ", sPMPExcelSaveAs), dispatcher, uiSynchronizationContext);
-                        try {
-                            Process.Start(new ProcessStartInfo(sPMPExcelSaveAs) { UseShellExecute = true });
-                        } catch { }
+                        //try {
+                        //    Process.Start(new ProcessStartInfo(sPMPExcelSaveAs) { UseShellExecute = true });
+                        //} catch { }
 
                         // Nettoyage: suppression du fichier PMP texte consolidé une fois l'Excel généré
                         if (deleteTxtAfter)
