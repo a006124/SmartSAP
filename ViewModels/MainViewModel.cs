@@ -100,6 +100,10 @@ namespace SmartSAP.ViewModels
                 case "Création de gammes de maintenance":
                     CurrentViewModel = new Module12ViewModel(this, "Création de gammes de maintenance");
                     break;
+                case "13":
+                case "Test GCP":
+                    CurrentViewModel = new Module13ViewModel(this, "Teste la connexion à GCP via Excel");
+                    break;
             }
         }
     }
