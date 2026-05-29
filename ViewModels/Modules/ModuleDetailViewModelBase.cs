@@ -33,6 +33,7 @@ namespace SmartSAP.ViewModels.Modules
         public ICommand GeneratePMPExcelCommand { get; protected set; }
         public ICommand ExportFixedWidthCommand { get; protected set; }
         public ICommand ClearLogsCommand { get; protected set; }
+        public ICommand ExportLogsCommand { get; protected set; }
         public ICommand PickExcelFileCommand { get; protected set; }
         public ICommand CheckSAPConnectionCommand { get; protected set; }
         public ICommand ExecuteSAPTransactionCommand { get; protected set; }
@@ -74,6 +75,7 @@ namespace SmartSAP.ViewModels.Modules
                 }
             }); 
             ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
+            ExportLogsCommand = new RelayCommand(_ => ExportLogs());
             PickExcelFileCommand = new RelayCommand(_ => PickExcelFile());
             CheckSAPConnectionCommand = new RelayCommand(async p => await this.CheckSAPConnectionAsync());
             ExecuteSAPTransactionCommand = new RelayCommand(async p => await this.ExecuteSAPTransactionAsync(p as WorkflowStep));
@@ -1152,6 +1154,64 @@ namespace SmartSAP.ViewModels.Modules
                     filePath
                 ));
             });
+        }
+
+        // Export des logs dans un fichier texte
+        protected virtual void ExportLogs()
+        {
+            if (Logs == null || Logs.Count == 0)
+            {
+                Logs.Add(new LogEntry("WARNING", "Aucun log à exporter."));
+                return;
+            }
+
+            string selectedFile = string.Empty;
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Exporter les logs",
+                    Filter = "Fichiers texte (*.txt)|*.txt|Tous les fichiers (*.*)|*.*",
+                    FileName = $"Logs_{ModuleTitle.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.txt",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    selectedFile = saveFileDialog.FileName;
+                }
+            });
+
+            if (string.IsNullOrEmpty(selectedFile))
+            {
+                Logs.Add(new LogEntry("WARNING", "Exportation des logs annulée par l'utilisateur."));
+                return;
+            }
+
+            try
+            {
+                var sb = new StringBuilder();
+                foreach (var entry in Logs)
+                {
+                    var line = $"[{entry.Timestamp}] [{entry.Type}] {entry.Message}";
+                    if (entry.HasFile)
+                    {
+                        line += $" {entry.FilePath}";
+                    }
+                    else if (entry.HasLink)
+                    {
+                        line += $" {entry.LinkText}";
+                    }
+                    sb.AppendLine(line);
+                }
+
+                File.WriteAllText(selectedFile, sb.ToString(), Encoding.UTF8);
+                Logs.Add(new LogEntry("SUCCESS", "Logs exportés avec succès : ", selectedFile));
+            }
+            catch (Exception ex)
+            {
+                Logs.Add(new LogEntry("ERROR", $"Erreur lors de l'exportation des logs : {ex.Message}"));
+            }
         }
     }
 }
